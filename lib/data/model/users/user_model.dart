@@ -45,7 +45,7 @@ class UserModel {
       phone: json['phone'],
       address: json['address'] ?? '',
       language: json['language'],
-      status: json['status'],
+      status: json['status'] ?? "",
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
       roles: json['roles'] != null
