@@ -1,0 +1,172 @@
+// import 'package:diplomasi_app/core/constants/routes.dart';
+// import 'package:flutter/scheduler.dart';
+import 'package:diplomasi_app/core/classes/shared_preferences.dart';
+import 'package:diplomasi_app/core/constants/assets.dart';
+import 'package:diplomasi_app/core/constants/routes.dart';
+import 'package:diplomasi_app/core/constants/storage_keys.dart';
+import 'package:diplomasi_app/data/model/users/user_model.dart';
+import 'package:diplomasi_app/data/resource/remote/user/notifications_data.dart';
+import 'package:diplomasi_app/data/resource/remote/user/user_data.dart';
+import 'package:diplomasi_app/view/screens/home/home.dart';
+import 'package:diplomasi_app/view/screens/profile/profile.dart';
+import 'package:diplomasi_app/view/screens/public/glossary_screen.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter/widgets.dart';
+import 'package:get/get.dart';
+
+abstract class AppController extends GetxController {
+  PageController pageController = PageController();
+
+  var isLoading = false;
+
+  int pageIndex = 0;
+
+  List pages = [
+    {'screen': HomeScreen(), 'name': 'الرئيسية', 'icon': Assets.icons.svg.home},
+    {
+      'screen': const GlossaryScreen(),
+      'name': 'المصطلحات',
+      'icon': Assets.icons.svg.terminology,
+    },
+
+    {
+      'screen': const ProfileScreen(),
+      'name': 'حسابي',
+      'icon': Assets.icons.svg.person,
+    },
+  ];
+
+  UserData userData = UserData();
+  UserModel? userModel;
+  bool isUserDataLoading = false;
+  Future<void> getMyInfo();
+
+  int unreadNotificationsCount = 0;
+
+  bool isUnreadNotificationsCountLoading = false;
+
+  NotificationsData notificationsData = NotificationsData();
+
+  Future<void> getUnreadNotificationsCount();
+
+  void goToHome();
+  void onPageChanged(int page);
+  void refreshHomePage();
+  void changePage(int page);
+  void checkLevelAndCourse();
+}
+
+class AppControllerImp extends AppController {
+  @override
+  void onInit() async {
+    getMyInfo();
+
+    checkLevelAndCourse();
+    getUnreadNotificationsCount();
+    super.onInit();
+
+    // if (isUserLoggedIn) {
+    //   getUnreadNotificationsCount();
+    // }
+  }
+
+  @override
+  void checkLevelAndCourse() {
+    int levelId = Shared.getValue(StorageKeys.levelId, initialValue: 0);
+    int courseId = Shared.getValue(StorageKeys.courseId, initialValue: 0);
+
+    if (levelId == 0 || courseId == 0) {
+      // Defer navigation until after the current build phase completes
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        Get.toNamed(AppRoutes.cources);
+      });
+      return;
+    }
+  }
+
+  @override
+  void goToHome() {
+    pageController.jumpToPage(
+      0,
+      // duration: const Duration(milliseconds: 250),
+      // curve: Curves.easeIn,
+    );
+  }
+
+  @override
+  void refreshHomePage() {
+    // if (Get.isRegistered<HomeControllerImp>()) {
+    //   Get.find<HomeControllerImp>().refreshHomePage();
+    // }
+  }
+
+  @override
+  void onPageChanged(int page) {
+    // pageIndex = page;
+    // update();
+
+    // // Notify the active tab controller
+    // if (page == 0 && Get.isRegistered<HomeControllerImp>()) {
+    //   Get.find<HomeControllerImp>().onBecameActive();
+    // } else if (page == 1 && Get.isRegistered<MapControllerImp>()) {
+    //   Get.find<MapControllerImp>().onBecameActive();
+    // } else if (page == 2 && Get.isRegistered<FavoritesControllerImp>()) {
+    //   Get.find<FavoritesControllerImp>().onBecameActive();
+    // }
+  }
+
+  @override
+  void changePage(int page) {
+    if (page == 0 && pageIndex == 0) {
+      refreshHomePage();
+    }
+    pageController.jumpToPage(
+      page,
+      // duration: const Duration(milliseconds: 250),
+      // curve: Curves.easeIn,
+    );
+    pageIndex = page;
+    update();
+
+    // // Notify the active tab controller
+    // if (page == 0 && Get.isRegistered<HomeControllerImp>()) {
+    //   Get.find<HomeControllerImp>().onBecameActive();
+    // } else if (page == 1 && Get.isRegistered<MapControllerImp>()) {
+    //   Get.find<MapControllerImp>().onBecameActive();
+    // } else if (page == 2 && Get.isRegistered<FavoritesControllerImp>()) {
+    //   Get.find<FavoritesControllerImp>().onBecameActive();
+    // }
+  }
+
+  @override
+  Future<void> getMyInfo() async {
+    if (isUserDataLoading) return;
+
+    isUserDataLoading = true;
+    update();
+
+    var response = await userData.getMyInfo();
+    if (response.isSuccess) {
+      Shared.setValue('user-data', response.data);
+      userModel = UserModel.fromJson(response.data);
+    }
+    isUserDataLoading = false;
+    update();
+  }
+
+  @override
+  Future<void> getUnreadNotificationsCount() async {
+    if (isUnreadNotificationsCountLoading) return;
+
+    isUnreadNotificationsCountLoading = true;
+    update();
+
+    var response = await notificationsData.getUnreadCount();
+    if (response.isSuccess) {
+      unreadNotificationsCount = response.data['count'];
+      Shared.setValue('notifications_unread_count', unreadNotificationsCount);
+    }
+    isUnreadNotificationsCountLoading = false;
+    update();
+  }
+}
