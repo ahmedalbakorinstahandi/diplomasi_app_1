@@ -33,7 +33,7 @@ abstract class PlansController extends GetxController {
   Future<void> cancelSubscription();
   Future<void> resumeSubscription();
   Future<void> retryPayment();
-  Future<void> purchasePlan(PlanModel plan);
+  Future<void> purchasePlan(PlanModel plan, {int? paymentMethodId});
   Future<bool> setDefaultPaymentMethod(int id);
   Future<bool> deletePaymentMethod(int id);
   bool isCurrentPlan(PlanModel plan);
@@ -104,7 +104,8 @@ class PlansControllerImp extends PlansController {
     defaultPaymentMethodId = null;
 
     final methodsResponse = await billingData.getPaymentMethods();
-    if (methodsResponse.isSuccess && methodsResponse.data is Map<String, dynamic>) {
+    if (methodsResponse.isSuccess &&
+        methodsResponse.data is Map<String, dynamic>) {
       final payload = methodsResponse.data as Map<String, dynamic>;
       final methods = payload['methods'];
       if (methods is List) {
@@ -169,7 +170,10 @@ class PlansControllerImp extends PlansController {
 
     final response = await billingData.cancelSubscription();
     if (response.isSuccess) {
-      customSnackBar(text: 'تم إيقاف التجديد التلقائي', snackType: SnackBarType.correct);
+      customSnackBar(
+        text: 'تم إيقاف التجديد التلقائي',
+        snackType: SnackBarType.correct,
+      );
     }
 
     isActionLoading = false;
@@ -185,7 +189,10 @@ class PlansControllerImp extends PlansController {
 
     final response = await billingData.resumeSubscription();
     if (response.isSuccess) {
-      customSnackBar(text: 'تم تفعيل التجديد التلقائي', snackType: SnackBarType.correct);
+      customSnackBar(
+        text: 'تم تفعيل التجديد التلقائي',
+        snackType: SnackBarType.correct,
+      );
     }
 
     isActionLoading = false;
@@ -195,7 +202,9 @@ class PlansControllerImp extends PlansController {
 
   @override
   Future<void> retryPayment() async {
-    if (isActionLoading || _isRetryPolling || currentSubscription == null) return;
+    if (isActionLoading || _isRetryPolling || currentSubscription == null) {
+      return;
+    }
     isActionLoading = true;
     _setRetryStatus(
       type: 'pending',
@@ -214,6 +223,8 @@ class PlansControllerImp extends PlansController {
       final gatewayStatus = data['gateway_status']?.toString() ?? 'unknown';
       final finalized = data['finalized'] == true;
       final verified = data['verified'] == true;
+      final failureCode = data['failure_code']?.toString();
+      final failureReason = data['failure_reason']?.toString();
 
       customSnackBar(
         text:
@@ -223,31 +234,38 @@ class PlansControllerImp extends PlansController {
             : SnackBarType.info,
       );
 
-      if (merchantReferenceId != null && merchantReferenceId.isNotEmpty && !finalized) {
+      if (merchantReferenceId != null &&
+          merchantReferenceId.isNotEmpty &&
+          !finalized) {
         await _pollRetryVerification(merchantReferenceId);
       } else if (finalized && verified) {
-        _setRetryStatus(type: 'success', message: 'تم تأكيد عملية الدفع بنجاح.', notify: false);
-      } else if (finalized) {
         _setRetryStatus(
-          type: 'failed',
-          message: 'فشلت إعادة المحاولة. الحالة: $gatewayStatus',
+          type: 'success',
+          message: 'تم تأكيد عملية الدفع بنجاح.',
           notify: false,
         );
+      } else if (finalized) {
+        final failureMessage = _resolveFailureMessage(
+          gatewayStatus: gatewayStatus,
+          failureCode: failureCode,
+          failureReason: failureReason,
+        );
+        _setRetryStatus(type: 'failed', message: failureMessage, notify: false);
       }
     } else {
       final reasonKey = response.key ?? '';
       final reasonMessage = _mapRetryReasonKey(reasonKey);
-      _setRetryStatus(
-        type: 'failed',
-        message: reasonMessage,
-        notify: false,
-      );
+      _setRetryStatus(type: 'failed', message: reasonMessage, notify: false);
     }
 
     isActionLoading = false;
     await loadBillingState();
     if (currentSubscription?['status'] == 'active') {
-      _setRetryStatus(type: 'success', message: 'الاشتراك نشط الآن.', notify: false);
+      _setRetryStatus(
+        type: 'success',
+        message: 'الاشتراك نشط الآن.',
+        notify: false,
+      );
     }
     update();
   }
@@ -258,8 +276,7 @@ class PlansControllerImp extends PlansController {
         'لا يمكن إعادة المحاولة الآن. حاول بعد انتهاء فترة الانتظار.',
       'billing.retry.max_attempts_reached' =>
         'تم الوصول للحد الأقصى من المحاولات لهذه الفترة.',
-      'billing.retry.already_paid_for_period' =>
-        'تم دفع هذه الفترة مسبقًا.',
+      'billing.retry.already_paid_for_period' => 'تم دفع هذه الفترة مسبقًا.',
       'billing.retry.no_active_payment_method' =>
         'لا توجد وسيلة دفع افتراضية فعّالة.',
       _ => 'تعذر إرسال إعادة المحاولة. حاول مرة أخرى.',
@@ -267,28 +284,50 @@ class PlansControllerImp extends PlansController {
   }
 
   @override
-  Future<void> purchasePlan(PlanModel plan) async {
+  Future<void> purchasePlan(PlanModel plan, {int? paymentMethodId}) async {
     if (isActionLoading) return;
 
     isActionLoading = true;
     actionPlanId = plan.id;
     update();
 
-    final response = await billingData.purchasePlan(planId: plan.id);
+    final response = await billingData.purchasePlan(
+      planId: plan.id,
+      paymentMethodId: paymentMethodId,
+    );
     if (response.isSuccess) {
       final data = response.data is Map<String, dynamic>
           ? response.data as Map<String, dynamic>
           : <String, dynamic>{};
       final merchantReferenceId = data['merchant_reference_id']?.toString();
       final finalized = data['finalized'] == true;
+      final verified = data['verified'] == true;
+      final gatewayStatus = data['gateway_status']?.toString() ?? 'unknown';
+      final failureCode = data['failure_code']?.toString();
+      final failureReason = data['failure_reason']?.toString();
 
-      customSnackBar(
-        text: 'تم إرسال طلب الشراء بنجاح.',
-        snackType: SnackBarType.correct,
-      );
-
-      if (merchantReferenceId != null && merchantReferenceId.isNotEmpty && !finalized) {
+      if (finalized && !verified) {
+        customSnackBar(
+          text: _resolveFailureMessage(
+            gatewayStatus: gatewayStatus,
+            failureCode: failureCode,
+            failureReason: failureReason,
+          ),
+          snackType: SnackBarType.error,
+        );
+      } else if (merchantReferenceId != null &&
+          merchantReferenceId.isNotEmpty &&
+          !finalized) {
+        customSnackBar(
+          text: 'تم إرسال طلب الشراء بنجاح.',
+          snackType: SnackBarType.correct,
+        );
         await _pollRetryVerification(merchantReferenceId);
+      } else if (verified) {
+        customSnackBar(
+          text: 'تمت عملية الشراء بنجاح.',
+          snackType: SnackBarType.correct,
+        );
       }
     } else {
       final message = switch (response.key ?? '') {
@@ -296,6 +335,8 @@ class PlansControllerImp extends PlansController {
           'لا يمكنك شراء باقة جديدة قبل انتهاء باقتك الحالية.',
         'billing.purchase.no_active_payment_method' =>
           'يلزم اختيار وسيلة دفع افتراضية فعالة أولاً.',
+        'billing.purchase.invalid_payment_method' =>
+          'وسيلة الدفع المختارة غير متاحة. اختر وسيلة أخرى.',
         _ => response.message ?? 'تعذر إتمام عملية الشراء.',
       };
       customSnackBar(text: message, snackType: SnackBarType.error);
@@ -318,30 +359,37 @@ class PlansControllerImp extends PlansController {
         final verifyResponse = await billingData.verifyPayment(
           merchantReferenceId: merchantReferenceId,
         );
-        if (!verifyResponse.isSuccess || verifyResponse.data is! Map<String, dynamic>) {
+        if (!verifyResponse.isSuccess ||
+            verifyResponse.data is! Map<String, dynamic>) {
           continue;
         }
 
         final verifyData = verifyResponse.data as Map<String, dynamic>;
         final finalized = verifyData['finalized'] == true;
         final verified = verifyData['verified'] == true;
-        final gatewayStatus = verifyData['gateway_status']?.toString() ?? 'unknown';
+        final gatewayStatus =
+            verifyData['gateway_status']?.toString() ?? 'unknown';
+        final failureCode = verifyData['failure_code']?.toString();
+        final failureReason = verifyData['failure_reason']?.toString();
 
         final stopStatuses = {'failed', 'expired'};
         final shouldStopEarly = stopStatuses.contains(gatewayStatus);
         if (finalized || shouldStopEarly) {
+          final failureMessage = _resolveFailureMessage(
+            gatewayStatus: gatewayStatus,
+            failureCode: failureCode,
+            failureReason: failureReason,
+          );
           _setRetryStatus(
             type: verified ? 'success' : 'failed',
-            message: verified
-                ? 'تمت إعادة المحاولة بنجاح.'
-                : 'انتهت إعادة المحاولة بحالة: $gatewayStatus',
+            message: verified ? 'تمت إعادة المحاولة بنجاح.' : failureMessage,
             notify: false,
           );
           customSnackBar(
             text: verified
                 ? 'نجحت عملية الدفع ($merchantReferenceId)'
-                : 'انتهت محاولة الدفع بحالة: $gatewayStatus',
-            snackType: verified ? SnackBarType.correct : SnackBarType.info,
+                : failureMessage,
+            snackType: verified ? SnackBarType.correct : SnackBarType.error,
           );
           return;
         }
@@ -361,16 +409,50 @@ class PlansControllerImp extends PlansController {
     }
   }
 
+  String _resolveFailureMessage({
+    String? gatewayStatus,
+    String? failureCode,
+    String? failureReason,
+  }) {
+    final reason = (failureReason ?? '').trim();
+    if (reason.isNotEmpty) {
+      return 'فشلت عملية الدفع: $reason';
+    }
+
+    final code = (failureCode ?? '').trim();
+    final knownByCode = switch (code) {
+      '05' => 'فشلت عملية الدفع: البطاقة مرفوضة من البنك أو الرصيد غير كافٍ.',
+      '14' => 'فشلت عملية الدفع: رقم البطاقة غير صحيح.',
+      '33' => 'فشلت عملية الدفع: البطاقة منتهية الصلاحية.',
+      '34' => 'فشلت عملية الدفع: العملية مرفوضة للاشتباه.',
+      _ => null,
+    };
+    if (knownByCode != null) {
+      return knownByCode;
+    }
+
+    final status = (gatewayStatus ?? '').trim();
+    if (status.isNotEmpty && status != 'unknown') {
+      return 'فشلت عملية الدفع. الحالة: $status';
+    }
+
+    return 'فشلت عملية الدفع. يرجى المحاولة بوسيلة دفع أخرى.';
+  }
+
   @override
   bool isCurrentPlan(PlanModel plan) {
     if (currentSubscription == null) return false;
-    final status = (currentSubscription?['status'] ?? '').toString().toLowerCase();
+    final status = (currentSubscription?['status'] ?? '')
+        .toString()
+        .toLowerCase();
     if (status != 'active' && status != 'past_due') {
       return false;
     }
 
     if (status == 'active') {
-      final endDate = DateTime.tryParse((currentSubscription?['end_date'] ?? '').toString());
+      final endDate = DateTime.tryParse(
+        (currentSubscription?['end_date'] ?? '').toString(),
+      );
       if (endDate != null && endDate.isBefore(DateTime.now())) {
         return false;
       }
@@ -381,7 +463,8 @@ class PlansControllerImp extends PlansController {
 
   bool get isAutoRenewEnabled {
     if (currentSubscription == null) return false;
-    final cancelAtPeriodEnd = currentSubscription?['cancel_at_period_end'] == true;
+    final cancelAtPeriodEnd =
+        currentSubscription?['cancel_at_period_end'] == true;
     final autoRenew = currentSubscription?['auto_renew'] == true;
     return autoRenew && !cancelAtPeriodEnd;
   }
@@ -397,11 +480,15 @@ class PlansControllerImp extends PlansController {
 
   bool get hasBlockingActiveSubscription {
     if (currentSubscription == null) return false;
-    final status = (currentSubscription?['status'] ?? '').toString().toLowerCase();
+    final status = (currentSubscription?['status'] ?? '')
+        .toString()
+        .toLowerCase();
     if (status == 'past_due') return true;
     if (status != 'active') return false;
 
-    final endDate = DateTime.tryParse((currentSubscription?['end_date'] ?? '').toString());
+    final endDate = DateTime.tryParse(
+      (currentSubscription?['end_date'] ?? '').toString(),
+    );
     if (endDate == null) return true;
 
     return !endDate.isBefore(DateTime.now());
@@ -411,7 +498,9 @@ class PlansControllerImp extends PlansController {
   bool get hasBlockingCurrentSubscription => hasBlockingActiveSubscription;
 
   void _persistSubscriptionSnapshot() {
-    final status = (currentSubscription?['status'] ?? 'none').toString().toLowerCase();
+    final status = (currentSubscription?['status'] ?? 'none')
+        .toString()
+        .toLowerCase();
     final normalizedStatus = status.isEmpty ? 'none' : status;
     Shared.setValue(StorageKeys.subscriptionState, {
       'has_subscription': currentSubscription != null,

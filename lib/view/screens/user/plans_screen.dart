@@ -24,7 +24,7 @@ class PlansScreen extends StatelessWidget {
       builder: (controller) {
         final scheme = Theme.of(context).colorScheme;
         return MyScaffold(
-          backgroundColor: scheme.primary,
+          backgroundColor: scheme.surface,
           body: Column(
             children: [
               // Header
@@ -39,14 +39,14 @@ class PlansScreen extends StatelessWidget {
                       },
                       icon: Icon(
                         Icons.receipt_long_outlined,
-                        color: scheme.onPrimary,
+                        color: scheme.onSurface,
                       ),
                       label: Text(
                         'الفواتير',
                         style: TextStyle(
                           fontSize: emp(14),
                           fontWeight: FontWeight.w500,
-                          color: scheme.onPrimary,
+                          color: scheme.onSurface,
                         ),
                       ),
                     ),
@@ -57,14 +57,14 @@ class PlansScreen extends StatelessWidget {
                         await Get.to(() => const PaymentMethodsScreen());
                         await controller.loadBillingState();
                       },
-                      icon: Icon(Icons.credit_card, color: scheme.onPrimary),
+                      icon: Icon(Icons.credit_card, color: scheme.onSurface),
                       label: Text(
                         'وسائل الدفع',
                         style: TextStyle(
                           fontSize: emp(14),
                           fontWeight: FontWeight.w500,
 
-                          color: scheme.onPrimary,
+                          color: scheme.onSurface,
                         ),
                       ),
                     ),
@@ -80,7 +80,7 @@ class PlansScreen extends StatelessWidget {
                     child: Text(
                       'غير مشترك حالياً',
                       style: TextStyle(
-                        color: scheme.onPrimary.withOpacity(0.85),
+                        color: scheme.onSurface.withOpacity(0.85),
                         fontSize: emp(13),
                         fontWeight: FontWeight.w600,
                       ),
@@ -172,6 +172,7 @@ class PlansScreen extends StatelessWidget {
                                         return;
                                       }
                                       await _handlePurchasePlan(
+                                        context,
                                         controller,
                                         planModel,
                                       );
@@ -197,6 +198,7 @@ class PlansScreen extends StatelessWidget {
   }
 
   Future<void> _handlePurchasePlan(
+    BuildContext context,
     PlansControllerImp controller,
     PlanModel plan,
   ) async {
@@ -236,20 +238,51 @@ class PlansScreen extends StatelessWidget {
         return;
       }
 
-      if (controller.hasActiveDefaultMethod) {
-        await controller.purchasePlan(plan);
+      final methods = controller.paymentMethods;
+      if (methods.isEmpty) {
+        await Get.to<bool>(
+          () => AddPaymentMethodScreen(
+            mode: AddPaymentMethodMode.purchasePlan,
+            plan: plan,
+          ),
+        );
+        await _refreshBillingState(controller);
         return;
       }
 
-      final completed = await Get.to<bool>(
-        () => AddPaymentMethodScreen(
-          mode: AddPaymentMethodMode.purchasePlan,
-          plan: plan,
-        ),
+      if (!context.mounted) return;
+      final selection = await _showPurchaseMethodSheet(
+        context,
+        methods: methods,
+        defaultMethodId: controller.defaultPaymentMethodId,
       );
-      if (completed == true) {
-        await _refreshBillingState(controller);
+      if (selection == null || selection.action == _PurchaseAction.cancel) {
+        return;
       }
+
+      if (selection.action == _PurchaseAction.addNewCard) {
+        await Get.to<bool>(
+          () => AddPaymentMethodScreen(
+            mode: AddPaymentMethodMode.purchasePlan,
+            plan: plan,
+          ),
+        );
+        await _refreshBillingState(controller);
+        return;
+      }
+
+      if (selection.selectedMethodId == null) {
+        customSnackBar(
+          text: 'يرجى اختيار وسيلة دفع صالحة.',
+          snackType: SnackBarType.info,
+        );
+        return;
+      }
+
+      await controller.purchasePlan(
+        plan,
+        paymentMethodId: selection.selectedMethodId,
+      );
     } finally {
       controller.isPurchaseFlowInProgress = false;
       controller.purchaseFlowPlanId = null;
@@ -257,14 +290,146 @@ class PlansScreen extends StatelessWidget {
     }
   }
 
+  Future<_PurchaseMethodSelection?> _showPurchaseMethodSheet(
+    BuildContext context, {
+    required List<Map<String, dynamic>> methods,
+    int? defaultMethodId,
+  }) async {
+    final preferredMethod = methods.firstWhere(
+      (m) => m['id'] == defaultMethodId,
+      orElse: () => methods.first,
+    );
+    int? selectedId = preferredMethod['id'] as int?;
+
+    return showModalBottomSheet<_PurchaseMethodSelection>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        final scheme = Theme.of(sheetContext).colorScheme;
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'اختر وسيلة الدفع',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: emp(15),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ...methods.map((method) {
+                      final methodId = method['id'] as int?;
+                      final isDefault = method['is_default'] == true;
+                      final status = (method['status'] ?? '').toString();
+                      final label =
+                          '${(method['brand'] ?? 'Card').toString().toUpperCase()} •••• ${method['last4'] ?? '****'}';
+                      final isActive = status == 'active';
+
+                      return RadioListTile<int>(
+                        value: methodId ?? -1,
+                        groupValue: selectedId ?? -1,
+                        onChanged: !isActive || methodId == null
+                            ? null
+                            : (value) => setModalState(() => selectedId = value),
+                        title: Text(label),
+                        subtitle: Text(
+                          isDefault
+                              ? 'افتراضية ${!isActive ? '• غير فعالة' : ''}'
+                              : (!isActive ? 'غير فعالة' : 'نشطة'),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.of(sheetContext).pop(
+                            const _PurchaseMethodSelection(
+                              action: _PurchaseAction.addNewCard,
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.add_card_outlined),
+                        label: const Text('إضافة بطاقة جديدة'),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.of(sheetContext).pop(
+                                const _PurchaseMethodSelection(
+                                  action: _PurchaseAction.cancel,
+                                ),
+                              );
+                            },
+                            child: const Text('إلغاء'),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (selectedId == null) return;
+                              final selectedMethod = methods.firstWhere(
+                                (m) => m['id'] == selectedId,
+                                orElse: () => <String, dynamic>{},
+                              );
+                              final isActive =
+                                  selectedMethod['status'] == 'active';
+                              if (!isActive) return;
+                              Navigator.of(sheetContext).pop(
+                                _PurchaseMethodSelection(
+                                  action: _PurchaseAction.selectSaved,
+                                  selectedMethodId: selectedId,
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: scheme.primary,
+                            ),
+                            child: const Text('متابعة الدفع'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Future<void> _refreshBillingState(PlansControllerImp controller) async {
-    await controller.loadBillingState();
-    // A short bounded re-check avoids stale card actions right after checkout return.
-    for (var i = 0; i < 2; i++) {
-      if (controller.hasBlockingCurrentSubscription) break;
-      await Future.delayed(const Duration(milliseconds: 600));
+    const backoff = <int>[0, 600, 1200, 1800];
+    for (var i = 0; i < backoff.length; i++) {
+      if (backoff[i] > 0) {
+        await Future.delayed(Duration(milliseconds: backoff[i]));
+      }
       await controller.loadBillingState();
+
+      if (controller.hasBlockingCurrentSubscription) {
+        break;
+      }
+      final currentStatus = (controller.currentSubscription?['status'] ?? '')
+          .toString()
+          .toLowerCase();
+      if (currentStatus == 'active' || currentStatus == 'past_due') {
+        break;
+      }
     }
+    await controller.getPlans();
   }
 
   Widget _buildCurrentPlanManagement(
@@ -350,4 +515,13 @@ class PlansScreen extends StatelessWidget {
       ],
     );
   }
+}
+
+enum _PurchaseAction { cancel, selectSaved, addNewCard }
+
+class _PurchaseMethodSelection {
+  final _PurchaseAction action;
+  final int? selectedMethodId;
+
+  const _PurchaseMethodSelection({required this.action, this.selectedMethodId});
 }

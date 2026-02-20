@@ -4,12 +4,12 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 class InvoicePdfPreviewScreen extends StatefulWidget {
   final String invoiceNumber;
-  final String pdfBase64;
+  final String pdfUrl;
 
   const InvoicePdfPreviewScreen({
     super.key,
     required this.invoiceNumber,
-    required this.pdfBase64,
+    required this.pdfUrl,
   });
 
   @override
@@ -19,50 +19,62 @@ class InvoicePdfPreviewScreen extends StatefulWidget {
 
 class _InvoicePdfPreviewScreenState extends State<InvoicePdfPreviewScreen> {
   late final WebViewController _webViewController;
+  bool _isLoading = true;
+  String? _errorText;
 
   @override
   void initState() {
     super.initState();
+    final viewerUrl = Uri.parse(
+      'https://docs.google.com/gview?embedded=1&url=${Uri.encodeComponent(widget.pdfUrl)}',
+    );
+
+    // final viewerUrl = Uri.parse(widget.pdfUrl);
+
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadHtmlString(_buildHtml(widget.pdfBase64));
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (_) {
+            if (!mounted) return;
+            setState(() {
+              _isLoading = true;
+              _errorText = null;
+            });
+          },
+          onPageFinished: (_) {
+            if (!mounted) return;
+            setState(() => _isLoading = false);
+          },
+          onWebResourceError: (error) {
+            if (!mounted) return;
+            setState(() {
+              _isLoading = false;
+              _errorText = 'تعذر عرض الفاتورة. تحقق من الرابط أو الشبكة.';
+            });
+          },
+        ),
+      )
+      ..loadRequest(viewerUrl);
   }
 
   @override
   Widget build(BuildContext context) {
     return MyScaffold(
       appBar: AppBar(title: Text('فاتورة ${widget.invoiceNumber}')),
-      body: WebViewWidget(controller: _webViewController),
+      body: Stack(
+        children: [
+          WebViewWidget(controller: _webViewController),
+          if (_isLoading) const Center(child: CircularProgressIndicator()),
+          if (_errorText != null)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(_errorText!, textAlign: TextAlign.center),
+              ),
+            ),
+        ],
+      ),
     );
-  }
-
-  String _buildHtml(String base64) {
-    return '''
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style>
-      html, body {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        background: #f5f5f5;
-      }
-      embed {
-        width: 100%;
-        height: 100%;
-        border: none;
-      }
-    </style>
-  </head>
-  <body>
-    <embed src="data:application/pdf;base64,$base64" type="application/pdf" />
-  </body>
-</html>
-''';
   }
 }

@@ -31,6 +31,10 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
 
   final BillingData _billingData = BillingData();
   bool _isSaving = false;
+  bool _resultHandled = false;
+  bool _isDisposed = false;
+  late final PaymentConfig _paymentConfig;
+  late final ValueKey<String> _creditCardKey;
 
   int _toMinorUnits(String amount) {
     final parsed = double.tryParse(amount.trim()) ?? 0;
@@ -53,22 +57,35 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
     return 'Card tokenization for subscription renewals';
   }
 
-  PaymentConfig get _paymentConfig => PaymentConfig(
-    publishableApiKey: _publishableKey,
-    amount: _amountMinor,
-    currency: 'SAR',
-    description: _description,
-    creditCard: CreditCardConfig(saveCard: true, manual: false),
-    metadata: {
-      'purpose': widget.mode == AddPaymentMethodMode.purchasePlan
-          ? 'plan_purchase'
-          : 'subscription_payment_method',
-      if (widget.plan != null) 'plan_id': widget.plan!.id.toString(),
-    },
-  );
+  @override
+  void initState() {
+    super.initState();
+    _paymentConfig = PaymentConfig(
+      publishableApiKey: _publishableKey,
+      amount: _amountMinor,
+      currency: 'SAR',
+      description: _description,
+      creditCard: CreditCardConfig(saveCard: true, manual: false),
+      metadata: {
+        'purpose': widget.mode == AddPaymentMethodMode.purchasePlan
+            ? 'plan_purchase'
+            : 'subscription_payment_method',
+        if (widget.plan != null) 'plan_id': widget.plan!.id.toString(),
+      },
+    );
+    _creditCardKey = ValueKey<String>(
+      'moyasar_card_${widget.mode.name}_${widget.plan?.id ?? 'none'}',
+    );
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
 
   Future<void> _handlePaymentResult(dynamic result) async {
-    if (_isSaving) return;
+    if (_isSaving || _resultHandled || _isDisposed || !mounted) return;
 
     if (result is! PaymentResponse) {
       customSnackBar(
@@ -81,7 +98,7 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
     final status = result.status;
     if (status == PaymentStatus.failed) {
       customSnackBar(
-        text: 'فشلت إضافة البطاقة. يرجى المحاولة مرة أخرى.',
+        text: 'فشلت عملية الدفع. يرجى التحقق من بيانات البطاقة والمحاولة مرة أخرى.',
         snackType: SnackBarType.error,
       );
       return;
@@ -133,7 +150,10 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
         ? digits.substring(digits.length - 4)
         : null;
 
-    setState(() => _isSaving = true);
+    _resultHandled = true;
+    if (mounted && !_isDisposed) {
+      setState(() => _isSaving = true);
+    }
     final isPurchaseMode = widget.mode == AddPaymentMethodMode.purchasePlan;
     final saveResponse = isPurchaseMode
         ? await _billingData.purchasePlanWithPayment(
@@ -169,25 +189,42 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
                   : 'sdk_response',
             },
           );
+    if (!mounted || _isDisposed) {
+      return;
+    }
     setState(() => _isSaving = false);
 
     if (!saveResponse.isSuccess) {
+      _resultHandled = false;
       customSnackBar(
-        text: isPurchaseMode
-            ? (saveResponse.message ?? 'فشل إتمام شراء الباقة.')
-            : 'تمت العملية لكن فشل حفظ البطاقة. أعد المحاولة.',
+        text:
+            saveResponse.message ??
+            (isPurchaseMode
+                ? 'فشل إتمام شراء الباقة.'
+                : 'تمت العملية لكن فشل حفظ البطاقة. أعد المحاولة.'),
         snackType: SnackBarType.error,
       );
       return;
     }
 
+    final responseData = saveResponse.data is Map<String, dynamic>
+        ? saveResponse.data as Map<String, dynamic>
+        : <String, dynamic>{};
+    final refundMeta = responseData['meta'] is Map<String, dynamic>
+        ? responseData['meta']['verification_refund']
+        : null;
+    final refundSuccess =
+        refundMeta is Map<String, dynamic> && refundMeta['success'] == true;
+
     customSnackBar(
       text: isPurchaseMode
           ? 'تمت عملية الشراء بنجاح وتم حفظ البطاقة للتجديد.'
-          : 'تمت إضافة وسيلة الدفع بنجاح. سيتم رد مبلغ التحقق تلقائيًا.',
+          : refundSuccess
+          ? 'تمت إضافة وسيلة الدفع بنجاح وتم رد 1 ريال.'
+          : 'تمت إضافة وسيلة الدفع بنجاح. سيصل رد 1 ريال خلال وقت قصير.',
       snackType: SnackBarType.correct,
     );
-    if (mounted) {
+    if (mounted && !_isDisposed) {
       Get.back(result: true);
     }
   }
@@ -254,6 +291,7 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
                   children: [
                     SingleChildScrollView(
                       child: CreditCard(
+                        key: _creditCardKey,
                         config: _paymentConfig,
                         locale: const Localization.ar(),
                         onPaymentResult: _handlePaymentResult,

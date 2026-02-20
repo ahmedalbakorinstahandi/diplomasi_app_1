@@ -22,10 +22,16 @@ class BillingData {
     return await apiService.post(EndPoints.billingSubscriptionRetryPayment);
   }
 
-  Future<ApiResponse> purchasePlan({required int planId}) async {
+  Future<ApiResponse> purchasePlan({
+    required int planId,
+    int? paymentMethodId,
+  }) async {
     return await apiService.post(
       EndPoints.billingSubscriptionPurchase,
-      data: {'plan_id': planId},
+      data: {
+        'plan_id': planId,
+        if (paymentMethodId != null) 'payment_method_id': paymentMethodId,
+      },
     );
   }
 
@@ -112,17 +118,35 @@ class BillingData {
     );
   }
 
-  Future<ApiResponse> getInvoices({int page = 1, int perPage = 20}) async {
+  Future<ApiResponse> getInvoices({
+    int page = 1,
+    int perPage = 20,
+    Map<String, dynamic>? filters,
+  }) async {
+    final params = <String, dynamic>{'page': page, 'per_page': perPage};
+    if (filters != null) {
+      params.addAll(filters);
+    }
+
     return await apiService.get(
       EndPoints.billingInvoices,
-      params: {'page': page, 'per_page': perPage},
+      params: params,
     );
   }
 
-  Future<ApiResponse> getPayments({int page = 1, int perPage = 20}) async {
+  Future<ApiResponse> getPayments({
+    int page = 1,
+    int perPage = 20,
+    Map<String, dynamic>? filters,
+  }) async {
+    final params = <String, dynamic>{'page': page, 'per_page': perPage};
+    if (filters != null) {
+      params.addAll(filters);
+    }
+
     return await apiService.get(
       EndPoints.billingPayments,
-      params: {'page': page, 'per_page': perPage},
+      params: params,
     );
   }
 

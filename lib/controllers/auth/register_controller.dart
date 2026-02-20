@@ -72,6 +72,7 @@ class RegisterControllerImp extends RegisterController {
         email: email.text,
         phone: phone.text,
         password: password.text,
+        passwordConfirmation: confirmPassword.text,
       );
 
       if (response.isSuccess) {

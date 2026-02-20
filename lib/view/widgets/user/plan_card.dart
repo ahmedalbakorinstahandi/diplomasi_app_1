@@ -439,32 +439,53 @@ class _AdaptivePlanCountdownState extends State<_AdaptivePlanCountdown> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(horizontal: width(12), vertical: height(10)),
       decoration: BoxDecoration(
-        color: scheme.primary.withOpacity(0.06),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: scheme.primary.withOpacity(0.22)),
+        color: scheme.surfaceContainerHighest.withOpacity(0.3),
+        border: Border.all(color: scheme.outlineVariant.withOpacity(0.6)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'الوقت المتبقي',
-            style: TextStyle(
-              fontSize: emp(12),
-              fontWeight: FontWeight.w700,
-              color: scheme.onSurface,
-            ),
-            textDirection: TextDirection.rtl,
-          ),
-          SizedBox(height: height(8)),
-          if (ended)
-            Text(
-              'انتهت المدة',
-              style: TextStyle(
-                fontSize: emp(13),
-                fontWeight: FontWeight.w700,
-                color: colors.error,
+          Row(
+            children: [
+              Icon(
+                Icons.timer_outlined,
+                size: emp(16),
+                color: scheme.primary,
               ),
-              textDirection: TextDirection.rtl,
+              SizedBox(width: width(6)),
+              Text(
+                'الوقت المتبقي من الاشتراك',
+                style: TextStyle(
+                  fontSize: emp(12),
+                  fontWeight: FontWeight.w700,
+                  color: scheme.onSurface,
+                ),
+                textDirection: TextDirection.rtl,
+              ),
+            ],
+          ),
+          SizedBox(height: height(10)),
+          if (ended)
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(
+                horizontal: width(12),
+                vertical: height(8),
+              ),
+              decoration: BoxDecoration(
+                color: scheme.errorContainer.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                'انتهت المدة',
+                style: TextStyle(
+                  fontSize: emp(12.5),
+                  fontWeight: FontWeight.w700,
+                  color: scheme.onErrorContainer,
+                ),
+                textDirection: TextDirection.rtl,
+              ),
             )
           else
             Wrap(
@@ -473,32 +494,54 @@ class _AdaptivePlanCountdownState extends State<_AdaptivePlanCountdown> {
               children: segments
                   .map(
                     (segment) => Container(
+                      width: width(72),
                       padding: EdgeInsets.symmetric(
-                        horizontal: width(10),
+                        horizontal: width(6),
                         vertical: height(6),
                       ),
                       decoration: BoxDecoration(
                         color: colors.surfaceCard,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: scheme.primary.withOpacity(0.2)),
-                      ),
-                      child: Text(
-                        '${segment.value} ${segment.label}',
-                        style: TextStyle(
-                          fontSize: emp(12),
-                          fontWeight: FontWeight.w600,
-                          color: scheme.onSurface,
+                        border: Border.all(
+                          color: scheme.outlineVariant.withOpacity(0.45),
                         ),
-                        textDirection: TextDirection.rtl,
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            _twoDigits(segment.value),
+                            style: TextStyle(
+                              fontSize: emp(16),
+                              fontWeight: FontWeight.w700,
+                              color: scheme.primary,
+                              height: 1.0,
+                            ),
+                          ),
+                          SizedBox(height: height(3)),
+                          Text(
+                            segment.label,
+                            style: TextStyle(
+                              fontSize: emp(10.5),
+                              fontWeight: FontWeight.w500,
+                              color: scheme.onSurface.withOpacity(0.78),
+                            ),
+                            textDirection: TextDirection.rtl,
+                          ),
+                        ],
                       ),
                     ),
                   )
                   .toList(),
             ),
+          if (!ended) ...[
+            SizedBox(height: height(4)),
+          ],
         ],
       ),
     );
   }
+
+  String _twoDigits(int value) => value < 10 ? '0$value' : '$value';
 
   List<_TimeSegment> _buildSegments(Duration remaining) {
     final days = remaining.inDays;
