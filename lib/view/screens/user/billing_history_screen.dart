@@ -22,7 +22,8 @@ class BillingHistoryScreen extends StatelessWidget {
             appBar: AppBar(title: const Text('الفواتير والمدفوعات')),
             body: Column(
               children: [
-                _BillingHeader(controller: controller),
+                // _Billing
+                //Header(controller: controller),
                 Container(
                   margin: EdgeInsets.symmetric(horizontal: width(16)),
                   decoration: BoxDecoration(
@@ -67,7 +68,10 @@ class _BillingHeader extends StatelessWidget {
     return Container(
       margin: EdgeInsets.fromLTRB(width(16), height(10), width(16), height(12)),
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: width(14), vertical: height(12)),
+      padding: EdgeInsets.symmetric(
+        horizontal: width(14),
+        vertical: height(12),
+      ),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
@@ -157,79 +161,83 @@ class _InvoicesTab extends StatelessWidget {
                     ],
                   )
                 : controller.invoices.isEmpty
-                    ? ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        children: const [
-                          SizedBox(height: 140),
-                          Center(child: Text('لا توجد فواتير حتى الآن')),
-                        ],
-                      )
-                    : ListView.builder(
-                        controller: controller.invoicesScrollController,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: width(14),
-                          vertical: height(12),
-                        ),
-                        itemCount:
-                            controller.invoices.length +
-                            (controller.isInvoicesLoadingMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index >= controller.invoices.length) {
-                            return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              child: Center(child: CircularProgressIndicator()),
-                            );
-                          }
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: const [
+                      SizedBox(height: 140),
+                      Center(child: Text('لا توجد فواتير حتى الآن')),
+                    ],
+                  )
+                : ListView.builder(
+                    controller: controller.invoicesScrollController,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: width(14),
+                      vertical: height(12),
+                    ),
+                    itemCount:
+                        controller.invoices.length +
+                        (controller.isInvoicesLoadingMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index >= controller.invoices.length) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
 
-                          final item = controller.invoices[index];
-                          final invoice = item is Map<String, dynamic>
-                              ? item
-                              : <String, dynamic>{};
-                          final invoiceId = invoice['id'] as int?;
-                          final invoiceNumber =
-                              invoice['invoice_number']?.toString() ?? '-';
-                          final status = invoice['status']?.toString() ?? '-';
-                          final amountMinor =
-                              (invoice['amount_minor'] as num?)?.toDouble() ?? 0;
-                          final currency = invoice['currency']?.toString() ?? 'SAR';
-                          final issuedAt = invoice['issued_at']?.toString() ?? '-';
+                      final item = controller.invoices[index];
+                      final invoice = item is Map<String, dynamic>
+                          ? item
+                          : <String, dynamic>{};
+                      final invoiceId = invoice['id'] as int?;
+                      final invoiceNumber =
+                          invoice['invoice_number']?.toString() ?? '-';
+                      final status = invoice['status']?.toString() ?? '-';
+                      final amountMinor =
+                          (invoice['amount_minor'] as num?)?.toDouble() ?? 0;
+                      final currency = invoice['currency']?.toString() ?? 'SAR';
+                      final issuedAt = invoice['issued_at']?.toString() ?? '-';
 
-                          return _BillingCard(
-                            title: invoiceNumber,
-                            subtitle:
-                                'الحالة: $status\nالمبلغ: ${(amountMinor / 100).toStringAsFixed(2)} $currency\nتاريخ الإصدار: $issuedAt',
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.visibility_outlined),
-                                  tooltip: 'عرض',
-                                  onPressed: invoiceId == null
-                                      ? () => _showInvoiceDetails(context, invoice)
-                                      : () => controller.previewInvoicePdf(
-                                          invoiceId: invoiceId,
-                                          invoiceNumber: invoiceNumber,
-                                        ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.download_outlined),
-                                  tooltip: 'تنزيل PDF',
-                                  onPressed: invoiceId == null
-                                      ? null
-                                      : () => controller.downloadInvoicePdf(invoiceId),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.share_outlined),
-                                  tooltip: 'مشاركة',
-                                  onPressed: invoiceId == null
-                                      ? null
-                                      : () => controller.shareInvoicePdfLink(invoiceId),
-                                ),
-                              ],
+                      return _BillingCard(
+                        title: invoiceNumber,
+                        subtitle:
+                            'الحالة: $status\nالمبلغ: ${(amountMinor / 100).toStringAsFixed(2)} $currency\nتاريخ الإصدار: $issuedAt',
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.visibility_outlined),
+                              tooltip: 'عرض',
+                              onPressed: invoiceId == null
+                                  ? () => _showInvoiceDetails(context, invoice)
+                                  : () => controller.previewInvoicePdf(
+                                      invoiceId: invoiceId,
+                                      invoiceNumber: invoiceNumber,
+                                    ),
                             ),
-                          );
-                        },
-                      ),
+                            IconButton(
+                              icon: const Icon(Icons.download_outlined),
+                              tooltip: 'تنزيل PDF',
+                              onPressed: invoiceId == null
+                                  ? null
+                                  : () => controller.downloadInvoicePdf(
+                                      invoiceId,
+                                    ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.share_outlined),
+                              tooltip: 'مشاركة',
+                              onPressed: invoiceId == null
+                                  ? null
+                                  : () => controller.shareInvoicePdfLink(
+                                      invoiceId,
+                                    ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -287,9 +295,15 @@ class _InvoicesTab extends StatelessWidget {
                       decoration: const InputDecoration(labelText: 'الحالة'),
                       items: const [
                         DropdownMenuItem(value: null, child: Text('الكل')),
-                        DropdownMenuItem(value: 'issued', child: Text('issued')),
+                        DropdownMenuItem(
+                          value: 'issued',
+                          child: Text('issued'),
+                        ),
                         DropdownMenuItem(value: 'paid', child: Text('paid')),
-                        DropdownMenuItem(value: 'failed', child: Text('failed')),
+                        DropdownMenuItem(
+                          value: 'failed',
+                          child: Text('failed'),
+                        ),
                       ],
                       onChanged: (v) => setStateSheet(() => status = v),
                     ),
@@ -347,18 +361,27 @@ class _InvoicesTab extends StatelessWidget {
                                 child: Text('تاريخ الإنشاء'),
                               ),
                             ],
-                            onChanged: (v) =>
-                                setStateSheet(() => sortField = v ?? 'issued_at'),
+                            onChanged: (v) => setStateSheet(
+                              () => sortField = v ?? 'issued_at',
+                            ),
                           ),
                         ),
                         SizedBox(width: width(10)),
                         Expanded(
                           child: DropdownButtonFormField<String>(
                             value: sortOrder,
-                            decoration: const InputDecoration(labelText: 'الاتجاه'),
+                            decoration: const InputDecoration(
+                              labelText: 'الاتجاه',
+                            ),
                             items: const [
-                              DropdownMenuItem(value: 'desc', child: Text('الأحدث')),
-                              DropdownMenuItem(value: 'asc', child: Text('الأقدم')),
+                              DropdownMenuItem(
+                                value: 'desc',
+                                child: Text('الأحدث'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'asc',
+                                child: Text('الأقدم'),
+                              ),
                             ],
                             onChanged: (v) =>
                                 setStateSheet(() => sortOrder = v ?? 'desc'),
@@ -486,53 +509,52 @@ class _PaymentsTab extends StatelessWidget {
                     ],
                   )
                 : controller.payments.isEmpty
-                    ? ListView(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        children: const [
-                          SizedBox(height: 140),
-                          Center(child: Text('لا توجد دفعات حتى الآن')),
-                        ],
-                      )
-                    : ListView.builder(
-                        controller: controller.paymentsScrollController,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: width(14),
-                          vertical: height(12),
-                        ),
-                        itemCount:
-                            controller.payments.length +
-                            (controller.isPaymentsLoadingMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index >= controller.payments.length) {
-                            return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 16),
-                              child: Center(child: CircularProgressIndicator()),
-                            );
-                          }
+                ? ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: const [
+                      SizedBox(height: 140),
+                      Center(child: Text('لا توجد دفعات حتى الآن')),
+                    ],
+                  )
+                : ListView.builder(
+                    controller: controller.paymentsScrollController,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: width(14),
+                      vertical: height(12),
+                    ),
+                    itemCount:
+                        controller.payments.length +
+                        (controller.isPaymentsLoadingMore ? 1 : 0),
+                    itemBuilder: (context, index) {
+                      if (index >= controller.payments.length) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
 
-                          final item = controller.payments[index];
-                          final payment = item is Map<String, dynamic>
-                              ? item
-                              : <String, dynamic>{};
-                          final merchantReference =
-                              payment['merchant_reference_id']?.toString() ?? '-';
-                          final gatewayStatus =
-                              payment['gateway_status']?.toString() ?? '-';
-                          final status = payment['status']?.toString() ?? '-';
-                          final amountMinor =
-                              (payment['amount_minor'] as num?)?.toDouble() ?? 0;
-                          final currency =
-                              payment['currency']?.toString() ?? 'SAR';
-                          final finalizedAt =
-                              payment['finalized_at']?.toString() ?? '-';
+                      final item = controller.payments[index];
+                      final payment = item is Map<String, dynamic>
+                          ? item
+                          : <String, dynamic>{};
+                      final merchantReference =
+                          payment['merchant_reference_id']?.toString() ?? '-';
+                      final gatewayStatus =
+                          payment['gateway_status']?.toString() ?? '-';
+                      final status = payment['status']?.toString() ?? '-';
+                      final amountMinor =
+                          (payment['amount_minor'] as num?)?.toDouble() ?? 0;
+                      final currency = payment['currency']?.toString() ?? 'SAR';
+                      final finalizedAt =
+                          payment['finalized_at']?.toString() ?? '-';
 
-                          return _BillingCard(
-                            title: 'Ref: $merchantReference',
-                            subtitle:
-                                'الحالة الداخلية: $status\nالحالة البنكية: $gatewayStatus\nالمبلغ: ${(amountMinor / 100).toStringAsFixed(2)} $currency\nأُغلقت: $finalizedAt',
-                          );
-                        },
-                      ),
+                      return _BillingCard(
+                        title: 'Ref: $merchantReference',
+                        subtitle:
+                            'الحالة الداخلية: $status\nالحالة البنكية: $gatewayStatus\nالمبلغ: ${(amountMinor / 100).toStringAsFixed(2)} $currency\nأُغلقت: $finalizedAt',
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -590,9 +612,15 @@ class _PaymentsTab extends StatelessWidget {
                       decoration: const InputDecoration(labelText: 'الحالة'),
                       items: const [
                         DropdownMenuItem(value: null, child: Text('الكل')),
-                        DropdownMenuItem(value: 'pending', child: Text('pending')),
+                        DropdownMenuItem(
+                          value: 'pending',
+                          child: Text('pending'),
+                        ),
                         DropdownMenuItem(value: 'paid', child: Text('paid')),
-                        DropdownMenuItem(value: 'failed', child: Text('failed')),
+                        DropdownMenuItem(
+                          value: 'failed',
+                          child: Text('failed'),
+                        ),
                       ],
                       onChanged: (v) => setStateSheet(() => status = v),
                     ),
@@ -659,10 +687,18 @@ class _PaymentsTab extends StatelessWidget {
                         Expanded(
                           child: DropdownButtonFormField<String>(
                             value: sortOrder,
-                            decoration: const InputDecoration(labelText: 'الاتجاه'),
+                            decoration: const InputDecoration(
+                              labelText: 'الاتجاه',
+                            ),
                             items: const [
-                              DropdownMenuItem(value: 'desc', child: Text('الأحدث')),
-                              DropdownMenuItem(value: 'asc', child: Text('الأقدم')),
+                              DropdownMenuItem(
+                                value: 'desc',
+                                child: Text('الأحدث'),
+                              ),
+                              DropdownMenuItem(
+                                value: 'asc',
+                                child: Text('الأقدم'),
+                              ),
                             ],
                             onChanged: (v) =>
                                 setStateSheet(() => sortOrder = v ?? 'desc'),

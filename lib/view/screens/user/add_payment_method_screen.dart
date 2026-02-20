@@ -269,11 +269,20 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
               ),
             ] else ...[
               Text(
-                'المبلغ الذي سيُخصم الآن: ${widget.plan?.price ?? '-'} SAR',
+                'المبلغ الذي سيُخصم الآن: ${widget.plan?.price ?? '-'} ر.س',
                 style: TextStyle(
                   color: scheme.primary,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
+                ),
+                textDirection: TextDirection.rtl,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'المبلغ شامل ضريبة القيمة المضافة 15%',
+                style: TextStyle(
+                  color: scheme.onSurface.withOpacity(0.7),
+                  fontSize: 12,
                 ),
                 textDirection: TextDirection.rtl,
               ),
