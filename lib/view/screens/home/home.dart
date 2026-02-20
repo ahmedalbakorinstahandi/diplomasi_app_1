@@ -118,7 +118,8 @@ class HomeScreen extends StatelessWidget {
                                           CrossAxisAlignment.start,
                                       children: [
                                         // Premium Banner
-                                        if (!isIos)
+                                        if (!isIos &&
+                                            controller.shouldShowPremiumBanner)
                                           PremiumBanner(
                                             onTap: () {
                                               Get.toNamed(AppRoutes.plans);

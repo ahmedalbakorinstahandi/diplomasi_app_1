@@ -11,4 +11,5 @@ abstract class StorageKeys {
   static String get levelId => 'level_id';
   static String get lessonAttemptId => 'lesson_attempt_id';
   static String get themeMode => 'theme_mode'; // system | light | dark
+  static String get subscriptionState => 'subscription_state';
 }

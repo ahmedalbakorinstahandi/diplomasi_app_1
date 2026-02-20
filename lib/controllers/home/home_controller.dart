@@ -5,6 +5,7 @@ import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/data/model/learning/level_model.dart';
 import 'package:diplomasi_app/data/model/user/certificate_model.dart';
 import 'package:diplomasi_app/data/resource/remote/learning/levels_data.dart';
+import 'package:diplomasi_app/data/resource/remote/user/billing_data.dart';
 import 'package:diplomasi_app/data/resource/remote/user/certificates_data.dart';
 import 'package:get/get.dart';
 
@@ -22,6 +23,7 @@ abstract class HomeController extends GetxController {
   int completedTracks = 0;
   double progressPercentage = 0.0;
   int userPoints = 10; // Default points
+  bool shouldShowPremiumBanner = true;
 
   Future<void> getLevelDetails();
   Future<void> getLevelTracks();
@@ -34,11 +36,77 @@ abstract class HomeController extends GetxController {
 }
 
 class HomeControllerImp extends HomeController {
+  final BillingData _billingData = BillingData();
+  bool _didBootstrapSubscriptionState = false;
+  bool _isBootstrappingSubscriptionState = false;
+
   @override
   void onInit() {
+    _applyBannerStateFromCache();
+    _bootstrapSubscriptionState();
     getLevels();
     getLevelTracks();
     super.onInit();
+  }
+
+  Map<String, dynamic>? get _cachedSubscriptionSnapshot =>
+      Shared.getMapValueOrNull(StorageKeys.subscriptionState);
+
+  bool get _isCachedActiveSubscription {
+    final cached = _cachedSubscriptionSnapshot;
+    if (cached == null) return false;
+    final status = (cached['status'] ?? '').toString().toLowerCase();
+    return status == 'active' || status == 'past_due';
+  }
+
+  bool get _shouldFetchSubscriptionOnAppOpen {
+    final cached = _cachedSubscriptionSnapshot;
+    if (cached == null) return true;
+    final status = (cached['status'] ?? '').toString().toLowerCase();
+    return status != 'active';
+  }
+
+  void _applyBannerStateFromCache() {
+    shouldShowPremiumBanner = !_isCachedActiveSubscription;
+  }
+
+  void _persistSubscriptionSnapshot(Map<String, dynamic>? subscription) {
+    final status = (subscription?['status'] ?? 'none').toString().toLowerCase();
+    final normalizedStatus = status.isEmpty ? 'none' : status;
+    Shared.setValue(StorageKeys.subscriptionState, {
+      'has_subscription': subscription != null,
+      'status': normalizedStatus,
+      'plan_id': subscription?['plan_id'],
+      'end_date': subscription?['end_date'],
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Future<void> _bootstrapSubscriptionState() async {
+    if (_didBootstrapSubscriptionState || _isBootstrappingSubscriptionState) return;
+    _didBootstrapSubscriptionState = true;
+
+    if (!_shouldFetchSubscriptionOnAppOpen) {
+      update();
+      return;
+    }
+
+    _isBootstrappingSubscriptionState = true;
+    try {
+      final response = await _billingData.getCurrentSubscription();
+      if (response.isSuccess) {
+        final subscription = response.data is Map<String, dynamic>
+            ? response.data as Map<String, dynamic>
+            : null;
+        _persistSubscriptionSnapshot(subscription);
+      } else if (response.statusCode == 404) {
+        _persistSubscriptionSnapshot(null);
+      }
+      _applyBannerStateFromCache();
+      update();
+    } finally {
+      _isBootstrappingSubscriptionState = false;
+    }
   }
 
   @override

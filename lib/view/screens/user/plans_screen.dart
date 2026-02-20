@@ -1,5 +1,6 @@
 import 'package:diplomasi_app/core/classes/handling_data_view.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
+import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/core/widgets/custom_scaffold.dart';
 import 'package:diplomasi_app/controllers/user/plans_controller.dart';
@@ -124,9 +125,13 @@ class PlansScreen extends StatelessWidget {
                                   final isFeatured = planModel.isPremium;
                                   final isCurrentPlan = controller
                                       .isCurrentPlan(planModel);
+                                  final currentSubscriptionEnd = DateTime.tryParse(
+                                    (controller.currentSubscription?['end_date'] ?? '')
+                                        .toString(),
+                                  );
                                   final purchaseBlocked =
                                       controller
-                                          .hasBlockingActiveSubscription &&
+                                          .hasBlockingCurrentSubscription &&
                                       !isCurrentPlan;
 
                                   return PlanCard(
@@ -138,15 +143,29 @@ class PlansScreen extends StatelessWidget {
                                         ? 'لديك خطة مفعلة'
                                         : 'شراء الآن',
                                     actionEnabled:
-                                        !isCurrentPlan && !purchaseBlocked,
+                                        !isCurrentPlan &&
+                                        !purchaseBlocked &&
+                                        !controller.isPurchaseFlowInProgress,
                                     isActionLoading:
-                                        controller.isActionLoading &&
-                                        controller.actionPlanId == planModel.id,
+                                        (controller.isActionLoading &&
+                                            controller.actionPlanId == planModel.id) ||
+                                        (controller.isPurchaseFlowInProgress &&
+                                            controller.purchaseFlowPlanId == planModel.id),
                                     managementWidget: isCurrentPlan
                                         ? _buildCurrentPlanManagement(
                                             context,
                                             controller,
                                           )
+                                        : null,
+                                    countdownTarget: isCurrentPlan
+                                        ? currentSubscriptionEnd
+                                        : null,
+                                    onCountdownFinished: isCurrentPlan
+                                        ? () {
+                                            if (!controller.isBillingLoading) {
+                                              controller.loadBillingState();
+                                            }
+                                          }
                                         : null,
                                     onActionTap: () async {
                                       if (isCurrentPlan || purchaseBlocked) {
@@ -181,6 +200,8 @@ class PlansScreen extends StatelessWidget {
     PlansControllerImp controller,
     PlanModel plan,
   ) async {
+    if (controller.isPurchaseFlowInProgress) return;
+
     final confirm = await Get.dialog<bool>(
       AlertDialog(
         title: const Text('تأكيد الشراء'),
@@ -200,20 +221,48 @@ class PlansScreen extends StatelessWidget {
 
     if (confirm != true) return;
 
-    await controller.loadBillingState();
+    controller.isPurchaseFlowInProgress = true;
+    controller.purchaseFlowPlanId = plan.id;
+    controller.update();
 
-    if (controller.hasActiveDefaultMethod) {
-      await controller.purchasePlan(plan);
-      return;
+    try {
+      await _refreshBillingState(controller);
+      if (controller.hasBlockingCurrentSubscription &&
+          !controller.isCurrentPlan(plan)) {
+        customSnackBar(
+          text: 'لا يمكنك شراء باقة جديدة قبل انتهاء/معالجة اشتراكك الحالي.',
+          snackType: SnackBarType.info,
+        );
+        return;
+      }
+
+      if (controller.hasActiveDefaultMethod) {
+        await controller.purchasePlan(plan);
+        return;
+      }
+
+      final completed = await Get.to<bool>(
+        () => AddPaymentMethodScreen(
+          mode: AddPaymentMethodMode.purchasePlan,
+          plan: plan,
+        ),
+      );
+      if (completed == true) {
+        await _refreshBillingState(controller);
+      }
+    } finally {
+      controller.isPurchaseFlowInProgress = false;
+      controller.purchaseFlowPlanId = null;
+      controller.update();
     }
+  }
 
-    final completed = await Get.to<bool>(
-      () => AddPaymentMethodScreen(
-        mode: AddPaymentMethodMode.purchasePlan,
-        plan: plan,
-      ),
-    );
-    if (completed == true) {
+  Future<void> _refreshBillingState(PlansControllerImp controller) async {
+    await controller.loadBillingState();
+    // A short bounded re-check avoids stale card actions right after checkout return.
+    for (var i = 0; i < 2; i++) {
+      if (controller.hasBlockingCurrentSubscription) break;
+      await Future.delayed(const Duration(milliseconds: 600));
       await controller.loadBillingState();
     }
   }

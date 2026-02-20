@@ -45,6 +45,28 @@ class Shared extends GetxController {
     return json.decode(value) ?? {};
   }
 
+  static Map<String, dynamic>? getMapValueOrNull(key) {
+    final value = myServices.sharedPreferences.get(key);
+    if (value == null) return null;
+
+    if (value is Map<String, dynamic>) {
+      return value;
+    }
+
+    if (value is String && value.isNotEmpty) {
+      try {
+        final decoded = json.decode(value);
+        if (decoded is Map<String, dynamic>) {
+          return decoded;
+        }
+      } catch (_) {
+        return null;
+      }
+    }
+
+    return null;
+  }
+
   static getListValue(key) {
     String value = myServices.sharedPreferences.get(key).toString();
 

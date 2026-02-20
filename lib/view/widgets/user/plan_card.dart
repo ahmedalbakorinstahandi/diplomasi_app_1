@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/constants/assets.dart';
@@ -14,6 +16,8 @@ class PlanCard extends StatelessWidget {
   final bool actionEnabled;
   final bool isActionLoading;
   final Widget? managementWidget;
+  final DateTime? countdownTarget;
+  final VoidCallback? onCountdownFinished;
 
   const PlanCard({
     super.key,
@@ -24,6 +28,8 @@ class PlanCard extends StatelessWidget {
     this.actionEnabled = false,
     this.isActionLoading = false,
     this.managementWidget,
+    this.countdownTarget,
+    this.onCountdownFinished,
   });
 
   @override
@@ -265,6 +271,14 @@ class PlanCard extends StatelessWidget {
 
                 SizedBox(height: height(24)),
 
+                if (countdownTarget != null) ...[
+                  _AdaptivePlanCountdown(
+                    target: countdownTarget!,
+                    onFinished: onCountdownFinished,
+                  ),
+                  SizedBox(height: height(12)),
+                ],
+
                 if (managementWidget != null) ...[
                   managementWidget!,
                   SizedBox(height: height(12)),
@@ -356,4 +370,199 @@ class PlanCard extends StatelessWidget {
       ),
     ));
   }
+}
+
+class _AdaptivePlanCountdown extends StatefulWidget {
+  final DateTime target;
+  final VoidCallback? onFinished;
+
+  const _AdaptivePlanCountdown({required this.target, this.onFinished});
+
+  @override
+  State<_AdaptivePlanCountdown> createState() => _AdaptivePlanCountdownState();
+}
+
+class _AdaptivePlanCountdownState extends State<_AdaptivePlanCountdown> {
+  Timer? _timer;
+  late DateTime _now;
+  bool _finishNotified = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _now = DateTime.now();
+    _startTimer();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AdaptivePlanCountdown oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.target != widget.target) {
+      _finishNotified = false;
+      _now = DateTime.now();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() {
+        _now = DateTime.now();
+      });
+      _maybeNotifyFinished();
+    });
+  }
+
+  void _maybeNotifyFinished() {
+    if (_finishNotified) return;
+    if (widget.target.isAfter(_now)) return;
+    _finishNotified = true;
+    widget.onFinished?.call();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.appColors;
+    final scheme = Theme.of(context).colorScheme;
+    final remaining = widget.target.difference(_now);
+    final ended = remaining.inSeconds <= 0;
+    final segments = ended ? const <_TimeSegment>[] : _buildSegments(remaining);
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: width(12), vertical: height(10)),
+      decoration: BoxDecoration(
+        color: scheme.primary.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: scheme.primary.withOpacity(0.22)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'الوقت المتبقي',
+            style: TextStyle(
+              fontSize: emp(12),
+              fontWeight: FontWeight.w700,
+              color: scheme.onSurface,
+            ),
+            textDirection: TextDirection.rtl,
+          ),
+          SizedBox(height: height(8)),
+          if (ended)
+            Text(
+              'انتهت المدة',
+              style: TextStyle(
+                fontSize: emp(13),
+                fontWeight: FontWeight.w700,
+                color: colors.error,
+              ),
+              textDirection: TextDirection.rtl,
+            )
+          else
+            Wrap(
+              spacing: width(8),
+              runSpacing: height(8),
+              children: segments
+                  .map(
+                    (segment) => Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: width(10),
+                        vertical: height(6),
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.surfaceCard,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: scheme.primary.withOpacity(0.2)),
+                      ),
+                      child: Text(
+                        '${segment.value} ${segment.label}',
+                        style: TextStyle(
+                          fontSize: emp(12),
+                          fontWeight: FontWeight.w600,
+                          color: scheme.onSurface,
+                        ),
+                        textDirection: TextDirection.rtl,
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  List<_TimeSegment> _buildSegments(Duration remaining) {
+    final days = remaining.inDays;
+    final hours = remaining.inHours;
+    final minutes = remaining.inMinutes;
+    final seconds = remaining.inSeconds;
+
+    if (days >= 365) {
+      final years = days ~/ 365;
+      final months = (days % 365) ~/ 30;
+      final remDays = (days % 365) % 30;
+      return [
+        _TimeSegment(years, 'سنة'),
+        _TimeSegment(months, 'شهر'),
+        _TimeSegment(remDays, 'يوم'),
+      ];
+    }
+
+    if (days >= 30) {
+      final months = days ~/ 30;
+      final remDays = days % 30;
+      final remHours = hours % 24;
+      return [
+        _TimeSegment(months, 'شهر'),
+        _TimeSegment(remDays, 'يوم'),
+        _TimeSegment(remHours, 'ساعة'),
+      ];
+    }
+
+    if (days >= 1) {
+      final remHours = hours % 24;
+      final remMinutes = minutes % 60;
+      return [
+        _TimeSegment(days, 'يوم'),
+        _TimeSegment(remHours, 'ساعة'),
+        _TimeSegment(remMinutes, 'دقيقة'),
+      ];
+    }
+
+    if (hours >= 1) {
+      final remMinutes = minutes % 60;
+      final remSeconds = seconds % 60;
+      return [
+        _TimeSegment(hours, 'ساعة'),
+        _TimeSegment(remMinutes, 'دقيقة'),
+        _TimeSegment(remSeconds, 'ثانية'),
+      ];
+    }
+
+    if (minutes >= 1) {
+      final remSeconds = seconds % 60;
+      return [
+        _TimeSegment(minutes, 'دقيقة'),
+        _TimeSegment(remSeconds, 'ثانية'),
+      ];
+    }
+
+    return [_TimeSegment(seconds, 'ثانية')];
+  }
+}
+
+class _TimeSegment {
+  final int value;
+  final String label;
+
+  const _TimeSegment(this.value, this.label);
 }

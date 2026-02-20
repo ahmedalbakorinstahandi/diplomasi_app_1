@@ -1,4 +1,6 @@
 import 'package:diplomasi_app/core/classes/api_response.dart';
+import 'package:diplomasi_app/core/classes/shared_preferences.dart';
+import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/data/model/user/plan_model.dart';
 import 'package:diplomasi_app/data/resource/remote/user/billing_data.dart';
@@ -18,6 +20,8 @@ abstract class PlansController extends GetxController {
   String? retryStatusMessage;
   String retryStatusType = 'none';
   int? actionPlanId;
+  int? purchaseFlowPlanId;
+  bool isPurchaseFlowInProgress = false;
   List<Map<String, dynamic>> paymentMethods = [];
   int? defaultPaymentMethodId;
 
@@ -33,6 +37,7 @@ abstract class PlansController extends GetxController {
   Future<bool> setDefaultPaymentMethod(int id);
   Future<bool> deletePaymentMethod(int id);
   bool isCurrentPlan(PlanModel plan);
+  bool get hasBlockingCurrentSubscription;
 }
 
 class PlansControllerImp extends PlansController {
@@ -89,6 +94,7 @@ class PlansControllerImp extends PlansController {
       // No active subscription is a valid state.
       currentSubscription = null;
     }
+    _persistSubscriptionSnapshot();
 
     hasPaymentMethod = false;
     hasDefaultPaymentMethod = false;
@@ -392,12 +398,44 @@ class PlansControllerImp extends PlansController {
   bool get hasBlockingActiveSubscription {
     if (currentSubscription == null) return false;
     final status = (currentSubscription?['status'] ?? '').toString().toLowerCase();
+    if (status == 'past_due') return true;
     if (status != 'active') return false;
 
     final endDate = DateTime.tryParse((currentSubscription?['end_date'] ?? '').toString());
     if (endDate == null) return true;
 
     return !endDate.isBefore(DateTime.now());
+  }
+
+  @override
+  bool get hasBlockingCurrentSubscription => hasBlockingActiveSubscription;
+
+  void _persistSubscriptionSnapshot() {
+    final status = (currentSubscription?['status'] ?? 'none').toString().toLowerCase();
+    final normalizedStatus = status.isEmpty ? 'none' : status;
+    Shared.setValue(StorageKeys.subscriptionState, {
+      'has_subscription': currentSubscription != null,
+      'status': normalizedStatus,
+      'plan_id': currentSubscription?['plan_id'],
+      'end_date': currentSubscription?['end_date'],
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+  }
+
+  Map<String, dynamic>? get cachedSubscriptionSnapshot =>
+      Shared.getMapValueOrNull(StorageKeys.subscriptionState);
+
+  bool get isCachedActiveSubscription {
+    final cached = cachedSubscriptionSnapshot;
+    if (cached == null) return false;
+    return (cached['status'] ?? '').toString().toLowerCase() == 'active';
+  }
+
+  bool get shouldFetchSubscriptionOnAppOpen {
+    final cached = cachedSubscriptionSnapshot;
+    if (cached == null) return true;
+    final status = (cached['status'] ?? '').toString().toLowerCase();
+    return status != 'active';
   }
 
   @override
