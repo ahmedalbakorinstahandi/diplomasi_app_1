@@ -59,10 +59,10 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAseLz8UM94my5LaQWbEWfhiDwLmdhsU6c',
-    appId: '1:470518614812:ios:a13e6eeb10bc5c4a4288d9',
+    appId: '1:470518614812:ios:b665e5d2c346987f4288d9',
     messagingSenderId: '470518614812',
     projectId: 'diplomasi-18e18',
     storageBucket: 'diplomasi-18e18.firebasestorage.app',
-    iosBundleId: 'com.example.diplomasiApp',
+    iosBundleId: 'com.diplomasi.app',
   );
 }
