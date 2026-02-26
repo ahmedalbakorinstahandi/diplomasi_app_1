@@ -35,6 +35,6 @@ bool get isDarkMode {
   return Theme.of(Get.context!).brightness == Brightness.dark;
 }
 
-bool get isIos {
-  return Platform.isIOS && false;
+bool get isVisible {
+  return !Platform.isIOS || (getUserData()?.approved ?? 0) == 1;
 }

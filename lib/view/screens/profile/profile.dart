@@ -110,7 +110,7 @@ class ProfileScreen extends StatelessWidget {
                                     Get.toNamed(AppRoutes.articles);
                                   },
                                 ),
-                                if (!isIos)
+                                if (isVisible)
                                   ProfileItem(
                                     title: 'الباقات',
                                     icon: Assets.icons.svg.subscriptions,

@@ -10,6 +10,8 @@ class UserModel {
   final String address;
   final String language;
   final String status;
+  //approved
+  final int approved;
   final String createdAt;
   final String updatedAt;
   final List<Role>? roles;
@@ -27,6 +29,7 @@ class UserModel {
     required this.address,
     required this.language,
     required this.status,
+    required this.approved,
     required this.createdAt,
     required this.updatedAt,
     this.roles,
@@ -46,6 +49,7 @@ class UserModel {
       address: json['address'] ?? '',
       language: json['language'],
       status: json['status'] ?? "",
+      approved: json['approved'] ?? 0,
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
       roles: json['roles'] != null
