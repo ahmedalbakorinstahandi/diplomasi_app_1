@@ -11,7 +11,7 @@ class UserModel {
   final String language;
   final String status;
   //approved
-  final int approved;
+  final bool approved;
   final String createdAt;
   final String updatedAt;
   final List<Role>? roles;
@@ -49,7 +49,7 @@ class UserModel {
       address: json['address'] ?? '',
       language: json['language'],
       status: json['status'] ?? "",
-      approved: json['approved'] ?? 0,
+      approved: json['approved'] ?? false,
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
       roles: json['roles'] != null
