@@ -36,5 +36,5 @@ bool get isDarkMode {
 }
 
 bool get isVisible {
-  return !Platform.isIOS || (getUserData()?.approved ?? 0) == 1;
+  return !Platform.isIOS || (getUserData()?.approved ?? false);
 }

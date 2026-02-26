@@ -118,13 +118,14 @@ class ProfileScreen extends StatelessWidget {
                                       Get.toNamed(AppRoutes.plans);
                                     },
                                   ),
-                                ProfileItem(
-                                  title: 'الفواتير والمدفوعات',
-                                  icon: Assets.icons.svg.fileEdit,
-                                  onTap: () {
-                                    Get.toNamed(AppRoutes.billingHistory);
-                                  },
-                                ),
+                                if (isVisible)
+                                  ProfileItem(
+                                    title: 'الفواتير والمدفوعات',
+                                    icon: Assets.icons.svg.fileEdit,
+                                    onTap: () {
+                                      Get.toNamed(AppRoutes.billingHistory);
+                                    },
+                                  ),
                                 ProfileItem(
                                   title: 'مكتبة الفيديوهات',
                                   icon: Assets.icons.svg.languageCircle,
