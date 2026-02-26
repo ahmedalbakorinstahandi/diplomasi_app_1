@@ -36,5 +36,5 @@ bool get isDarkMode {
 }
 
 bool get isIos {
-  return Platform.isIOS && true;
+  return Platform.isIOS && false;
 }
