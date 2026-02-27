@@ -37,7 +37,7 @@ class ScenarioCard extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        final cardWidth = screenWidth * 0.35; // 35% of screen width
+        final cardWidth = screenWidth * 0.45; // 35% of screen width
 
         return Stack(
           clipBehavior: Clip.none,
@@ -107,7 +107,9 @@ class ScenarioCard extends StatelessWidget {
                               // Scenario title
                               Expanded(
                                 child: Text(
-                                  scenario.title,
+                                  scenario.title.length > 30
+                                      ? '${scenario.title.substring(0, 30)}...'
+                                      : scenario.title,
                                   style: TextStyle(
                                     fontSize: width(15),
                                     fontWeight: FontWeight.w600,

@@ -40,7 +40,7 @@ class LessonCard extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        final cardWidth = screenWidth * 0.35; // 35% of screen width
+        final cardWidth = screenWidth * 0.45; // 35% of screen width
 
         return Align(
           alignment: isRightAligned
@@ -90,7 +90,9 @@ class LessonCard extends StatelessWidget {
                           // Lesson title
                           Expanded(
                             child: Text(
-                              lesson.title,
+                              lesson.title.length > 30
+                                  ? '${lesson.title.substring(0, 30)}...'
+                                  : lesson.title,
                               style: TextStyle(
                                 fontSize: width(15),
                                 fontWeight: FontWeight.w600,

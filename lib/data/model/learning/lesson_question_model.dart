@@ -12,6 +12,10 @@ class LessonQuestionModel {
   final double score;
   final int orderIndex;
   final List<LessonQuestionOptionModel> options;
+  /// For match questions: column (أ) when provided by API
+  final List<LessonQuestionOptionModel>? leftOptions;
+  /// For match questions: column (ب) when provided by API
+  final List<LessonQuestionOptionModel>? rightOptions;
   final String? status; // 'not_answered' | 'answered' | 'current'
   final LessonAnswerModel? userAnswer;
 
@@ -25,11 +29,26 @@ class LessonQuestionModel {
     required this.score,
     required this.orderIndex,
     required this.options,
+    this.leftOptions,
+    this.rightOptions,
     this.status,
     this.userAnswer,
   });
 
   factory LessonQuestionModel.fromJson(Map<String, dynamic> json) {
+    List<LessonQuestionOptionModel>? parseOptions(String? key) {
+      if (json[key] == null) return null;
+      final list = json[key] as List<dynamic>?;
+      if (list == null || list.isEmpty) return null;
+      return list
+          .map(
+            (e) => LessonQuestionOptionModel.fromJson(
+              e as Map<String, dynamic>,
+            ),
+          )
+          .toList();
+    }
+
     return LessonQuestionModel(
       id: json['id'] as int,
       lessonId: json['lesson_id'] as int? ?? 0,
@@ -52,6 +71,8 @@ class LessonQuestionModel {
                 )
                 .toList()
           : [],
+      leftOptions: parseOptions('left_options'),
+      rightOptions: parseOptions('right_options'),
       status: json['status'] as String?,
       userAnswer: json['user_answer'] != null
           ? LessonAnswerModel.fromJson(
@@ -72,6 +93,8 @@ class LessonQuestionModel {
       'score': score,
       'order_index': orderIndex,
       'options': options.map((e) => e.toJson()).toList(),
+      if (leftOptions != null) 'left_options': leftOptions!.map((e) => e.toJson()).toList(),
+      if (rightOptions != null) 'right_options': rightOptions!.map((e) => e.toJson()).toList(),
       'status': status,
       'user_answer': userAnswer?.toJson(),
     };

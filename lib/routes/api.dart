@@ -1,8 +1,9 @@
 final class EndPoints {
   const EndPoints._();
 
-  static const String baseApi =
-      'https://diplomasi-backend.ahmed-albakor.com/api/v1';
+  // static const String baseApi =
+  //     'https://diplomasi-backend.ahmed-albakor.com/api/v1';
+  static const String baseApi = 'https://backend.diplomasi.app/api/v1';
 
   static String login = "$baseApi/auth/login";
   static String register = "$baseApi/auth/register";

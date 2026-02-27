@@ -25,18 +25,17 @@ class _MatchQuestionState extends State<MatchQuestion> {
   int? selectedLeftOptionId;
   bool isLoading = false;
 
+  /// ألوان واضحة ومختلفة تماماً لكل زوج اختيار (حتى يُميّز المستخدم بين أزواج التحديد)
   List<Color> _matchPalette(BuildContext context) {
-    final colors = context.appColors;
-    final scheme = Theme.of(context).colorScheme;
     return [
-      scheme.primary,
-      scheme.secondary,
-      scheme.tertiary,
-      colors.info,
-      colors.success,
-      colors.warning,
-      colors.highlight,
-      scheme.error,
+      const Color(0xFF1976D2), // أزرق
+      const Color(0xFFE65100), // برتقالي غامق
+      const Color(0xFF2E7D32), // أخضر
+      const Color(0xFFC62828), // أحمر
+      const Color(0xFF6A1B9A), // بنفسجي
+      const Color(0xFF00838F), // تركواز
+      const Color(0xFFF9A825), // كهرماني
+      const Color(0xFF283593), // نيلي
     ];
   }
 
@@ -64,18 +63,20 @@ class _MatchQuestionState extends State<MatchQuestion> {
     final scheme = Theme.of(context).colorScheme;
     final isAnswered = widget.question.userAnswer != null;
 
-    // Separate left and right options
-    final leftOptions = <LessonQuestionOptionModel>[];
-    final rightOptions = <LessonQuestionOptionModel>[];
-
-    // Group options by pair_key or assume first half is left, second half is right
-    final half = widget.question.options.length ~/ 2;
-    for (int i = 0; i < widget.question.options.length; i++) {
-      if (i < half) {
-        leftOptions.add(widget.question.options[i]);
-      } else {
-        rightOptions.add(widget.question.options[i]);
-      }
+    // Use API left/right columns when provided; otherwise fallback to splitting options in half
+    final List<LessonQuestionOptionModel> leftOptions;
+    final List<LessonQuestionOptionModel> rightOptions;
+    final leftProvided = widget.question.leftOptions != null &&
+        widget.question.leftOptions!.isNotEmpty &&
+        widget.question.rightOptions != null &&
+        widget.question.rightOptions!.isNotEmpty;
+    if (leftProvided) {
+      leftOptions = widget.question.leftOptions!;
+      rightOptions = widget.question.rightOptions!;
+    } else {
+      final half = widget.question.options.length ~/ 2;
+      leftOptions = widget.question.options.take(half).toList();
+      rightOptions = widget.question.options.skip(half).toList();
     }
 
     return QuestionCard(
@@ -84,7 +85,9 @@ class _MatchQuestionState extends State<MatchQuestion> {
         children: [
           // Instruction
           Text(
-            'صل بين العناصر',
+            widget.question.questionText.trim().isNotEmpty
+                ? widget.question.questionText
+                : 'صل بين العناصر',
             style: TextStyle(
               fontSize: emp(18),
               fontWeight: FontWeight.w600,
@@ -94,204 +97,178 @@ class _MatchQuestionState extends State<MatchQuestion> {
 
           SizedBox(height: height(24)),
 
-          // Match grid
-          Row(
-            children: [
-              // Left column
-              Expanded(
-                child: Column(
-                  children: leftOptions.map((leftOption) {
-                    final isSelected = selectedLeftOptionId == leftOption.id;
-                    final matchedRightId = selectedMatches[leftOption.id];
-                    final isMatched = matchedRightId != null;
-                    final matchColor = isMatched
-                        ? getMatchColor(context, leftOption.id)
-                        : (isSelected
-                              ? getColorForNewSelection(context)
-                              : scheme.primary);
+          // Match grid: صف واحد لكل زوج حتى يكون العمودان موازيين (أ فوق ب)
+          Column(
+            children: List.generate(leftOptions.length, (i) {
+              if (i >= rightOptions.length) return const SizedBox.shrink();
+              final leftOption = leftOptions[i];
+              final rightOption = rightOptions[i];
+              final isSelectedLeft = selectedLeftOptionId == leftOption.id;
+              final matchedRightId = selectedMatches[leftOption.id];
+              final isMatchedLeft = matchedRightId != null;
+              int? matchedLeftId;
+              selectedMatches.forEach((leftId, rightId) {
+                if (rightId == rightOption.id) matchedLeftId = leftId;
+              });
+              final isMatchedRight = matchedLeftId != null;
+              final isSelectedRight = selectedLeftOptionId != null &&
+                  selectedMatches[selectedLeftOptionId] == rightOption.id;
 
-                    Color borderColor = colors.border;
-                    Color backgroundColor = colors.surfaceCard;
+              // لون الخلية اليسرى: حسب الزوج الذي يشمله (إن وُجد)
+              final Color leftCellColor = isMatchedLeft
+                  ? getMatchColor(context, leftOption.id)
+                  : (isSelectedLeft ? getColorForNewSelection(context) : scheme.primary);
+              // لون الخلية اليمنى: حسب الزوج الذي يشمله (نفس لون الشريك الأيسر)، وليس لون الصف
+              final Color rightCellColor = isMatchedRight && matchedLeftId != null
+                  ? getMatchColor(context, matchedLeftId!)
+                  : (isSelectedRight ? getColorForNewSelection(context) : scheme.primary);
 
-                    if (isAnswered) {
-                      // Check if this match was correct
-                      AnswerMatch? userMatch;
-                      if (widget.question.userAnswer?.matches != null) {
-                        try {
-                          userMatch = widget.question.userAnswer!.matches!
-                              .firstWhere(
-                                (m) => m.leftOptionId == leftOption.id,
-                              );
-                        } catch (e) {
-                          userMatch = null;
-                        }
-                      }
-                      if (userMatch != null) {
-                        if (userMatch.isCorrect) {
-                          borderColor = colors.success;
-                          backgroundColor = colors.success.withOpacity(0.12);
-                        } else {
-                          borderColor = scheme.error;
-                          backgroundColor = scheme.error.withOpacity(0.12);
-                        }
-                      }
-                    } else if (isSelected) {
-                      borderColor = matchColor;
-                      backgroundColor = matchColor.withOpacity(0.2);
-                    } else if (isMatched) {
-                      borderColor = matchColor;
-                      backgroundColor = matchColor.withOpacity(0.1);
-                    }
+              Color leftBorder = colors.border;
+              Color leftBg = colors.surfaceCard;
+              Color rightBorder = colors.border;
+              Color rightBg = colors.surfaceCard;
 
-                    return GestureDetector(
-                      onTap: isAnswered
-                          ? null
-                          : () {
-                              setState(() {
-                                if (isMatched) {
-                                  // Remove the match if clicking on a matched option
-                                  selectedMatches.remove(leftOption.id);
-                                  if (selectedLeftOptionId == leftOption.id) {
-                                    selectedLeftOptionId = null;
-                                  }
-                                } else if (isSelected) {
-                                  selectedLeftOptionId = null;
-                                } else {
-                                  selectedLeftOptionId = leftOption.id;
-                                }
-                              });
-                            },
-                      child: Container(
-                        margin: EdgeInsets.only(bottom: height(12)),
-                        padding: EdgeInsets.all(width(12)),
-                        decoration: BoxDecoration(
-                          color: backgroundColor,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: borderColor, width: 2),
-                        ),
-                        child: Text(
-                          leftOption.optionText,
-                          style: TextStyle(
-                            fontSize: emp(14),
-                            color: scheme.onSurface,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
+              if (isAnswered) {
+                AnswerMatch? userMatchLeft;
+                AnswerMatch? userMatchRight;
+                if (widget.question.userAnswer?.matches != null) {
+                  try {
+                    userMatchLeft = widget.question.userAnswer!.matches!
+                        .firstWhere((m) => m.leftOptionId == leftOption.id);
+                  } catch (_) {}
+                  try {
+                    userMatchRight = widget.question.userAnswer!.matches!
+                        .firstWhere((m) => m.rightOptionId == rightOption.id);
+                  } catch (_) {}
+                }
+                if (userMatchLeft != null) {
+                  if (userMatchLeft.isCorrect) {
+                    leftBorder = colors.success;
+                    leftBg = colors.success.withOpacity(0.12);
+                  } else {
+                    leftBorder = scheme.error;
+                    leftBg = scheme.error.withOpacity(0.12);
+                  }
+                }
+                if (userMatchRight != null) {
+                  if (userMatchRight.isCorrect) {
+                    rightBorder = colors.success;
+                    rightBg = colors.success.withOpacity(0.12);
+                  } else {
+                    rightBorder = scheme.error;
+                    rightBg = scheme.error.withOpacity(0.12);
+                  }
+                }
+              } else {
+                if (isSelectedLeft || isMatchedLeft) {
+                  leftBorder = leftCellColor;
+                  leftBg = isSelectedLeft
+                      ? leftCellColor.withOpacity(0.2)
+                      : leftCellColor.withOpacity(0.1);
+                }
+                if (isSelectedRight || isMatchedRight) {
+                  rightBorder = rightCellColor;
+                  rightBg = isSelectedRight
+                      ? rightCellColor.withOpacity(0.2)
+                      : rightCellColor.withOpacity(0.1);
+                }
+              }
 
-              SizedBox(width: width(16)),
-
-              // Right column
-              Expanded(
-                child: Column(
-                  children: rightOptions.map((rightOption) {
-                    // Find which left option is matched to this right option
-                    int? matchedLeftId;
-                    selectedMatches.forEach((leftId, rightId) {
-                      if (rightId == rightOption.id) {
-                        matchedLeftId = leftId;
-                      }
-                    });
-
-                    final isMatched = matchedLeftId != null;
-                    final isSelected =
-                        selectedLeftOptionId != null &&
-                        selectedMatches[selectedLeftOptionId] == rightOption.id;
-                    final matchColor = isMatched && matchedLeftId != null
-                        ? getMatchColor(context, matchedLeftId!)
-                        : scheme.primary;
-
-                    Color borderColor = colors.border;
-                    Color backgroundColor = colors.surfaceCard;
-
-                    if (isAnswered) {
-                      // Check if this match was correct
-                      AnswerMatch? userMatch;
-                      if (widget.question.userAnswer?.matches != null) {
-                        try {
-                          userMatch = widget.question.userAnswer!.matches!
-                              .firstWhere(
-                                (m) => m.rightOptionId == rightOption.id,
-                              );
-                        } catch (e) {
-                          userMatch = null;
-                        }
-                      }
-                      if (userMatch != null) {
-                        if (userMatch.isCorrect) {
-                          borderColor = colors.success;
-                          backgroundColor = colors.success.withOpacity(0.12);
-                        } else {
-                          borderColor = scheme.error;
-                          backgroundColor = scheme.error.withOpacity(0.12);
-                        }
-                      }
-                    } else if (isSelected) {
-                      // Only show highlight when this right option is matched to the selected left option
-                      final selectedMatchColor = selectedLeftOptionId != null
-                          ? getColorForNewSelection(context)
-                          : scheme.primary;
-                      borderColor = selectedMatchColor;
-                      backgroundColor = selectedMatchColor.withOpacity(0.2);
-                    } else if (isMatched) {
-                      borderColor = matchColor;
-                      backgroundColor = matchColor.withOpacity(0.1);
-                    }
-
-                    return GestureDetector(
-                      onTap: isAnswered
-                          ? null
-                          : () {
-                              setState(() {
-                                if (isMatched && matchedLeftId != null) {
-                                  // Remove the match if clicking on a matched option
-                                  selectedMatches.remove(matchedLeftId);
-                                  if (selectedLeftOptionId == matchedLeftId) {
-                                    selectedLeftOptionId = null;
-                                  }
-                                } else if (selectedLeftOptionId != null) {
-                                  // Check if this right option is already matched to another left
-                                  int? existingLeftId;
-                                  selectedMatches.forEach((leftId, rightId) {
-                                    if (rightId == rightOption.id) {
-                                      existingLeftId = leftId;
+              return Padding(
+                padding: EdgeInsets.only(bottom: height(12)),
+                child: IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: isAnswered
+                              ? null
+                              : () {
+                                  setState(() {
+                                    if (isMatchedLeft) {
+                                      selectedMatches.remove(leftOption.id);
+                                      if (selectedLeftOptionId == leftOption.id) {
+                                        selectedLeftOptionId = null;
+                                      }
+                                    } else if (isSelectedLeft) {
+                                      selectedLeftOptionId = null;
+                                    } else {
+                                      selectedLeftOptionId = leftOption.id;
                                     }
                                   });
-                                  if (existingLeftId != null) {
-                                    selectedMatches.remove(existingLeftId);
-                                  }
-                                  selectedMatches[selectedLeftOptionId!] =
-                                      rightOption.id;
-                                  selectedLeftOptionId = null;
-                                }
-                              });
-                            },
-                      child: Container(
-                        margin: EdgeInsets.only(bottom: height(12)),
-                        padding: EdgeInsets.all(width(12)),
-                        decoration: BoxDecoration(
-                          color: backgroundColor,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: borderColor, width: 2),
-                        ),
-                        child: Text(
-                          rightOption.optionText,
-                          style: TextStyle(
-                            fontSize: emp(14),
-                            color: scheme.onSurface,
+                                },
+                          child: Container(
+                            padding: EdgeInsets.all(width(12)),
+                            decoration: BoxDecoration(
+                              color: leftBg,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: leftBorder, width: 2),
+                            ),
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              leftOption.optionText,
+                              style: TextStyle(
+                                fontSize: emp(14),
+                                color: scheme.onSurface,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
                           ),
-                          textAlign: TextAlign.center,
                         ),
                       ),
-                    );
-                  }).toList(),
+                      SizedBox(width: width(12)),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: isAnswered
+                              ? null
+                              : () {
+                                  setState(() {
+                                    if (isMatchedRight && matchedLeftId != null) {
+                                      selectedMatches.remove(matchedLeftId);
+                                      if (selectedLeftOptionId == matchedLeftId) {
+                                        selectedLeftOptionId = null;
+                                      }
+                                    } else if (selectedLeftOptionId != null) {
+                                      int? existingLeftId;
+                                      selectedMatches.forEach((leftId, rightId) {
+                                        if (rightId == rightOption.id) {
+                                          existingLeftId = leftId;
+                                        }
+                                      });
+                                      if (existingLeftId != null) {
+                                        selectedMatches.remove(existingLeftId);
+                                      }
+                                      selectedMatches[selectedLeftOptionId!] =
+                                          rightOption.id;
+                                      selectedLeftOptionId = null;
+                                    }
+                                  });
+                                },
+                          child: Container(
+                            padding: EdgeInsets.all(width(12)),
+                            decoration: BoxDecoration(
+                              color: rightBg,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: rightBorder, width: 2),
+                            ),
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              rightOption.optionText,
+                              style: TextStyle(
+                                fontSize: emp(14),
+                                color: scheme.onSurface,
+                              ),
+                              textAlign: TextAlign.right,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              );
+            }),
           ),
 
           SizedBox(height: height(24)),

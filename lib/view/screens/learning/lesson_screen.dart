@@ -121,17 +121,18 @@ class _LessonScreenState extends State<LessonScreen> {
 
                   SizedBox(height: height(20)),
 
-                  // Content
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: width(16)),
-                    child: Text(
-                      currentLesson.content,
-                      style: TextStyle(fontSize: emp(16)),
+                  // Content (scrollable when long)
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.symmetric(horizontal: width(16)),
+                      child: Text(
+                        currentLesson.content,
+                        style: TextStyle(fontSize: emp(16)),
+                      ),
                     ),
                   ),
 
                   // Complete button
-                  const Spacer(),
                   LessonCompleteButton(
                     isLoading: controller.isLoadingAttempt,
                     onTap: () async {
@@ -154,7 +155,7 @@ class _LessonScreenState extends State<LessonScreen> {
                       }
                     },
                   ),
-                  SizedBox(height: height(20)),
+                  // SizedBox(height: height(10)),
                 ],
               ),
             ],
