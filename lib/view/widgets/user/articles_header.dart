@@ -34,16 +34,6 @@ class ArticlesHeader extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  InkWell(
-                    onTap: () {
-                      Get.back();
-                    },
-                    child: Icon(
-                      Icons.arrow_back_ios_new,
-                      color: scheme.onPrimary,
-                    ),
-                  ),
-                  SizedBox(width: width(12)),
                   Expanded(
                     child: controller.isSearchMode
                         ? _buildSearchField(context, controller, scheme)

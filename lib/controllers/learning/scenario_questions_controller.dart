@@ -198,6 +198,7 @@ class ScenarioQuestionsControllerImp extends ScenarioQuestionsController {
         result = {
           'next_question_id': nextQuestionId,
           'finished': scenarioFinished,
+          'feedback_text': data['feedback_text'] as String?,
           'explanation': data['explanation'] as String?,
           'answer': data['answer'],
         };

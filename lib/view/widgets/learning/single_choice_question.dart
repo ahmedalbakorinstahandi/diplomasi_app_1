@@ -7,11 +7,13 @@ import 'package:flutter/material.dart';
 class SingleChoiceQuestion extends StatefulWidget {
   final LessonQuestionModel question;
   final Future<void> Function(int optionId) onSubmit;
+  final bool showInstruction;
 
   const SingleChoiceQuestion({
     super.key,
     required this.question,
     required this.onSubmit,
+    this.showInstruction = true,
   });
 
   @override
@@ -31,16 +33,17 @@ class _SingleChoiceQuestionState extends State<SingleChoiceQuestion> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Instruction
-          Text(
-            'اختر الإجابة الصحيحة',
-            style: TextStyle(
-              fontSize: emp(16),
-              fontWeight: FontWeight.w600,
-              color: scheme.onSurface,
+          if (widget.showInstruction) ...[
+            Text(
+              'اختر الإجابة الصحيحة',
+              style: TextStyle(
+                fontSize: emp(16),
+                fontWeight: FontWeight.w600,
+                color: scheme.onSurface,
+              ),
             ),
-          ),
-
-          SizedBox(height: height(16)),
+            SizedBox(height: height(16)),
+          ],
 
           // Question text
           Container(

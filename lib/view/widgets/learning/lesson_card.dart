@@ -40,7 +40,7 @@ class LessonCard extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        final cardWidth = screenWidth * 0.45; // 35% of screen width
+        final cardWidth = screenWidth * 0.52; // عرض مناسب للكرت
 
         return Align(
           alignment: isRightAligned
@@ -87,12 +87,12 @@ class LessonCard extends StatelessWidget {
                           ),
 
                           SizedBox(width: width(12)),
-                          // Lesson title
+                          // Lesson title - حد أقصى سطرين
                           Expanded(
                             child: Text(
-                              lesson.title.length > 30
-                                  ? '${lesson.title.substring(0, 30)}...'
-                                  : lesson.title,
+                              lesson.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: width(15),
                                 fontWeight: FontWeight.w600,

@@ -59,41 +59,47 @@ class CertificateDetailScreen extends StatelessWidget {
                       // Certificate Image
                       if (certificate.imageUrl != null &&
                           certificate.imageUrl!.isNotEmpty)
-                        Container(
-                          width: double.infinity,
-                          margin: EdgeInsets.only(bottom: height(24)),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: colors.shadow,
-                                blurRadius: 16,
-                                offset: Offset(0, height(4)),
-                              ),
-                            ],
+                        GestureDetector(
+                          onTap: () => _showCertificateImagePreview(
+                            context,
+                            certificate.imageUrl!,
                           ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: CachedNetworkImage(
-                              imageUrl: certificate.imageUrl!,
-                              fit: BoxFit.contain,
-                              placeholder: (context, url) => Container(
-                                height: height(400),
-                                color: colors.backgroundSecondary,
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    color: scheme.primary,
-                                    strokeWidth: 2,
+                          child: Container(
+                            width: double.infinity,
+                            margin: EdgeInsets.only(bottom: height(24)),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: colors.shadow,
+                                  blurRadius: 16,
+                                  offset: Offset(0, height(4)),
+                                ),
+                              ],
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: CachedNetworkImage(
+                                imageUrl: certificate.imageUrl!,
+                                fit: BoxFit.contain,
+                                placeholder: (context, url) => Container(
+                                  height: height(400),
+                                  color: colors.backgroundSecondary,
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      color: scheme.primary,
+                                      strokeWidth: 2,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              errorWidget: (context, url, error) => Container(
-                                height: height(400),
-                                color: colors.backgroundSecondary,
-                                child: Icon(
-                                  Icons.image_not_supported,
-                                  color: colors.textMuted,
-                                  size: emp(40),
+                                errorWidget: (context, url, error) => Container(
+                                  height: height(400),
+                                  color: colors.backgroundSecondary,
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    color: colors.textMuted,
+                                    size: emp(40),
+                                  ),
                                 ),
                               ),
                             ),
@@ -301,6 +307,74 @@ class CertificateDetailScreen extends StatelessWidget {
     } catch (e) {
       return dateString;
     }
+  }
+
+  void _showCertificateImagePreview(BuildContext context, String imageUrl) {
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: true,
+        barrierColor: Colors.black,
+        pageBuilder: (context, _, __) =>
+            _CertificateImagePreviewScreen(imageUrl: imageUrl),
+      ),
+    );
+  }
+}
+
+class _CertificateImagePreviewScreen extends StatelessWidget {
+  final String imageUrl;
+
+  const _CertificateImagePreviewScreen({required this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final statusBarHeight = MediaQuery.of(context).padding.top;
+    final scheme = Theme.of(context).colorScheme;
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          Center(
+            child: InteractiveViewer(
+              minScale: 0.5,
+              maxScale: 4.0,
+              child: CachedNetworkImage(
+                imageUrl: imageUrl,
+                fit: BoxFit.contain,
+                placeholder: (context, url) => Center(
+                  child: CircularProgressIndicator(
+                    color: scheme.primary,
+                    strokeWidth: 2,
+                  ),
+                ),
+                errorWidget: (context, url, error) => Icon(
+                  Icons.image_not_supported,
+                  color: Colors.white54,
+                  size: emp(48),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: statusBarHeight + height(8),
+            left: width(8),
+            child: Material(
+              color: Colors.black45,
+              borderRadius: BorderRadius.circular(24),
+              child: InkWell(
+                onTap: () => Navigator.of(context).pop(),
+                borderRadius: BorderRadius.circular(24),
+                child: Padding(
+                  padding: EdgeInsets.all(width(12)),
+                  child: Icon(Icons.close, color: Colors.white, size: emp(24)),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

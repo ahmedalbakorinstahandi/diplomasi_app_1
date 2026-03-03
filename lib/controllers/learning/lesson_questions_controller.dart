@@ -162,13 +162,15 @@ class LessonQuestionsControllerImp extends LessonQuestionsController {
       // Refresh current question to get updated data with answer
       await getCurrentQuestion();
 
-      // Prepare result data for UI
+      // Prepare result data for UI (include match counts for match questions)
       result = {
         'is_correct': data['is_correct'] as bool? ?? false,
         'score': data['score'],
         'explanation': data['explanation'] as String?,
         'next_question_id': data['next_question_id'],
         'attempt_finished': attemptFinished,
+        if (data['correct_count'] != null) 'correct_count': (data['correct_count'] as num).toInt(),
+        if (data['total_count'] != null) 'total_count': (data['total_count'] as num).toInt(),
       };
     }
 

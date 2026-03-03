@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:diplomasi_app/controllers/user/articles_controller.dart';
 import 'package:diplomasi_app/core/classes/handling_data_view.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
@@ -245,12 +246,12 @@ class ArticleCard extends StatelessWidget {
                 topLeft: Radius.circular(width(16)),
                 topRight: Radius.circular(width(16)),
               ),
-              child: Image.network(
-                article.imageUrl!,
+              child: CachedNetworkImage(
+                imageUrl: article.imageUrl!,
                 width: double.infinity,
                 height: height(200),
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
+                errorWidget: (context, error, stackTrace) {
                   return Container(
                     height: height(200),
                     color: colors.border,

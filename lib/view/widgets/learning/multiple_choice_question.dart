@@ -23,6 +23,15 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
   bool isLoading = false;
 
   @override
+  void didUpdateWidget(MultipleChoiceQuestion oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Clear selections when the question changes (e.g. after moving to next question)
+    if (oldWidget.question.id != widget.question.id) {
+      selectedOptionIds.clear();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
@@ -34,7 +43,7 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
         children: [
           // Instruction
           Text(
-            'اختر الإجابة الصحيحة',
+            'اختر الإجابات الصحيحة',
             style: TextStyle(
               fontSize: emp(16),
               fontWeight: FontWeight.w600,
@@ -131,7 +140,9 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                               (isSelected && !isAnswered)
                           ? Icon(
                               Icons.check,
-                              color: isAnswered ? colors.onSuccess : scheme.onPrimary,
+                              color: isAnswered
+                                  ? colors.onSuccess
+                                  : scheme.onPrimary,
                               size: emp(14),
                             )
                           : null,

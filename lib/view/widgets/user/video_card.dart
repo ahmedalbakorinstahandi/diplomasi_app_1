@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/data/model/user/video_model.dart';
@@ -63,10 +64,10 @@ class VideoCard extends StatelessWidget {
                 height: height(80),
                 color: colors.border,
                 child: thumbnailUrl.isNotEmpty
-                    ? Image.network(
-                        thumbnailUrl,
+                    ? CachedNetworkImage(
+                        imageUrl: thumbnailUrl,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
+                        errorWidget: (context, error, stackTrace) {
                           return Container(
                             color: colors.border,
                             child: Icon(

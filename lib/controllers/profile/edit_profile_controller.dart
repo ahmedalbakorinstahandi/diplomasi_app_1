@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:diplomasi_app/controllers/profile/profile_controller.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/data/model/users/user_model.dart';
@@ -85,7 +86,7 @@ class EditProfileControllerImp extends GetxController {
     );
 
     if (response.isSuccess) {
-      currentAvatarUrl = response.data!.imageUrl;
+      currentAvatarUrl = response.data!.imageName;
     }
     isUploadingImage = false;
     update();
@@ -109,13 +110,15 @@ class EditProfileControllerImp extends GetxController {
     final response = await userData.updateProfile(updateData);
 
     if (response.success) {
+      Shared.setValue('user-data', response.data);
+
+      Get.find<ProfileControllerImp>().update();
+
       Get.back();
       customSnackBar(
         text: response.message ?? 'تم حفظ التغييرات بنجاح',
         snackType: SnackBarType.correct,
       );
-
-      Shared.setValue('user-data', response.data);
     }
 
     isLoading = false;

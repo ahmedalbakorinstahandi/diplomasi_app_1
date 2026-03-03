@@ -59,32 +59,41 @@ class CertificateCard extends StatelessWidget {
             // Certificate Image Preview
             if (certificate.imageUrl != null &&
                 certificate.imageUrl!.isNotEmpty)
-              ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
-                child: CachedNetworkImage(
-                  imageUrl: certificate.imageUrl!,
-                  width: double.infinity,
-                  height: height(200),
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    height: height(200),
-                    color: colors.backgroundSecondary,
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: scheme.primary,
-                        strokeWidth: 2,
-                      ),
-                    ),
+              Center(
+                child: Container(
+                  margin: EdgeInsets.only(top: height(12)),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: colors.border, width: 2),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  errorWidget: (context, url, error) => Container(
-                    height: height(200),
-                    color: colors.backgroundSecondary,
-                    child: Icon(
-                      Icons.image_not_supported,
-                      color: colors.textMuted,
-                      size: emp(40),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(16),
+                    ),
+                    child: CachedNetworkImage(
+                      imageUrl: certificate.imageUrl!,
+                      width: 340,
+                      height: 240,
+                      fit: BoxFit.contain,
+                      placeholder: (context, url) => Container(
+                        height: height(200),
+                        color: colors.backgroundSecondary,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            color: scheme.primary,
+                            strokeWidth: 2,
+                          ),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        height: height(200),
+                        color: colors.backgroundSecondary,
+                        child: Icon(
+                          Icons.image_not_supported,
+                          color: colors.textMuted,
+                          size: emp(40),
+                        ),
+                      ),
                     ),
                   ),
                 ),

@@ -429,15 +429,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  geideapay:
-    dependency: "direct main"
-    description:
-      path: "."
-      ref: main
-      resolved-ref: "39701e921c5471f3603ce655b9969313ebaf4988"
-      url: "https://github.com/GeideaSolutions/Flutter-SDK"
-    source: git
-    version: "0.0.1"
   get:
     dependency: "direct main"
     description:

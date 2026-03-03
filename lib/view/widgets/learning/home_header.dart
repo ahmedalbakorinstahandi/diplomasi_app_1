@@ -58,6 +58,7 @@ class HomeHeader extends StatelessWidget {
                     borderRadius: BorderRadius.circular(100),
                     child: CachedNetworkImage(
                       imageUrl: user?.avatar ?? '',
+                      fit: BoxFit.cover,
                       errorWidget: (context, url, error) => Icon(
                         Icons.person,
                         color: scheme.onPrimary,

@@ -196,6 +196,8 @@ class LessonQuestionsScreen extends StatelessWidget {
       final isCorrect = result['is_correct'] as bool? ?? false;
       final explanation = result['explanation'] as String?;
       final attemptFinished = result['attempt_finished'] as bool? ?? false;
+      final matchCorrectCount = result['correct_count'] as int?;
+      final matchTotalCount = result['total_count'] as int?;
 
       // Show feedback dialog
       if (Get.context != null) {
@@ -205,6 +207,8 @@ class LessonQuestionsScreen extends StatelessWidget {
           builder: (context) => AnswerFeedbackDialog(
             isCorrect: isCorrect,
             explanation: explanation,
+            matchCorrectCount: matchCorrectCount,
+            matchTotalCount: matchTotalCount,
             onNext: () {
               Navigator.of(context).pop(); // Close dialog
 

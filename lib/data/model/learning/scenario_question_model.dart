@@ -5,7 +5,7 @@ class ScenarioQuestionModel {
   final int id;
   final int scenarioId;
   final String code;
-  final String type; // 'single_choice' | 'true_false'
+  final String type; // 'single_choice'
   final String questionText;
   final String? attachedPath;
   final String? explanation;

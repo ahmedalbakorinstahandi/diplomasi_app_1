@@ -7,12 +7,14 @@ import 'package:flutter_html/flutter_html.dart' as html;
 class ScenarioDescriptionView extends StatelessWidget {
   final ScenarioModel scenario;
   final VoidCallback onContinue;
+  final VoidCallback? onShowAttempts;
   final bool isLoading;
 
   const ScenarioDescriptionView({
     super.key,
     required this.scenario,
     required this.onContinue,
+    this.onShowAttempts,
     this.isLoading = false,
   });
 
@@ -93,6 +95,19 @@ class ScenarioDescriptionView extends StatelessWidget {
           ),
 
           SizedBox(height: height(32)),
+
+          if (onShowAttempts != null) ...[
+            SizedBox(
+              width: double.infinity,
+              height: height(44),
+              child: OutlinedButton.icon(
+                onPressed: onShowAttempts,
+                icon: const Icon(Icons.history),
+                label: const Text('عرض المحاولات السابقة'),
+              ),
+            ),
+            SizedBox(height: height(12)),
+          ],
 
           // Continue button
           Container(

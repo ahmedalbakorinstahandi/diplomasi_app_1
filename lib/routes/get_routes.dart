@@ -9,7 +9,11 @@ import 'package:diplomasi_app/view/screens/app.dart';
 import 'package:diplomasi_app/view/screens/learning/cources.dart';
 import 'package:diplomasi_app/view/screens/learning/levels.dart';
 import 'package:diplomasi_app/view/screens/learning/lesson_screen.dart';
+import 'package:diplomasi_app/view/screens/learning/lesson_attempt_review_screen.dart';
+import 'package:diplomasi_app/view/screens/learning/lesson_attempts_screen.dart';
 import 'package:diplomasi_app/view/screens/learning/lesson_questions_screen.dart';
+import 'package:diplomasi_app/view/screens/learning/scenario_attempt_journey_screen.dart';
+import 'package:diplomasi_app/view/screens/learning/scenario_attempts_screen.dart';
 import 'package:diplomasi_app/view/screens/learning/scenario_questions_screen.dart';
 import 'package:diplomasi_app/view/screens/public/onboarding.dart';
 import 'package:diplomasi_app/view/screens/public/privacy_policy.dart';
@@ -24,6 +28,7 @@ import 'package:diplomasi_app/view/screens/user/certificates_screen.dart';
 import 'package:diplomasi_app/view/screens/user/certificate_detail_screen.dart';
 import 'package:diplomasi_app/view/screens/user/articles_screen.dart';
 import 'package:diplomasi_app/view/screens/user/article_details_screen.dart';
+import 'package:diplomasi_app/view/screens/public/glossary_screen.dart';
 import 'package:diplomasi_app/view/screens/user/billing_history_screen.dart';
 import 'package:diplomasi_app/view/screens/user/faqs_screen.dart';
 import 'package:diplomasi_app/view/screens/user/videos_screen.dart';
@@ -75,8 +80,32 @@ List<GetPage<dynamic>>? getPages = [
     transitionDuration: const Duration(milliseconds: 300),
   ),
   GetPage(
+    name: AppRoutes.lessonAttempts,
+    page: () => const LessonAttemptsScreen(),
+    transition: Transition.rightToLeft,
+    transitionDuration: const Duration(milliseconds: 300),
+  ),
+  GetPage(
+    name: AppRoutes.lessonAttemptReview,
+    page: () => const LessonAttemptReviewScreen(),
+    transition: Transition.rightToLeft,
+    transitionDuration: const Duration(milliseconds: 300),
+  ),
+  GetPage(
     name: AppRoutes.scenarioQuestions,
     page: () => const ScenarioQuestionsScreen(),
+    transition: Transition.rightToLeft,
+    transitionDuration: const Duration(milliseconds: 300),
+  ),
+  GetPage(
+    name: AppRoutes.scenarioAttempts,
+    page: () => const ScenarioAttemptsScreen(),
+    transition: Transition.rightToLeft,
+    transitionDuration: const Duration(milliseconds: 300),
+  ),
+  GetPage(
+    name: AppRoutes.scenarioAttemptJourney,
+    page: () => const ScenarioAttemptJourneyScreen(),
     transition: Transition.rightToLeft,
     transitionDuration: const Duration(milliseconds: 300),
   ),
@@ -121,6 +150,12 @@ List<GetPage<dynamic>>? getPages = [
   GetPage(
     name: AppRoutes.articles,
     page: () => const ArticlesScreen(),
+    transition: Transition.rightToLeft,
+    transitionDuration: const Duration(milliseconds: 300),
+  ),
+  GetPage(
+    name: AppRoutes.glossary,
+    page: () => const GlossaryScreen(),
     transition: Transition.rightToLeft,
     transitionDuration: const Duration(milliseconds: 300),
   ),

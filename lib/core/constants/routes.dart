@@ -28,6 +28,7 @@ abstract class AppRoutes {
   static String certificateDetail = '/certificate-detail/:id';
   static String articles = '/articles';
   static String articleDetails = '/article-details';
+  static String glossary = '/glossary';
   static String faqs = '/faqs';
   static String videos = '/videos';
   static String billingHistory = '/billing-history';
@@ -37,5 +38,9 @@ abstract class AppRoutes {
   static String levels = '/levels';
   static String lesson = '/lesson';
   static String lessonQuestions = '/lesson-questions';
+  static String lessonAttempts = '/lesson-attempts';
+  static String lessonAttemptReview = '/lesson-attempt-review';
   static String scenarioQuestions = '/scenario-questions';
+  static String scenarioAttempts = '/scenario-attempts';
+  static String scenarioAttemptJourney = '/scenario-attempt-journey';
 }

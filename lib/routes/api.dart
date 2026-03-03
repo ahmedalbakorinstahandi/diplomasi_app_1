@@ -72,6 +72,9 @@ final class EndPoints {
   static String lessonQuestions = "$baseApi/user/lessons/{id}/questions";
   static String lessonCurrentQuestion =
       "$baseApi/user/lessons/{id}/attempts/{attemptId}/current-question";
+  static String lessonAttempts = "$baseApi/user/lessons/{id}/attempts";
+  static String lessonAttemptReview =
+      "$baseApi/user/lessons/{id}/attempts/{attemptId}/review";
   static String lessonSubmitAnswer =
       "$baseApi/user/lessons/{id}/attempts/{attemptId}/submit-answer";
   static String lessonFinishAttempt =
@@ -89,6 +92,9 @@ final class EndPoints {
       "$baseApi/user/scenarios/{id}/start-attempt";
   static String scenarioCurrentQuestion =
       "$baseApi/user/scenarios/{id}/attempts/{attemptId}/current-question";
+  static String scenarioAttempts = "$baseApi/user/scenarios/{id}/attempts";
+  static String scenarioAttemptJourney =
+      "$baseApi/user/scenarios/{id}/attempts/{attemptId}/journey";
   static String scenarioSubmitAnswer = "$baseApi/user/scenarios/submit-answer";
   static String scenarioFinishAttempt =
       "$baseApi/user/scenarios/{id}/attempts/{attemptId}/finish";

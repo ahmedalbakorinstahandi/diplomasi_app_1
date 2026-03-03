@@ -57,10 +57,10 @@ dependencies:
   path_provider: ^2.1.5
   url_launcher: ^6.3.1
   webview_flutter: ^4.10.0
-  geideapay:
-    git:
-      url: https://github.com/GeideaSolutions/Flutter-SDK
-      ref: main
+  # geideapay:
+  #   git:
+  #     url: https://github.com/GeideaSolutions/Flutter-SDK
+  #     ref: main
   moyasar: ^2.2.0
 
 dependency_overrides:

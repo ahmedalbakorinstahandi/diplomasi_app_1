@@ -11,6 +11,7 @@ class ScenarioModel {
   final int orderIndex;
   final String? status; // locked, open, completed
   final double? progressPercentage; // 0-100
+  final bool hasPreviousAttempts;
   final String createdAt;
   final String updatedAt;
   final LevelModel? level;
@@ -26,6 +27,7 @@ class ScenarioModel {
     required this.orderIndex,
     this.status,
     this.progressPercentage,
+    this.hasPreviousAttempts = false,
     required this.createdAt,
     required this.updatedAt,
     this.level,
@@ -47,6 +49,7 @@ class ScenarioModel {
               ? json['progress_percentage'].toDouble()
               : json['progress_percentage'] as double)
           : null,
+      hasPreviousAttempts: json['has_previous_attempts'] as bool? ?? false,
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
       level: json['level'] != null ? LevelModel.fromJson(json['level']) : null,
@@ -65,6 +68,7 @@ class ScenarioModel {
       'order_index': orderIndex,
       'status': status,
       'progress_percentage': progressPercentage,
+      'has_previous_attempts': hasPreviousAttempts,
       'created_at': createdAt,
       'updated_at': updatedAt,
       'level': level?.toJson(),

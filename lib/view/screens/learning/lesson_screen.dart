@@ -132,6 +132,32 @@ class _LessonScreenState extends State<LessonScreen> {
                     ),
                   ),
 
+                  if (currentLesson.hasPreviousAttempts) ...[
+                    Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: width(16),
+                        vertical: height(12),
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: height(44),
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Get.toNamed(
+                              AppRoutes.lessonAttempts,
+                              parameters: {
+                                'lesson_id': currentLesson.id.toString(),
+                              },
+                            );
+                          },
+                          icon: const Icon(Icons.history),
+                          label: const Text('عرض الإجابات السابقة'),
+                        ),
+                      ),
+                    ),
+                    // SizedBox(height: height(10)),
+                  ],
+
                   // Complete button
                   LessonCompleteButton(
                     isLoading: controller.isLoadingAttempt,

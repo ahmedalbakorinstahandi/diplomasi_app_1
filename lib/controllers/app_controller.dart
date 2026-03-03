@@ -9,7 +9,7 @@ import 'package:diplomasi_app/data/resource/remote/user/notifications_data.dart'
 import 'package:diplomasi_app/data/resource/remote/user/user_data.dart';
 import 'package:diplomasi_app/view/screens/home/home.dart';
 import 'package:diplomasi_app/view/screens/profile/profile.dart';
-import 'package:diplomasi_app/view/screens/public/glossary_screen.dart';
+import 'package:diplomasi_app/view/screens/user/articles_screen.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
@@ -24,9 +24,9 @@ abstract class AppController extends GetxController {
   List pages = [
     {'screen': HomeScreen(), 'name': 'الرئيسية', 'icon': Assets.icons.svg.home},
     {
-      'screen': const GlossaryScreen(),
-      'name': 'المصطلحات',
-      'icon': Assets.icons.svg.terminology,
+      'screen': const ArticlesScreen(),
+      'name': 'المقالات',
+      'icon': Assets.icons.svg.book,
     },
 
     {

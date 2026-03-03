@@ -6,21 +6,14 @@ class LessonCompleteButton extends StatelessWidget {
   final VoidCallback? onTap;
   final bool isLoading;
 
-  const LessonCompleteButton({
-    super.key,
-    this.onTap,
-    this.isLoading = false,
-  });
+  const LessonCompleteButton({super.key, this.onTap, this.isLoading = false});
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: width(16),
-        vertical: height(20),
-      ),
+      margin: EdgeInsets.symmetric(horizontal: width(16), vertical: height(0)),
       width: double.infinity,
       height: height(56),
       decoration: BoxDecoration(
@@ -46,7 +39,9 @@ class LessonCompleteButton extends StatelessWidget {
                     height: width(24),
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(scheme.onPrimary),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        scheme.onPrimary,
+                      ),
                     ),
                   )
                 : Text(
@@ -63,4 +58,3 @@ class LessonCompleteButton extends StatelessWidget {
     );
   }
 }
-

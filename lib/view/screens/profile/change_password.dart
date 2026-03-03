@@ -25,7 +25,7 @@ class ChangePasswordScreen extends StatelessWidget {
                   // Header
                   Container(
                     width: getWidth(),
-                    height: height(190),
+                    height: height(120),
                     padding: EdgeInsets.only(
                       top: MediaQuery.of(context).padding.top + height(20),
                       left: width(20),

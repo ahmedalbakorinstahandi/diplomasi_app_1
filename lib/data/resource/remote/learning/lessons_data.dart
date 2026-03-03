@@ -48,6 +48,28 @@ class LessonsData {
     );
   }
 
+  /// Get attempts history for a lesson
+  Future<ApiResponse> getAttempts({required int lessonId}) async {
+    return await apiService.get(
+      EndPoints.lessonAttempts,
+      pathVariables: {'id': lessonId.toString()},
+    );
+  }
+
+  /// Get full review payload for one attempt
+  Future<ApiResponse> getAttemptReview({
+    required int lessonId,
+    required int attemptId,
+  }) async {
+    return await apiService.get(
+      EndPoints.lessonAttemptReview,
+      pathVariables: {
+        'id': lessonId.toString(),
+        'attemptId': attemptId.toString(),
+      },
+    );
+  }
+
   /// Submit answer for a question
   Future<ApiResponse> submitAnswer({
     required int lessonId,

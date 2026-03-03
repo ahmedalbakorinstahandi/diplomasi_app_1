@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/data/model/learning/lesson_question_model.dart';
@@ -58,18 +59,14 @@ class _TrueFalseQuestionState extends State<TrueFalseQuestion> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  widget.question.attachedPath!,
+                child: CachedNetworkImage(
+                  imageUrl: widget.question.attachedPath!,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Center(
-                      child: Text(
-                        'لا يمكن تحميل الصورة',
-                        style: TextStyle(
-                          fontSize: emp(14),
-                          color: colors.textSecondary,
-                        ),
-                      ),
+                  errorWidget: (context, error, stackTrace) {
+                    return Container(
+                      height: height(200),
+                      color: colors.border,
+                      child: Icon(Icons.image_not_supported, color: colors.textSecondary, size: width(40)),
                     );
                   },
                 ),

@@ -6,6 +6,7 @@ class ArticleModel {
   final int authorId;
   final bool isPublished;
   final String? imageUrl;
+  final String? pdfUrl;
   final String? publishedAt;
   final int orderIndex;
   final String createdAt;
@@ -20,6 +21,7 @@ class ArticleModel {
     required this.authorId,
     required this.isPublished,
     this.imageUrl,
+    this.pdfUrl,
     this.publishedAt,
     required this.orderIndex,
     required this.createdAt,
@@ -36,6 +38,7 @@ class ArticleModel {
       authorId: json['author_id'],
       isPublished: json['is_published'] ?? false,
       imageUrl: json['image_url'],
+      pdfUrl: json['pdf_url'],
       publishedAt: json['published_at'],
       orderIndex: json['order_index'] ?? 0,
       createdAt: json['created_at'] ?? '',
@@ -55,6 +58,7 @@ class ArticleModel {
       'author_id': authorId,
       'is_published': isPublished,
       'image_url': imageUrl,
+      'pdf_url': pdfUrl,
       'published_at': publishedAt,
       'order_index': orderIndex,
       'created_at': createdAt,

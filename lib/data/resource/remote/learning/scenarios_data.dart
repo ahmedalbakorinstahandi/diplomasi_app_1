@@ -36,6 +36,28 @@ class ScenariosData {
     );
   }
 
+  /// Get attempts history for one scenario
+  Future<ApiResponse> getAttempts({required int scenarioId}) async {
+    return await apiService.get(
+      EndPoints.scenarioAttempts,
+      pathVariables: {'id': scenarioId.toString()},
+    );
+  }
+
+  /// Get full journey payload for one scenario attempt
+  Future<ApiResponse> getAttemptJourney({
+    required int scenarioId,
+    required int attemptId,
+  }) async {
+    return await apiService.get(
+      EndPoints.scenarioAttemptJourney,
+      pathVariables: {
+        'id': scenarioId.toString(),
+        'attemptId': attemptId.toString(),
+      },
+    );
+  }
+
   /// Submit answer for a question
   Future<ApiResponse> submitAnswer({
     required int attemptId,

@@ -1,6 +1,7 @@
 import 'package:diplomasi_app/controllers/learning/scenario_questions_controller.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/constants/assets.dart';
+import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/constants/variables.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/core/widgets/custom_scaffold.dart';
@@ -13,7 +14,6 @@ import 'package:diplomasi_app/view/widgets/learning/scenario_completion_dialog.d
 import 'package:diplomasi_app/view/widgets/learning/scenario_description_view.dart';
 import 'package:diplomasi_app/view/widgets/learning/scenario_explanation_dialog.dart';
 import 'package:diplomasi_app/view/widgets/learning/single_choice_question.dart';
-import 'package:diplomasi_app/view/widgets/learning/true_false_question.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
@@ -78,27 +78,31 @@ class ScenarioQuestionsScreen extends StatelessWidget {
                               ),
 
                               // Title
-                              Text(
-                                controller.scenario?.title ?? 'السيناريو',
-                                style: TextStyle(
-                                  fontSize: emp(16),
-                                  fontWeight: FontWeight.w600,
-                                  color: scheme.onPrimary,
+                              SizedBox(
+                                width: width(250),
+                                child: Text(
+                                  controller.scenario?.title ?? 'السيناريو',
+                                  style: TextStyle(
+                                    fontSize: emp(16),
+                                    fontWeight: FontWeight.w600,
+                                    color: scheme.onPrimary,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
 
-                              // Toggle button (show description/questions)
-                              if (controller.scenario != null &&
-                                  !controller.showDescription)
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.info_outline,
-                                    size: 24,
-                                    color: scheme.onPrimary,
-                                  ),
-                                  onPressed: () => controller.toggleView(),
-                                  tooltip: 'عرض الوصف',
-                                ),
+                              // // Toggle button (show description/questions)
+                              // if (controller.scenario != null &&
+                              //     !controller.showDescription)
+                              //   IconButton(
+                              //     icon: Icon(
+                              //       Icons.info_outline,
+                              //       size: 24,
+                              //       color: scheme.onPrimary,
+                              //     ),
+                              //     onPressed: () => controller.toggleView(),
+                              //     tooltip: 'عرض الوصف',
+                              //   ),
 
                               // Close button
                               IconButton(
@@ -136,13 +140,15 @@ class ScenarioQuestionsScreen extends StatelessWidget {
     // Determine what to show based on question readiness
     // Priority: If question is ready (loaded and not loading), show questions/shimmer
     // Otherwise, if showDescription is true, show description
-    
-    final hasQuestionReady = (controller.currentQuestion != null || controller.scenarioFinished) &&
+
+    final hasQuestionReady =
+        (controller.currentQuestion != null || controller.scenarioFinished) &&
         !controller.isLoadingQuestion &&
         !controller.isLoading;
 
     // Show description only if we don't have a ready question AND showDescription is true
-    final shouldShowDescription = !hasQuestionReady && controller.showDescription;
+    final shouldShowDescription =
+        !hasQuestionReady && controller.showDescription;
 
     if (shouldShowDescription) {
       if (controller.isLoadingScenario || controller.scenario == null) {
@@ -152,6 +158,16 @@ class ScenarioQuestionsScreen extends StatelessWidget {
       return ScenarioDescriptionView(
         scenario: controller.scenario!,
         isLoading: controller.isLoading || controller.isLoadingQuestion,
+        onShowAttempts: controller.scenario!.hasPreviousAttempts
+            ? () {
+                Get.toNamed(
+                  AppRoutes.scenarioAttempts,
+                  parameters: {
+                    'scenario_id': controller.scenario!.id.toString(),
+                  },
+                );
+              }
+            : null,
         onContinue: () async {
           // Start attempt first
           await controller.startAttempt();
@@ -241,23 +257,9 @@ class ScenarioQuestionsScreen extends StatelessWidget {
     BuildContext context,
     ScenarioQuestionsControllerImp controller,
   ) {
-    final colors = context.appColors;
     final question = controller.currentQuestion!;
-
-    switch (question.type) {
-      case 'single_choice':
-        return _buildScenarioSingleChoice(question, controller);
-      case 'true_false':
-        return _buildScenarioTrueFalse(question, controller);
-      default:
-        return Container(
-          padding: EdgeInsets.all(width(20)),
-          child: Text(
-            'نوع سؤال غير مدعوم: ${question.type}',
-            style: TextStyle(fontSize: emp(16), color: colors.textSecondary),
-          ),
-        );
-    }
+    // السيناريو يعتمد على المسارات؛ كل الأنواع تُعرض كخيارات انتقال.
+    return _buildScenarioSingleChoice(question, controller);
   }
 
   Widget _buildScenarioSingleChoice(
@@ -268,17 +270,7 @@ class ScenarioQuestionsScreen extends StatelessWidget {
     return SingleChoiceQuestion(
       question: _convertToLessonQuestion(question),
       onSubmit: (optionId) => _handleSubmit(controller, optionId: optionId),
-    );
-  }
-
-  Widget _buildScenarioTrueFalse(
-    ScenarioQuestionModel question,
-    ScenarioQuestionsControllerImp controller,
-  ) {
-    // Convert ScenarioQuestionModel to LessonQuestionModel format for reuse
-    return TrueFalseQuestion(
-      question: _convertToLessonQuestion(question),
-      onSubmit: (optionId) => _handleSubmit(controller, optionId: optionId),
+      showInstruction: false,
     );
   }
 
@@ -337,22 +329,32 @@ class ScenarioQuestionsScreen extends StatelessWidget {
     ScenarioQuestionsControllerImp controller, {
     required int optionId,
   }) async {
+    final localOptionFeedback = controller.currentQuestion?.options
+        .firstWhereOrNull((option) => option.id == optionId)
+        ?.feedbackText;
+
     // Submit answer and get result
     final result = await controller.submitAnswer(optionId: optionId);
 
     // Check if we got a result
     if (result != null) {
       final finished = result['finished'] as bool? ?? false;
+      final feedbackText = result['feedback_text'] as String?;
       final explanation = result['explanation'] as String?;
+      final message = (feedbackText != null && feedbackText.isNotEmpty)
+          ? feedbackText
+          : ((localOptionFeedback != null && localOptionFeedback.isNotEmpty)
+                ? localOptionFeedback
+                : explanation);
 
-      // Show explanation dialog if there's an explanation
-      if (explanation != null && explanation.isNotEmpty) {
+      // Show feedback/explanation dialog if there's a message
+      if (message != null && message.isNotEmpty) {
         if (Get.context != null) {
           showDialog(
             context: Get.context!,
             barrierDismissible: false,
             builder: (context) => ScenarioExplanationDialog(
-              explanation: explanation,
+              explanation: message,
               onNext: () {
                 Navigator.of(context).pop(); // Close dialog
 

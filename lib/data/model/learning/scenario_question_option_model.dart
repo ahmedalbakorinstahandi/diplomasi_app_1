@@ -2,6 +2,7 @@ class ScenarioQuestionOptionModel {
   final int id;
   final int questionId;
   final String optionText;
+  final String? feedbackText;
   final int? nextQuestionId; // السؤال التالي عند اختيار هذا الخيار
   final String? attachedPath;
   final int orderIndex;
@@ -10,6 +11,7 @@ class ScenarioQuestionOptionModel {
     required this.id,
     required this.questionId,
     required this.optionText,
+    this.feedbackText,
     this.nextQuestionId,
     this.attachedPath,
     required this.orderIndex,
@@ -20,6 +22,7 @@ class ScenarioQuestionOptionModel {
       id: json['id'] as int,
       questionId: json['question_id'] as int? ?? 0,
       optionText: json['option_text'] as String,
+      feedbackText: json['feedback_text'] as String?,
       nextQuestionId: json['next_question_id'] as int?,
       attachedPath: json['attached_path'] as String?,
       orderIndex: json['order_index'] as int? ?? 0,
@@ -31,6 +34,7 @@ class ScenarioQuestionOptionModel {
       'id': id,
       'question_id': questionId,
       'option_text': optionText,
+      'feedback_text': feedbackText,
       'next_question_id': nextQuestionId,
       'attached_path': attachedPath,
       'order_index': orderIndex,

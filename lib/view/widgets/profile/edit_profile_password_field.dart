@@ -43,80 +43,72 @@ class EditProfilePasswordField extends StatelessWidget {
               color: scheme.onSurface,
             ),
           ),
+          SizedBox(height: height(12)),
           // Field Container
-          Container(
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(color: colors.borderStrong, width: 1),
-              ),
-            ),
-            child: Row(
-              children: [
-                // Eye Icon (on the left)
-                IconButton(
-                  onPressed: onToggleVisibility,
-                  icon: MySvgIcon(
-                    path: obscureText
-                        ? Assets.icons.svg.eyeOff
-                        : Assets.icons.svg.eyeOn,
-                    size: emp(20),
-                    color: colors.textMuted,
-                  ),
-                  padding: EdgeInsets.zero,
-                  constraints: BoxConstraints(),
-                ),
-                SizedBox(width: width(12)),
-                // Text Field
-                Expanded(
-                  child: TextFormField(
-                    controller: controller,
-                    obscureText: obscureText,
-                    textAlign: TextAlign.right,
-                    validator: validator,
-                    style: TextStyle(
-                      fontSize: emp(16),
-                      fontWeight: FontWeight.w400,
-                      color: scheme.onSurface,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: hintText,
-                      hintStyle: TextStyle(
-                        fontSize: emp(14),
-                        color: colors.textMuted,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                ),
-                SizedBox(width: width(12)),
-                // Lock Icon (on the right)
-                MySvgIcon(
-                  path: Assets.icons.svg.lock,
+          Row(
+            children: [
+              // Eye Icon (on the left)
+              IconButton(
+                onPressed: onToggleVisibility,
+                icon: MySvgIcon(
+                  path: obscureText
+                      ? Assets.icons.svg.eyeOff
+                      : Assets.icons.svg.eyeOn,
                   size: emp(20),
                   color: colors.textMuted,
                 ),
-              ],
-            ),
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(),
+              ),
+              SizedBox(width: width(12)),
+              // Text Field
+              Expanded(
+                child: TextFormField(
+                  controller: controller,
+                  obscureText: obscureText,
+                  textAlign: TextAlign.right,
+                  validator: validator,
+                  style: TextStyle(
+                    fontSize: emp(16),
+                    fontWeight: FontWeight.w400,
+                    color: scheme.onSurface,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: hintText,
+                    hintStyle: TextStyle(
+                      fontSize: emp(14),
+                      color: colors.textMuted,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ),
+              SizedBox(width: width(12)),
+              // Lock Icon (on the right)
+              MySvgIcon(
+                path: Assets.icons.svg.lock,
+                size: emp(20),
+                color: colors.textMuted,
+              ),
+            ],
           ),
           // Requirements
           if (requirements != null && requirements!.isNotEmpty) ...[
             SizedBox(height: height(8)),
-            ...requirements!.map((req) => Padding(
-                  padding: EdgeInsets.only(bottom: height(4)),
-                  child: Text(
-                    req,
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: emp(12),
-                      color: scheme.error,
-                    ),
-                  ),
-                )),
+            ...requirements!.map(
+              (req) => Padding(
+                padding: EdgeInsets.only(bottom: height(4)),
+                child: Text(
+                  req,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(fontSize: emp(12), color: scheme.error),
+                ),
+              ),
+            ),
           ],
         ],
       ),
     );
   }
 }
-

@@ -27,6 +27,15 @@ class GlossaryHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
+          InkWell(
+            onTap: () => Navigator.of(context).pop(),
+            child: Icon(
+              Icons.arrow_back_ios_new,
+              color: scheme.onPrimary,
+              size: width(22),
+            ),
+          ),
+          SizedBox(width: width(12)),
           Text(
             'المصطلحات',
             textAlign: TextAlign.right,

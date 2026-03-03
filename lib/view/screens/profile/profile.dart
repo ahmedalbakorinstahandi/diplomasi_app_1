@@ -70,8 +70,8 @@ class ProfileScreen extends StatelessWidget {
                                 ProfileItem(
                                   title: 'تعديل الملف الشخصي',
                                   icon: Assets.icons.svg.edit,
-                                  onTap: () {
-                                    Get.toNamed(AppRoutes.editProfile);
+                                  onTap: () async {
+                                    await Get.toNamed(AppRoutes.editProfile);
                                   },
                                 ),
                                 ProfileItem(
@@ -104,10 +104,10 @@ class ProfileScreen extends StatelessWidget {
                                 //   onTap: () {},
                                 // ),
                                 ProfileItem(
-                                  title: 'المقالات',
-                                  icon: Assets.icons.svg.book,
+                                  title: 'المصطلحات',
+                                  icon: Assets.icons.svg.terminology,
                                   onTap: () {
-                                    Get.toNamed(AppRoutes.articles);
+                                    Get.toNamed(AppRoutes.glossary);
                                   },
                                 ),
                                 if (isVisible)
