@@ -2,9 +2,7 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
-import 'package:diplomasi_app/core/constants/assets.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
-import 'package:diplomasi_app/core/widgets/icon_svg.dart';
 import 'package:diplomasi_app/data/model/user/plan_model.dart';
 import 'package:flutter/material.dart';
 
@@ -37,6 +35,7 @@ class PlanCard extends StatelessWidget {
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
 
+    final featuredBorderColor = Colors.orange;
     return Container(
       margin: EdgeInsets.symmetric(horizontal: width(20), vertical: height(12)),
       decoration: BoxDecoration(
@@ -47,7 +46,9 @@ class PlanCard extends StatelessWidget {
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),
         ),
-        border: null,
+        border: isFeatured
+            ? Border.all(color: featuredBorderColor, width: 2)
+            : null,
         boxShadow: [
           BoxShadow(
             color: colors.shadow,
@@ -59,7 +60,7 @@ class PlanCard extends StatelessWidget {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Crown and sparkles for featured/premium plan
+          // أيقونة تاج للخطة المميزة (is_featured من API)
           if (isFeatured) ...[
             Positioned(
               top: -height(20),
@@ -68,10 +69,24 @@ class PlanCard extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  MySvgIcon(
-                    path: Assets.icons.svg.crown,
-                    size: emp(40),
-                    color: colors.highlight,
+                  Container(
+                    padding: EdgeInsets.all(width(8)),
+                    decoration: BoxDecoration(
+                      color: featuredBorderColor,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: featuredBorderColor.withOpacity(0.4),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.workspace_premium,
+                      size: emp(28),
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
@@ -89,85 +104,115 @@ class PlanCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Icon (if available)
-                if (plan.iconUrl != null && plan.iconUrl!.isNotEmpty)
-                  Container(
-                    margin: EdgeInsets.only(bottom: height(16)),
-                    child: CachedNetworkImage(
-                      imageUrl: plan.iconUrl!,
-                      width: width(60),
-                      height: width(60),
-                      errorWidget: (context, error, stackTrace) =>
-                          Icon(Icons.image_not_supported),
-                    ),
-                  ),
-
-                // Price section
+                // صف واحد: الأيقونة + بجانبها تسمية (الأشهر أو المدة) والسعر
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   textDirection: TextDirection.rtl,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      textDirection: TextDirection.rtl,
-                      children: [
-                        // Current price
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          textDirection: TextDirection.rtl,
-                          children: [
-                            Text(
-                              '${plan.price} SAR',
-                              style: TextStyle(
-                                fontSize: emp(32),
-                                fontWeight: FontWeight.w700,
-                                color: scheme.onSurface,
-                              ),
-                              textDirection: TextDirection.ltr,
+                    // تسمية بجانب الصورة: الأشهر للخطة المميزة، أو مدة الاشتراك
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        textDirection: TextDirection.rtl,
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: width(10),
+                              vertical: height(5),
                             ),
-                            SizedBox(width: width(8)),
-                            // Show annual discount if applicable
-                            if (plan.isAnnual)
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: width(8),
-                                  vertical: height(4),
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colors.success.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  'خصم ${_calculateAnnualDiscount(plan)}%',
-                                  style: TextStyle(
-                                    fontSize: emp(12),
-                                    fontWeight: FontWeight.w600,
-                                    color: colors.success,
-                                  ),
+                            decoration: BoxDecoration(
+                              color: isFeatured
+                                  ? featuredBorderColor.withOpacity(0.15)
+                                  : scheme.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              isFeatured
+                                  ? 'الأشهر'
+                                  : plan.displayIntervalLabel,
+                              style: TextStyle(
+                                fontSize: emp(12),
+                                fontWeight: FontWeight.w700,
+                                color: isFeatured
+                                    ? featuredBorderColor
+                                    : scheme.primary,
+                              ),
+                              textDirection: TextDirection.rtl,
+                            ),
+                          ),
+                          SizedBox(height: height(10)),
+                          Text(
+                            '${plan.price} SAR',
+                            style: TextStyle(
+                              fontSize: emp(28),
+                              fontWeight: FontWeight.w700,
+                              color: scheme.onSurface,
+                            ),
+                            textDirection: TextDirection.ltr,
+                          ),
+                          SizedBox(height: height(2)),
+                          Text(
+                            '/${plan.displayIntervalLabel}',
+                            style: TextStyle(
+                              fontSize: emp(13),
+                              fontWeight: FontWeight.w400,
+                              color: colors.textSecondary,
+                            ),
+                            textDirection: TextDirection.rtl,
+                          ),
+                          if (plan.isAnnual) ...[
+                            SizedBox(height: height(4)),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: width(8),
+                                vertical: height(3),
+                              ),
+                              decoration: BoxDecoration(
+                                color: colors.success.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'خصم ${_calculateAnnualDiscount(plan)}%',
+                                style: TextStyle(
+                                  fontSize: emp(11),
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.success,
                                 ),
                               ),
+                            ),
                           ],
-                        ),
-                        SizedBox(height: height(4)),
-                        // Interval
-                        Text(
-                          plan.isAnnual ? '/سنة' : '/شهر',
-                          style: TextStyle(
-                            fontSize: emp(14),
-                            fontWeight: FontWeight.w400,
-                            color: colors.textSecondary,
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: width(12)),
+                    if (plan.iconUrl != null && plan.iconUrl!.isNotEmpty)
+                      CachedNetworkImage(
+                        imageUrl: plan.iconUrl!,
+                        width: width(60),
+                        height: width(60),
+                        fit: BoxFit.cover,
+                        imageBuilder: (context, imageProvider) => Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            image: DecorationImage(
+                              image: imageProvider,
+                              fit: BoxFit.cover,
+                            ),
                           ),
                         ),
-                      ],
-                    ),
+                        errorWidget: (context, error, stackTrace) =>
+                            Icon(Icons.image_not_supported, size: emp(32)),
+                      ),
                   ],
                 ),
 
                 SizedBox(height: height(16)),
 
-                // Plan name
+                // اسم الخطة + مدة الاشتراك
                 Text(
-                  _getPlanName(plan.name),
+                  plan.name.trim().isNotEmpty
+                      ? '${plan.name} • ${plan.displayIntervalLabel}'
+                      : plan.displayIntervalLabel,
                   style: TextStyle(
                     fontSize: emp(24),
                     fontWeight: FontWeight.w700,
@@ -190,8 +235,8 @@ class PlanCard extends StatelessWidget {
                   textDirection: TextDirection.rtl,
                 ),
 
-                // Special tagline for premium/lifetime plan
-                if (isFeatured) ...[
+                // عبارة ترويجية من API (caption) إن وُجدت بدل النص الثابت
+                if (plan.caption != null && plan.caption!.trim().isNotEmpty) ...[
                   SizedBox(height: height(12)),
                   Container(
                     padding: EdgeInsets.symmetric(
@@ -199,7 +244,8 @@ class PlanCard extends StatelessWidget {
                       vertical: height(8),
                     ),
                     decoration: BoxDecoration(
-                      color: colors.highlight.withOpacity(0.1),
+                      color: (isFeatured ? Colors.orange : colors.highlight)
+                          .withOpacity(0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -207,11 +253,13 @@ class PlanCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            'أكثر من 80% من المتعلمين يختارون هذه الخطة مدى الحياة!',
+                            plan.caption!,
                             style: TextStyle(
                               fontSize: emp(12),
                               fontWeight: FontWeight.w600,
-                              color: colors.highlightText,
+                              color: isFeatured
+                                  ? Colors.orange.shade800
+                                  : colors.highlightText,
                             ),
                             textDirection: TextDirection.rtl,
                           ),
@@ -300,19 +348,6 @@ class PlanCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _getPlanName(String name) {
-    switch (name.toLowerCase()) {
-      case 'basic':
-        return 'الخطة الأساسية';
-      case 'pro':
-        return 'الخطة الاحترافية';
-      case 'premium':
-        return 'الخطة الدائمة';
-      default:
-        return name;
-    }
   }
 
   int _calculateAnnualDiscount(PlanModel plan) {

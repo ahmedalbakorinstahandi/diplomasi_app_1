@@ -27,10 +27,15 @@ class PlansScreen extends StatelessWidget {
           backgroundColor: scheme.surface,
           body: Column(
             children: [
-              // Header
-              const PlansHeader(),
+              // Header (تعرض في الزاوية "غير مشترك حالياً" عند عدم الاشتراك)
+              PlansHeader(
+                hasActiveSubscription: controller.currentSubscription != null,
+              ),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: width(20)),
+                padding: EdgeInsets.symmetric(
+                  horizontal: width(20),
+                  vertical: height(16),
+                ),
                 child: Row(
                   children: [
                     OutlinedButton.icon(
@@ -71,24 +76,7 @@ class PlansScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              SizedBox(height: height(20)),
-              if (controller.currentSubscription == null)
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: width(20)),
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      'غير مشترك حالياً',
-                      style: TextStyle(
-                        color: scheme.onSurface.withOpacity(0.85),
-                        fontSize: emp(13),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              if (controller.currentSubscription == null)
-                SizedBox(height: height(8)),
+              // SizedBox(height: height(16)),
               Expanded(
                 child: HandlingListDataView(
                   isLoading: controller.isLoading,
@@ -104,83 +92,70 @@ class PlansScreen extends StatelessWidget {
                       padding: EdgeInsets.symmetric(vertical: height(8)),
                       child: Column(
                         children: [
-                          // SizedBox(height: height(8)),
-                          // Display plans - reorder to put premium in center
-                          Builder(
-                            builder: (context) {
-                              final sortedPlans = <Map<String, dynamic>>[
-                                ...controller.plans.where(
-                                  (p) => !PlanModel.fromJson(p).isPremium,
-                                ),
-                                ...controller.plans.where(
-                                  (p) => PlanModel.fromJson(p).isPremium,
-                                ),
-                              ];
+                          // عرض الخطط بالترتيب الطبيعي من API
+                          Column(
+                            children: controller.plans.map((planData) {
+                              final planModel = PlanModel.fromJson(planData);
+                              final isFeatured = planModel.isFeatured;
+                              final isCurrentPlan = controller.isCurrentPlan(
+                                planModel,
+                              );
+                              final currentSubscriptionEnd = DateTime.tryParse(
+                                (controller.currentSubscription?['end_date'] ??
+                                        '')
+                                    .toString(),
+                              );
+                              final purchaseBlocked =
+                                  controller.hasBlockingCurrentSubscription &&
+                                  !isCurrentPlan;
 
-                              return Column(
-                                children: sortedPlans.map((planData) {
-                                  final planModel = PlanModel.fromJson(
-                                    planData,
-                                  );
-                                  final isFeatured = planModel.isPremium;
-                                  final isCurrentPlan = controller
-                                      .isCurrentPlan(planModel);
-                                  final currentSubscriptionEnd = DateTime.tryParse(
-                                    (controller.currentSubscription?['end_date'] ?? '')
-                                        .toString(),
-                                  );
-                                  final purchaseBlocked =
-                                      controller
-                                          .hasBlockingCurrentSubscription &&
-                                      !isCurrentPlan;
-
-                                  return PlanCard(
-                                    plan: planModel,
-                                    isFeatured: isFeatured,
-                                    actionLabel: isCurrentPlan
-                                        ? 'هذه خطتك الحالية'
-                                        : purchaseBlocked
-                                        ? 'لديك خطة مفعلة'
-                                        : 'شراء الآن',
-                                    actionEnabled:
-                                        !isCurrentPlan &&
-                                        !purchaseBlocked &&
-                                        !controller.isPurchaseFlowInProgress,
-                                    isActionLoading:
-                                        (controller.isActionLoading &&
-                                            controller.actionPlanId == planModel.id) ||
-                                        (controller.isPurchaseFlowInProgress &&
-                                            controller.purchaseFlowPlanId == planModel.id),
-                                    managementWidget: isCurrentPlan
-                                        ? _buildCurrentPlanManagement(
-                                            context,
-                                            controller,
-                                          )
-                                        : null,
-                                    countdownTarget: isCurrentPlan
-                                        ? currentSubscriptionEnd
-                                        : null,
-                                    onCountdownFinished: isCurrentPlan
-                                        ? () {
-                                            if (!controller.isBillingLoading) {
-                                              controller.loadBillingState();
-                                            }
-                                          }
-                                        : null,
-                                    onActionTap: () async {
-                                      if (isCurrentPlan || purchaseBlocked) {
-                                        return;
-                                      }
-                                      await _handlePurchasePlan(
+                              return PlanCard(
+                                plan: planModel,
+                                isFeatured: isFeatured,
+                                actionLabel: isCurrentPlan
+                                    ? 'هذه خطتك الحالية'
+                                    : purchaseBlocked
+                                    ? 'لديك خطة مفعلة'
+                                    : 'شراء الآن',
+                                actionEnabled:
+                                    !isCurrentPlan &&
+                                    !purchaseBlocked &&
+                                    !controller.isPurchaseFlowInProgress,
+                                isActionLoading:
+                                    (controller.isActionLoading &&
+                                        controller.actionPlanId ==
+                                            planModel.id) ||
+                                    (controller.isPurchaseFlowInProgress &&
+                                        controller.purchaseFlowPlanId ==
+                                            planModel.id),
+                                managementWidget: isCurrentPlan
+                                    ? _buildCurrentPlanManagement(
                                         context,
                                         controller,
-                                        planModel,
-                                      );
-                                    },
+                                      )
+                                    : null,
+                                countdownTarget: isCurrentPlan
+                                    ? currentSubscriptionEnd
+                                    : null,
+                                onCountdownFinished: isCurrentPlan
+                                    ? () {
+                                        if (!controller.isBillingLoading) {
+                                          controller.loadBillingState();
+                                        }
+                                      }
+                                    : null,
+                                onActionTap: () async {
+                                  if (isCurrentPlan || purchaseBlocked) {
+                                    return;
+                                  }
+                                  await _handlePurchasePlan(
+                                    context,
+                                    controller,
+                                    planModel,
                                   );
-                                }).toList(),
+                                },
                               );
-                            },
+                            }).toList(),
                           ),
 
                           SizedBox(height: height(24)),
@@ -335,7 +310,8 @@ class PlansScreen extends StatelessWidget {
                         groupValue: selectedId ?? -1,
                         onChanged: !isActive || methodId == null
                             ? null
-                            : (value) => setModalState(() => selectedId = value),
+                            : (value) =>
+                                  setModalState(() => selectedId = value),
                         title: Text(label),
                         subtitle: Text(
                           isDefault

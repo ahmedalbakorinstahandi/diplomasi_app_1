@@ -3,7 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class PlansHeader extends StatelessWidget {
-  const PlansHeader({super.key});
+  final bool hasActiveSubscription;
+
+  const PlansHeader({
+    super.key,
+    this.hasActiveSubscription = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +54,43 @@ class PlansHeader extends StatelessWidget {
               textDirection: TextDirection.rtl,
             ),
           ),
+          // زاوية الـ app bar: حالة الاشتراك عندما المستخدم غير مشترك
+          if (!hasActiveSubscription)
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: width(10),
+                vertical: height(6),
+              ),
+              decoration: BoxDecoration(
+                color: scheme.onPrimary.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: scheme.onPrimary.withOpacity(0.5),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                textDirection: TextDirection.rtl,
+                children: [
+                  Icon(
+                    Icons.person_off_outlined,
+                    size: emp(16),
+                    color: scheme.onPrimary,
+                  ),
+                  SizedBox(width: width(6)),
+                  Text(
+                    'غير مشترك حالياً',
+                    style: TextStyle(
+                      fontSize: emp(12),
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onPrimary,
+                    ),
+                    textDirection: TextDirection.rtl,
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
