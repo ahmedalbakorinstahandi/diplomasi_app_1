@@ -1,5 +1,7 @@
 import 'package:diplomasi_app/core/bindings/initialbindings.dart';
 import 'package:diplomasi_app/core/localization/translation.dart';
+import 'package:diplomasi_app/core/services/notification_navigation_service.dart';
+import 'package:diplomasi_app/core/services/push_notification_service.dart';
 import 'package:diplomasi_app/core/services/services.dart';
 import 'package:diplomasi_app/core/theme/app_theme.dart';
 import 'package:diplomasi_app/controllers/theme/theme_controller.dart';
@@ -17,13 +19,18 @@ void main() async {
 
   // Initialize all app services
   await MyServices.initialServices();
+  Get.put(NotificationNavigationService(), permanent: true);
+  final pushNotificationService = Get.put(
+    PushNotificationService(),
+    permanent: true,
+  );
+  await pushNotificationService.init();
 
   // Theme controller needs SharedPreferences (services) ready.
   Get.put(ThemeControllerImp(), permanent: true);
 
   runApp(const MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

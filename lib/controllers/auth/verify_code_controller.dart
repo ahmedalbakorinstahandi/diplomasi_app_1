@@ -1,4 +1,5 @@
 import 'package:diplomasi_app/core/functions/snackbar.dart';
+import 'package:diplomasi_app/core/services/push_notification_service.dart';
 import 'package:diplomasi_app/data/resource/remote/user/auth_data.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
@@ -34,7 +35,10 @@ class VerifyCodeControllerImp extends VerifyCodeController {
     email = arguments?['email'] ?? '';
     isForgotPassword = arguments?['isForgotPassword'] ?? false;
 
-    otpControllers = List.generate(otpLength, (index) => TextEditingController());
+    otpControllers = List.generate(
+      otpLength,
+      (index) => TextEditingController(),
+    );
     startResendTimer();
     super.onInit();
   }
@@ -63,7 +67,14 @@ class VerifyCodeControllerImp extends VerifyCodeController {
     isLoading = true;
     update();
 
-    var response = await authData.verifyOtp(email: email, otp: otp);
+    final pushService = Get.find<PushNotificationService>();
+    final deviceToken = await pushService.getDeviceToken();
+
+    var response = await authData.verifyOtp(
+      email: email,
+      otp: otp,
+      deviceToken: deviceToken,
+    );
 
     if (response.isSuccess) {
       // Save access token if exists

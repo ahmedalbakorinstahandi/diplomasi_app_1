@@ -2,6 +2,7 @@ import 'package:diplomasi_app/controllers/user/notifications_controller.dart';
 import 'package:diplomasi_app/core/classes/handling_data_view.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
+import 'package:diplomasi_app/core/services/notification_navigation_service.dart';
 import 'package:diplomasi_app/core/widgets/custom_scaffold.dart';
 import 'package:diplomasi_app/view/shimmers/user/presentation/shimmer/notifications_screen_shimmer.dart';
 import 'package:diplomasi_app/view/widgets/user/notifications_header.dart';
@@ -151,113 +152,118 @@ class NotificationCard extends StatelessWidget {
     }
   }
 
-  void _handleNotificationTap() {
-    // Empty function - to be implemented later
+  Future<void> _handleNotificationTap() async {
+    await Get.find<NotificationNavigationService>().handleStoredNotification(
+      notification,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      margin: EdgeInsets.only(bottom: height(12)),
-      padding: EdgeInsets.all(width(16)),
-      decoration: BoxDecoration(
-        color: colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(width(16)),
-        border: notification.isRead
-            ? Border.all(color: colors.border, width: 1)
-            : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title and Time Row
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  notification.title,
-                  style: TextStyle(
-                    fontSize: emp(16),
-                    fontWeight: FontWeight.w500,
-                    color: scheme.onSurface,
-                  ),
-                ),
-              ),
-              SizedBox(width: width(8)),
-              // Time
-              Text(
-                _formatTime(notification.createdAt),
-                style: TextStyle(
-                  fontSize: emp(12),
-                  fontWeight: FontWeight.w500,
-                  color: colors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: height(8)),
-          // Body Text
-          Text(
-            notification.body,
-            style: TextStyle(
-              fontSize: emp(14),
-              fontWeight: FontWeight.w400,
-              color: colors.textSecondary,
-              height: 1.4,
-            ),
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-          ),
-          SizedBox(height: height(12)),
-          // Action Button and Read Indicator Row
-          Row(
-            children: [
-              if (notification.notificationableType != null &&
-                  notification.notificationableId != null)
-                GestureDetector(
-                  onTap: _handleNotificationTap,
+    return InkWell(
+      onTap: notification.hasAction ? _handleNotificationTap : null,
+      borderRadius: BorderRadius.circular(width(16)),
+      child: Container(
+        margin: EdgeInsets.only(bottom: height(12)),
+        padding: EdgeInsets.all(width(16)),
+        decoration: BoxDecoration(
+          color: colors.backgroundSecondary,
+          borderRadius: BorderRadius.circular(width(16)),
+          border: notification.isRead
+              ? Border.all(color: colors.border, width: 1)
+              : null,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title and Time Row
+            Row(
+              children: [
+                Expanded(
                   child: Text(
-                    'فتح',
+                    notification.title,
                     style: TextStyle(
-                      fontSize: emp(14),
-                      fontWeight: FontWeight.w600,
-                      color: scheme.primary,
+                      fontSize: emp(16),
+                      fontWeight: FontWeight.w500,
+                      color: scheme.onSurface,
                     ),
                   ),
                 ),
-              const Spacer(),
-              // Read Indicator
-              Column(
-                children: [
-                  // Read Indicator
-                  Container(
-                    width: width(8),
-                    height: width(8),
-                    decoration: BoxDecoration(
-                      color: notification.isRead
-                          ? scheme.primary
-                          : colors.textMuted,
-                      shape: BoxShape.circle,
+                SizedBox(width: width(8)),
+                // Time
+                Text(
+                  _formatTime(notification.createdAt),
+                  style: TextStyle(
+                    fontSize: emp(12),
+                    fontWeight: FontWeight.w500,
+                    color: colors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: height(8)),
+            // Body Text
+            Text(
+              notification.body,
+              style: TextStyle(
+                fontSize: emp(14),
+                fontWeight: FontWeight.w400,
+                color: colors.textSecondary,
+                height: 1.4,
+              ),
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            SizedBox(height: height(12)),
+            // Action Button and Read Indicator Row
+            Row(
+              children: [
+                if (notification.hasAction)
+                  GestureDetector(
+                    onTap: _handleNotificationTap,
+                    child: Text(
+                      'فتح',
+                      style: TextStyle(
+                        fontSize: emp(14),
+                        fontWeight: FontWeight.w600,
+                        color: scheme.primary,
+                      ),
                     ),
                   ),
-                  if (notification.isRead) ...[
-                    SizedBox(height: height(4)),
+                const Spacer(),
+                // Read Indicator
+                Column(
+                  children: [
+                    // Read Indicator
                     Container(
                       width: width(8),
                       height: width(8),
                       decoration: BoxDecoration(
-                        color: scheme.primary,
+                        color: notification.isRead
+                            ? scheme.primary
+                            : colors.textMuted,
                         shape: BoxShape.circle,
                       ),
                     ),
+                    if (notification.isRead) ...[
+                      SizedBox(height: height(4)),
+                      Container(
+                        width: width(8),
+                        height: width(8),
+                        decoration: BoxDecoration(
+                          color: scheme.primary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
-              ),
-            ],
-          ),
-        ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

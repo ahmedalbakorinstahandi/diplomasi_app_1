@@ -9,10 +9,16 @@ class AuthData {
   Future<ApiResponse> login({
     required String email,
     required String password,
+    String? deviceToken,
   }) async {
     return await apiService.post(
       EndPoints.login,
-      data: {'email': email, 'password': password, 'role': 'user'},
+      data: {
+        'email': email,
+        'password': password,
+        'role': 'user',
+        'device_token': deviceToken,
+      },
     );
   }
 
@@ -48,10 +54,11 @@ class AuthData {
   Future<ApiResponse> verifyOtp({
     required String email,
     required String otp,
+    String? deviceToken,
   }) async {
     return await apiService.post(
       EndPoints.verifyOtp,
-      data: {'email': email, 'otp': otp},
+      data: {'email': email, 'otp': otp, 'device_token': deviceToken},
     );
   }
 

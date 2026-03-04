@@ -2,6 +2,7 @@ import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/steps.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
+import 'package:diplomasi_app/core/services/push_notification_service.dart';
 import 'package:diplomasi_app/data/resource/remote/user/auth_data.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
@@ -49,9 +50,13 @@ class LoginControllerImp extends LoginController {
       isLogin = true;
       update();
 
+      final pushService = Get.find<PushNotificationService>();
+      final deviceToken = await pushService.getDeviceToken();
+
       var response = await authData.login(
         email: email.text,
         password: password.text,
+        deviceToken: deviceToken,
       );
 
       if (response.isSuccess) {

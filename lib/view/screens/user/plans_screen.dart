@@ -89,7 +89,7 @@ class PlansScreen extends StatelessWidget {
                       await controller.loadBillingState();
                     },
                     child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(vertical: height(8)),
+                      // padding: EdgeInsets.symmetric(vertical: height(4)),
                       child: Column(
                         children: [
                           // عرض الخطط بالترتيب الطبيعي من API
