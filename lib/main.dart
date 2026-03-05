@@ -7,6 +7,7 @@ import 'package:diplomasi_app/core/theme/app_theme.dart';
 import 'package:diplomasi_app/controllers/theme/theme_controller.dart';
 import 'package:diplomasi_app/routes/get_routes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -14,6 +15,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // التطبيق يبدأ بالطول؛ الفيديو ينتقل للعرض عند الملء (من داخل مشغّل الفيديو)
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 

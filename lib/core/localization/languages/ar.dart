@@ -56,8 +56,8 @@ const Map<String, String> ar = {
   "price": "السعر",
   "view_on_map": "عرض على الخريطة",
   "view_details": "عرض التفاصيل",
-  "shared_from_ajar": "🏡 مشاركة من تطبيق أجار",
-  "discover_more": "اكتشف المزيد من العقارات على تطبيق أجار",
+  "shared_from_diplomasi": "🏡 مشاركة من تطبيق ديبلوماسي",
+  "discover_more": "اكتشف المزيد من العقارات على تطبيق ديبلوماسي",
   "download_app": "حمّل التطبيق الآن",
   "property_id": "رقم الإعلان",
   "yes": "نعم",
@@ -279,6 +279,15 @@ const Map<String, String> ar = {
   'notifications_permission_error': 'تعذر تحديث صلاحية الإشعارات حالياً.',
   'notifications_enabled_success': 'تم تفعيل الإشعارات بنجاح.',
   'notifications_disabled_success': 'تم إيقاف الإشعارات.',
+  'notifications_disabled_go_to_settings':
+      'لإيقاف الإشعارات بالكامل قم بتعطيلها من إعدادات التطبيق.',
+  'notifications_disabled_open_settings':
+      'سنفتح إعدادات التطبيق — قم بتعطيل الإشعارات هناك.',
+  'notification_prompt_title': 'فعّل الإشعارات',
+  'notification_prompt_message':
+      'لنوصل لك آخر المستجدات والتذكيرات، ننصحك بتفعيل الإشعارات حتى لا يفوتك شيء.',
+  'notification_prompt_enable': 'تفعيل الإشعارات',
+  'notification_prompt_later': 'لاحقاً',
   'language': 'اللغة',
   'about_app': 'عن التطبيق',
 
@@ -321,7 +330,9 @@ const Map<String, String> ar = {
   'registration_successful': 'نجح التسجيل',
   'registration_successful_message': 'تم التسجيل بنجاح',
   'logout_confirmation': 'هل أنت متأكد من تسجيل الخروج من التطبيق؟',
-  'app_name': 'تطبيق أجار',
+  'exit_app_confirmation': 'ستغادر التطبيق الآن. هل تريد المتابعة؟',
+  'exit_app': 'خروج',
+  'app_name': 'تطبيق ديبلوماسي',
   'verification_code_required': 'يجب أن يكون لديك رمز تحقق',
   'seconds': 'ثانية',
   'camera': 'الكاميرا',
@@ -350,4 +361,15 @@ const Map<String, String> ar = {
   'privacy_policy': 'سياسة الخصوصية',
   'help_center': 'مركز المساعدة',
   'terms_conditions': 'الشروط والأحكام',
+
+  // App update & banned
+  'force_update_title': 'تحديث مطلوب',
+  'force_update_message': 'يجب تحديث التطبيق للمتابعة. حمّل النسخة الأحدث من المتجر.',
+  'suggest_update_title': 'تحديث جديد متاح',
+  'suggest_update_message': 'يوجد إصدار أحدث من التطبيق مع تحسينات جديدة. ننصحك بالتحديث.',
+  'update_button': 'تحديث',
+  'later_button': 'لاحقاً',
+  'banned_title': 'حسابك محظور',
+  'banned_message': 'تم حظر حسابك. للاستفسار تواصل مع مركز المساعدة.',
+  'close_app': 'إغلاق',
 };

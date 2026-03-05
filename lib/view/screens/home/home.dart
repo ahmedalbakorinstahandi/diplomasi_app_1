@@ -75,38 +75,33 @@ class HomeScreen extends StatelessWidget {
                             child: Column(
                               children: [
                                 // Course title
-                                GestureDetector(
-                                  onTap: () {
-                                    // Get.toNamed(AppRoutes.onboarding);
-                                  },
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        controller.level?.course?.title ?? '',
-                                        textAlign: TextAlign.right,
-                                        style: TextStyle(
-                                          fontStyle: FontStyle.normal,
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: emp(22),
-                                          color: scheme.onSurface,
-                                        ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      controller.level?.course?.title ?? '',
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontStyle: FontStyle.normal,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: emp(22),
+                                        color: scheme.onSurface,
                                       ),
-
-                                      // Levels dropdown
-                                      SizedBox(
-                                        width: width(140),
-                                        child: LevelDropdown(
-                                          selectedLevel: controller.level,
-                                          levels: controller.levels,
-                                          onLevelSelected: (level) {
-                                            controller.selectLevel(level);
-                                          },
-                                        ),
+                                    ),
+                                
+                                    // Levels dropdown
+                                    SizedBox(
+                                      width: width(140),
+                                      child: LevelDropdown(
+                                        selectedLevel: controller.level,
+                                        levels: controller.levels,
+                                        onLevelSelected: (level) {
+                                          controller.selectLevel(level);
+                                        },
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
 
                                 // Content Section

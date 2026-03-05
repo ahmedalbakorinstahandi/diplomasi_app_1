@@ -1,16 +1,19 @@
 import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class LessonVideoPlayer extends StatefulWidget {
   final String videoUrl;
   final String? videoId;
+  final ValueChanged<bool>? onFullScreenChange;
 
   const LessonVideoPlayer({
     super.key,
     required this.videoUrl,
     this.videoId,
+    this.onFullScreenChange,
   });
 
   @override
@@ -20,6 +23,7 @@ class LessonVideoPlayer extends StatefulWidget {
 class LessonVideoPlayerState extends State<LessonVideoPlayer> {
   YoutubePlayerController? _controller;
   bool _isPlayerReady = false;
+  bool _wasFullScreen = false;
 
   @override
   void initState() {
@@ -50,6 +54,21 @@ class LessonVideoPlayerState extends State<LessonVideoPlayer> {
   void _listener() {
     if (_isPlayerReady && mounted && _controller!.value.isReady) {
       setState(() {});
+    }
+    final isFullScreen = _controller?.value.isFullScreen ?? false;
+    if (isFullScreen != _wasFullScreen) {
+      _wasFullScreen = isFullScreen;
+      if (isFullScreen) {
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]);
+      } else {
+        SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+        ]);
+      }
+      widget.onFullScreenChange?.call(isFullScreen);
     }
   }
 

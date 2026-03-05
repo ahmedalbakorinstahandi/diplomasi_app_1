@@ -3,6 +3,8 @@ import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/constants/steps.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
+import 'package:diplomasi_app/view/widgets/general/banned_user_dialog.dart';
+import 'package:diplomasi_app/view/widgets/general/force_update_dialog.dart';
 
 class ApiResponse<T> {
   final bool success;
@@ -52,37 +54,32 @@ class ApiResponse<T> {
 
   bool get isSuccess => success && statusCode != null && statusCode! < 400;
 
-  @override
-  String toString() {
-    // if (kDebugMode) {
-    //   printDebug("=========== Inputes ===========");
-    //   printDebug("Url: $url");
-    //   printDebug("params: ${params ?? {}}");
-    //   printDebug("body: ${body ?? {}}");
-    //   printDebug("=========== Outputs ===========");
-    //   printDebug("success: $success");
-    //   printDebug("Status Code: $statusCode");
-    //   printDebug("data: $data");
-    //   printDebug("message: $message");
-    // }
+  /// Handles global response keys: force update, banned user. Call from toString() and on every response path.
+  void runGlobalHandlers() {
+    if (key == 'app.force_update') {
+      final d = data is Map ? data as Map<String, dynamic>? : null;
+      ForceUpdateDialog.show(
+        storeLinkAndroid: d?['store_link_android']?.toString(),
+        storeLinkIos: d?['store_link_ios']?.toString(),
+      );
+      return;
+    }
+    if (key == 'messages.user.is_banned') {
+      BannedUserDialog.show();
+      return;
+    }
 
     int step = Shared.getValue(StorageKeys.step, initialValue: Steps.login);
-
-    if (step == Steps.homeApp) {
-      if (statusCode == 401) {
-        Shared.clear();
-        Shared.setValue(StorageKeys.step, Steps.login);
-        Get.offAllNamed(AppRoutes.login);
-      }
-
-      if (key == 'messages.user.is_banned') {
-        Shared.clear();
-        Shared.setValue(StorageKeys.step, Steps.login);
-        Get.offAllNamed(AppRoutes.login);
-
-        // showBannedDialog();
-      }
+    if (step == Steps.homeApp && statusCode == 401) {
+      Shared.clear();
+      Shared.setValue(StorageKeys.step, Steps.login);
+      Get.offAllNamed(AppRoutes.login);
     }
+  }
+
+  @override
+  String toString() {
+    runGlobalHandlers();
 
     String dataAsString =
         'ApiResponse(success: $success, statusCode: $statusCode, url: $url, params: $params, body: $body, message: $message, data: $data)';

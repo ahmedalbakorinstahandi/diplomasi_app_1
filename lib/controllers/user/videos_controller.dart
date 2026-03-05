@@ -13,6 +13,7 @@ abstract class VideosController extends GetxController {
   int perPage = 20;
   bool isLoadingMore = false;
   bool shouldAutoPlay = false;
+  bool isVideoFullScreen = false;
 
   VideosData videosData = VideosData();
   ScrollController videosScrollController = ScrollController();
@@ -23,6 +24,7 @@ abstract class VideosController extends GetxController {
   void selectVideo(int index);
   void nextVideo();
   void previousVideo();
+  void setVideoFullScreen(bool value);
 }
 
 class VideosControllerImp extends VideosController {
@@ -119,6 +121,14 @@ class VideosControllerImp extends VideosController {
       update();
       // Scroll to selected video in list
       _scrollToVideo();
+    }
+  }
+
+  @override
+  void setVideoFullScreen(bool value) {
+    if (isVideoFullScreen != value) {
+      isVideoFullScreen = value;
+      update();
     }
   }
 

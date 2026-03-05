@@ -4,6 +4,8 @@ import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/assets.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
+import 'package:diplomasi_app/core/services/notification_prompt_service.dart';
+import 'package:diplomasi_app/view/widgets/general/suggest_update_dialog.dart';
 import 'package:diplomasi_app/data/model/users/user_model.dart';
 import 'package:diplomasi_app/data/resource/remote/user/notifications_data.dart';
 import 'package:diplomasi_app/data/resource/remote/user/user_data.dart';
@@ -71,6 +73,16 @@ class AppControllerImp extends AppController {
   }
 
   @override
+  void onReady() {
+    super.onReady();
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 800), () {
+        NotificationPromptService().maybeShowPrompt();
+      });
+    });
+  }
+
+  @override
   void checkLevelAndCourse() {
     int levelId = Shared.getValue(StorageKeys.levelId, initialValue: 0);
     int courseId = Shared.getValue(StorageKeys.courseId, initialValue: 0);
@@ -86,11 +98,9 @@ class AppControllerImp extends AppController {
 
   @override
   void goToHome() {
-    pageController.jumpToPage(
-      0,
-      // duration: const Duration(milliseconds: 250),
-      // curve: Curves.easeIn,
-    );
+    pageController.jumpToPage(0);
+    pageIndex = 0;
+    update();
   }
 
   @override
@@ -149,6 +159,26 @@ class AppControllerImp extends AppController {
     if (response.isSuccess) {
       Shared.setValue('user-data', response.data);
       userModel = UserModel.fromJson(response.data);
+
+      // Optional update suggestion (at most once per 24h), piggybacked on getMyInfo
+      final appUpdate = response.body is Map ? (response.body as Map)['app_update'] : null;
+      final suggest = appUpdate is Map && (appUpdate['suggest'] == true);
+      if (suggest) {
+        const twentyFourHoursMs = 24 * 60 * 60 * 1000;
+        final lastAt = Shared.getValue(StorageKeys.lastUpdateSuggestionAt, initialValue: 0) as int;
+        final now = DateTime.now().millisecondsSinceEpoch;
+        if (lastAt == 0 || (now - lastAt) >= twentyFourHoursMs) {
+          final storeAndroid = appUpdate['store_link_android']?.toString();
+          final storeIos = appUpdate['store_link_ios']?.toString();
+          SuggestUpdateDialog.show(
+            storeLinkAndroid: storeAndroid,
+            storeLinkIos: storeIos,
+            onLater: () {},
+          ).then((_) {
+            Shared.setValue(StorageKeys.lastUpdateSuggestionAt, DateTime.now().millisecondsSinceEpoch);
+          });
+        }
+      }
     }
     isUserDataLoading = false;
     update();

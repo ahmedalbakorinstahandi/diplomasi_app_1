@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:diplomasi_app/core/classes/api_response.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
@@ -43,6 +44,8 @@ class ApiService {
 
           options.headers['Accept-Language'] = LocaleController.languageCode;
           options.headers['X-Context'] = 'app';
+          final packageInfo = await PackageInfo.fromPlatform();
+          options.headers['X-App-Version'] = packageInfo.version;
           final timezoneHeaders = await getTimezoneHeaders();
           options.headers.addAll(timezoneHeaders);
           if (accessToken != null) {
@@ -113,6 +116,7 @@ class ApiService {
         cancelToken: cancelToken,
       );
       ApiResponse apiResponse = ApiResponse.fromResponse(response);
+      apiResponse.toString();
       return apiResponse;
     } on DioException catch (e) {
       printDebug('response error: $e');
@@ -284,6 +288,9 @@ class ApiService {
         customSnackBar(text: message, snackType: SnackBarType.error);
       }
     }
+    final responseData = error.response?.data;
+    final dataPayload = responseData is Map ? responseData['data'] : null;
+
     ApiResponse api = ApiResponse(
       success: false,
       statusCode: statusCode,
@@ -291,7 +298,8 @@ class ApiService {
       params: params,
       body: body,
       message: message,
-      key: error.response?.data['key'],
+      key: responseData is Map ? responseData['key'] : null,
+      data: dataPayload,
     );
 
     api.toString();

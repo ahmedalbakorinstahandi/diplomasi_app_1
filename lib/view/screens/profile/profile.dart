@@ -142,20 +142,6 @@ class ProfileScreen extends StatelessWidget {
                             // Application Settings Section
                             ProfileSection(
                               items: [
-                                ProfileItem(
-                                  title: 'تفعيل الإشعارات',
-                                  icon: Assets.icons.svg.notificationBell,
-                                  hasSwitch: true,
-                                  switchValue:
-                                      controller.isNotificationsEnabled,
-                                  onSwitchChanged: (value) {
-                                    controller.isNotificationActionInProgress
-                                        ? (_) {}
-                                        : controller.setNotificationsEnabled(
-                                            value,
-                                          );
-                                  },
-                                ),
                                 // ProfileItem(
                                 //   title: 'اتباع وضع النظام',
                                 //   icon: Assets.icons.svg.languageCircle,

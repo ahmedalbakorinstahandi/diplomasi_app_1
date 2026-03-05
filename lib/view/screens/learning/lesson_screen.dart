@@ -24,6 +24,18 @@ class LessonScreen extends StatefulWidget {
 class _LessonScreenState extends State<LessonScreen> {
   final GlobalKey<LessonVideoPlayerState> _videoPlayerKey =
       GlobalKey<LessonVideoPlayerState>();
+  bool _isVideoFullScreen = false;
+  bool _scriptExpanded = false;
+
+  @override
+  void didUpdateWidget(covariant LessonScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldLesson = oldWidget.lesson;
+    final newLesson = widget.lesson;
+    if (oldLesson?.id != newLesson?.id) {
+      _scriptExpanded = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,87 +64,149 @@ class _LessonScreenState extends State<LessonScreen> {
               // Content
               Column(
                 children: [
-                  // Header
-                  Container(
-                    padding: EdgeInsets.only(
-                      top: MediaQuery.of(context).padding.top + height(16),
-                      left: width(16),
-                      right: width(16),
-                      bottom: height(16),
-                    ),
-                    decoration: BoxDecoration(
-                      color: scheme.primary,
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(16),
-                        bottomRight: Radius.circular(16),
+                  // Header — يُخفى عند ملء شاشة الفيديو
+                  if (!_isVideoFullScreen)
+                    Container(
+                      padding: EdgeInsets.only(
+                        top: MediaQuery.of(context).padding.top + height(16),
+                        left: width(16),
+                        right: width(16),
+                        bottom: height(16),
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        // Back button
-                        IconButton(
-                          icon: Icon(Icons.arrow_back, color: scheme.onPrimary),
-                          onPressed: () => Get.back(),
+                      decoration: BoxDecoration(
+                        color: scheme.primary,
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(16),
+                          bottomRight: Radius.circular(16),
                         ),
-
-                        SizedBox(width: width(12)),
-
-                        // Lesson title
-                        Expanded(
-                          child: Text(
-                            currentLesson.title,
-                            style: TextStyle(
-                              fontSize: emp(18),
-                              fontWeight: FontWeight.w600,
+                      ),
+                      child: Row(
+                        children: [
+                          // Back button
+                          IconButton(
+                            icon: Icon(
+                              Icons.arrow_back,
                               color: scheme.onPrimary,
                             ),
-                            textAlign: TextAlign.center,
+                            onPressed: () => Get.back(),
                           ),
-                        ),
 
-                        SizedBox(width: width(12)),
+                          SizedBox(width: width(12)),
 
-                        // // Book icon
-                        // Container(
-                        //   width: width(40),
-                        //   height: width(40),
-                        //   decoration: BoxDecoration(
-                        //     color: scheme.onPrimary.withOpacity(0.2),
-                        //     shape: BoxShape.circle,
-                        //   ),
-                        //   child: Center(
-                        //     child: MySvgIcon(
-                        //       path: Assets.icons.svg.book,
-                        //       size: emp(20),
-                        //       color: scheme.onPrimary,
-                        //     ),
-                        //   ),
-                        // ),
-                      ],
-                    ),
-                  ),
+                          // Lesson title
+                          Expanded(
+                            child: Text(
+                              currentLesson.title,
+                              style: TextStyle(
+                                fontSize: emp(18),
+                                fontWeight: FontWeight.w600,
+                                color: scheme.onPrimary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
 
-                  // Video player
-                  SizedBox(height: height(20)),
-                  LessonVideoPlayer(
-                    key: _videoPlayerKey,
-                    videoUrl: currentLesson.videoUrl,
-                  ),
-
-                  SizedBox(height: height(20)),
-
-                  // Content (scrollable when long)
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: EdgeInsets.symmetric(horizontal: width(16)),
-                      child: Text(
-                        currentLesson.content,
-                        style: TextStyle(fontSize: emp(16)),
+                          SizedBox(width: width(12)),
+                        ],
                       ),
                     ),
-                  ),
 
-                  if (currentLesson.hasPreviousAttempts) ...[
+                  // Video player — عند ملء الشاشة يأخذ كامل المساحة
+                  SizedBox(height: height(20)),
+                  if (_isVideoFullScreen)
+                    Expanded(
+                      child: LessonVideoPlayer(
+                        key: _videoPlayerKey,
+                        videoUrl: currentLesson.videoUrl,
+                        onFullScreenChange: (isFullScreen) {
+                          setState(() {
+                            _isVideoFullScreen = isFullScreen;
+                          });
+                        },
+                      ),
+                    )
+                  else
+                    LessonVideoPlayer(
+                      key: _videoPlayerKey,
+                      videoUrl: currentLesson.videoUrl,
+                      onFullScreenChange: (isFullScreen) {
+                        setState(() {
+                          _isVideoFullScreen = isFullScreen;
+                        });
+                      },
+                    ),
+
+                  SizedBox(height: height(20)),
+
+                  // Content (script) — سطران مع عرض المزيد/أقل
+                  if (!_isVideoFullScreen)
+                    Expanded(
+                      child: SingleChildScrollView(
+                        padding: EdgeInsets.symmetric(horizontal: width(16)),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final content = currentLesson.content;
+                            if (content.trim().isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+                            const maxLinesCollapsed = 4;
+                            final textStyle = TextStyle(
+                              fontSize: emp(16),
+                              height: 1.4,
+                            );
+                            final textPainter = TextPainter(
+                              text: TextSpan(text: content, style: textStyle),
+                              maxLines: maxLinesCollapsed,
+                              textDirection: TextDirection.rtl,
+                            )..layout(maxWidth: constraints.maxWidth);
+                            final needsToggle = textPainter.didExceedMaxLines;
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  content,
+                                  style: textStyle,
+                                  textDirection: TextDirection.rtl,
+                                  textAlign: TextAlign.right,
+                                  maxLines: _scriptExpanded
+                                      ? null
+                                      : maxLinesCollapsed,
+                                  overflow: _scriptExpanded
+                                      ? null
+                                      : TextOverflow.ellipsis,
+                                ),
+                                if (needsToggle) ...[
+                                  SizedBox(height: height(6)),
+                                  GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        _scriptExpanded = !_scriptExpanded;
+                                      });
+                                    },
+                                    child: Text(
+                                      _scriptExpanded
+                                          ? 'عرض أقل'
+                                          : 'عرض المزيد',
+                                      style: TextStyle(
+                                        fontSize: emp(14),
+                                        fontWeight: FontWeight.w600,
+                                        color: scheme.primary,
+                                      ),
+                                      textDirection: TextDirection.rtl,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+
+                  if (!_isVideoFullScreen &&
+                      currentLesson.hasPreviousAttempts) ...[
                     Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: width(16),
@@ -158,30 +232,30 @@ class _LessonScreenState extends State<LessonScreen> {
                     // SizedBox(height: height(10)),
                   ],
 
-                  // Complete button
-                  LessonCompleteButton(
-                    isLoading: controller.isLoadingAttempt,
-                    onTap: () async {
-                      // Pause video if playing
-                      _videoPlayerKey.currentState?.pause();
+                  // Complete button — يُخفى عند ملء شاشة الفيديو
+                  if (!_isVideoFullScreen)
+                    LessonCompleteButton(
+                      isLoading: controller.isLoadingAttempt,
+                      onTap: () async {
+                        // Pause video if playing
+                        _videoPlayerKey.currentState?.pause();
 
-                      // Start or resume attempt first
-                      await controller.startOrResumeAttempt();
-                      if (controller.attempt != null) {
-                        // Mark video as watched
-                        await controller.markVideoWatched();
-                        // Navigate to questions
-                        Get.toNamed(
-                          AppRoutes.lessonQuestions,
-                          parameters: {
-                            'lesson_id': currentLesson.id.toString(),
-                            'attempt_id': controller.attempt!.id.toString(),
-                          },
-                        );
-                      }
-                    },
-                  ),
-                  // SizedBox(height: height(10)),
+                        // Start or resume attempt first
+                        await controller.startOrResumeAttempt();
+                        if (controller.attempt != null) {
+                          // Mark video as watched
+                          await controller.markVideoWatched();
+                          // Navigate to questions
+                          Get.toNamed(
+                            AppRoutes.lessonQuestions,
+                            parameters: {
+                              'lesson_id': currentLesson.id.toString(),
+                              'attempt_id': controller.attempt!.id.toString(),
+                            },
+                          );
+                        }
+                      },
+                    ),
                 ],
               ),
             ],

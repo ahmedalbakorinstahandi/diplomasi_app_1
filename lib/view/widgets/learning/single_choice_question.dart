@@ -26,6 +26,14 @@ class _SingleChoiceQuestionState extends State<SingleChoiceQuestion> {
   bool isLoading = false;
 
   @override
+  void didUpdateWidget(covariant SingleChoiceQuestion oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.question.id != widget.question.id) {
+      selectedOptionId = null;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;

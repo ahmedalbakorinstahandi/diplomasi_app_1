@@ -22,7 +22,6 @@ class PushNotificationService extends GetxService {
 
     FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-    await _requestPermission();
     await _storeDeviceToken();
 
     FirebaseMessaging.instance.onTokenRefresh.listen((token) {
@@ -53,7 +52,8 @@ class PushNotificationService extends GetxService {
     return null;
   }
 
-  Future<void> _requestPermission() async {
+  /// استدعاؤه من واجهة المستخدم فقط (مثلاً بعد تسجيل الدخول أو من نافذة الاقتراح).
+  Future<void> requestPermission() async {
     await _messaging.requestPermission(
       alert: true,
       announcement: true,

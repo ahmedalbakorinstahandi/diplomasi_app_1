@@ -12,16 +12,9 @@ import 'package:diplomasi_app/data/resource/remote/user/auth_data.dart';
 import 'package:diplomasi_app/view/widgets/profile/account_deletion_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:share_plus/share_plus.dart';
 
 abstract class ProfileController extends GetxController {
-  bool notificationsEnabled = true;
-  bool isNotificationsEnabled = false;
-  bool isNotificationActionInProgress = false;
-
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
-
   bool isShareAppInProgress = false;
   bool isLoggingOut = false;
   bool isDeletingAccount = false;
@@ -34,10 +27,7 @@ abstract class ProfileController extends GetxController {
   SettingsData settingsData = SettingsData();
   AuthData authData = AuthData();
 
-  void toggleNotifications(bool value);
   Future<void> getProfile();
-  void setNotificationsEnabled(bool value);
-
   Future<void> shareApp();
 
   void logout();
@@ -51,108 +41,8 @@ abstract class ProfileController extends GetxController {
 
 class ProfileControllerImp extends ProfileController {
   @override
-  void toggleNotifications(bool value) {
-    notificationsEnabled = value;
-    update();
-  }
-
-  @override
   Future<void> getProfile() {
     throw UnimplementedError();
-  }
-
-  @override
-  void setNotificationsEnabled(bool value, {bool showSnackbar = true}) async {
-    if (isNotificationActionInProgress) return;
-
-    isNotificationActionInProgress = true;
-    update();
-
-    try {
-      if (value) {
-        final granted = await _ensureNotificationPermission();
-
-        if (!granted) {
-          isNotificationsEnabled = false;
-          Shared.setValue('isNotificationsEnabled', false);
-          await _messaging.setAutoInitEnabled(false);
-
-          if (showSnackbar) {
-            customSnackBar(
-              text: 'notifications_permission_required'.tr,
-              snackType: SnackBarType.error,
-            );
-          }
-          return;
-        }
-
-        await _messaging.setAutoInitEnabled(true);
-        await _messaging.getToken();
-
-        isNotificationsEnabled = true;
-        Shared.setValue('isNotificationsEnabled', true);
-        if (showSnackbar) {
-          customSnackBar(
-            text: 'notifications_enabled_success'.tr,
-            snackType: SnackBarType.correct,
-          );
-        }
-      } else {
-        await _disableNotifications();
-        isNotificationsEnabled = false;
-        Shared.setValue('isNotificationsEnabled', false);
-        if (showSnackbar) {
-          customSnackBar(
-            text: 'notifications_disabled_success'.tr,
-            snackType: SnackBarType.info,
-          );
-        }
-      }
-    } catch (e) {
-      if (showSnackbar) {
-        customSnackBar(
-          text: 'notifications_permission_error'.tr,
-          message: e.toString(),
-          snackType: SnackBarType.error,
-        );
-      }
-    } finally {
-      isNotificationActionInProgress = false;
-      update();
-    }
-  }
-
-  bool _isPermissionGranted(AuthorizationStatus status) {
-    return status == AuthorizationStatus.authorized ||
-        status == AuthorizationStatus.provisional;
-  }
-
-  Future<bool> _ensureNotificationPermission() async {
-    final current = await _messaging.getNotificationSettings();
-    if (_isPermissionGranted(current.authorizationStatus)) {
-      return true;
-    }
-
-    final requested = await _messaging.requestPermission(
-      alert: true,
-      announcement: true,
-      badge: true,
-      carPlay: true,
-      criticalAlert: true,
-      provisional: true,
-      sound: true,
-    );
-
-    return _isPermissionGranted(requested.authorizationStatus);
-  }
-
-  Future<void> _disableNotifications() async {
-    await _messaging.setAutoInitEnabled(false);
-    try {
-      await _messaging.deleteToken();
-    } catch (_) {
-      // Ignored: token might not exist yet.
-    }
   }
 
   @override

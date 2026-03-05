@@ -2,6 +2,7 @@ import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/data/model/user/video_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 class VideoPlayerWidget extends StatefulWidget {
@@ -11,6 +12,7 @@ class VideoPlayerWidget extends StatefulWidget {
   final bool hasNext;
   final bool hasPrevious;
   final bool autoPlay;
+  final ValueChanged<bool>? onFullScreenChange;
 
   const VideoPlayerWidget({
     super.key,
@@ -20,6 +22,7 @@ class VideoPlayerWidget extends StatefulWidget {
     this.hasNext = false,
     this.hasPrevious = false,
     this.autoPlay = false,
+    this.onFullScreenChange,
   });
 
   @override
@@ -29,6 +32,7 @@ class VideoPlayerWidget extends StatefulWidget {
 class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
   YoutubePlayerController? _controller;
   bool _isPlayerReady = false;
+  bool _wasFullScreen = false;
 
   @override
   void initState() {
@@ -93,6 +97,22 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
             _isPlayerReady = true;
           });
         }
+      }
+      // عند الملء: السماح بالعرض (landscape). عند الخروج: الرجوع للطول (portrait)
+      final isFullScreen = _controller!.value.isFullScreen;
+      if (isFullScreen != _wasFullScreen) {
+        _wasFullScreen = isFullScreen;
+        if (isFullScreen) {
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.landscapeRight,
+          ]);
+        } else {
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.portraitUp,
+          ]);
+        }
+        widget.onFullScreenChange?.call(isFullScreen);
       }
     } catch (e) {
       // Controller might be disposed, ignore

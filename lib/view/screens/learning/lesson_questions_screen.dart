@@ -144,12 +144,14 @@ class LessonQuestionsScreen extends StatelessWidget {
     switch (question.type) {
       case 'single_choice':
         return SingleChoiceQuestion(
+          key: ValueKey(question.id),
           question: question,
           onSubmit: (optionId) => _handleSubmit(controller, optionId: optionId),
         );
 
       case 'multiple_choice':
         return MultipleChoiceQuestion(
+          key: ValueKey(question.id),
           question: question,
           onSubmit: (optionIds) =>
               _handleSubmit(controller, optionIds: optionIds),
@@ -157,12 +159,14 @@ class LessonQuestionsScreen extends StatelessWidget {
 
       case 'true_false':
         return TrueFalseQuestion(
+          key: ValueKey(question.id),
           question: question,
           onSubmit: (optionId) => _handleSubmit(controller, optionId: optionId),
         );
 
       case 'match':
         return MatchQuestion(
+          key: ValueKey(question.id),
           question: question,
           onSubmit: (matches) => _handleSubmit(controller, matches: matches),
         );

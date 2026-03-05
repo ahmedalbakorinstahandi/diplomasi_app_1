@@ -74,8 +74,8 @@ const Map<String, String> en = {
   "location": "Location",
   "view_on_map": "View on Map",
   "view_details": "View Details",
-  "shared_from_ajar": "🏡 Shared from Ajar App",
-  "discover_more": "Discover more properties on Ajar App",
+  "shared_from_diplomasi": "🏡 Shared from Diplomasi App",
+  "discover_more": "Discover more properties on Diplomasi App",
   "download_app": "Download the app now",
   "property_id": "Property ID",
 
@@ -290,6 +290,15 @@ const Map<String, String> en = {
       'Could not update notification permission right now.',
   'notifications_enabled_success': 'Notifications enabled successfully.',
   'notifications_disabled_success': 'Notifications have been turned off.',
+  'notifications_disabled_go_to_settings':
+      'To fully disable notifications, turn them off in app settings.',
+  'notifications_disabled_open_settings':
+      'Opening app settings — turn off notifications there.',
+  'notification_prompt_title': 'Enable notifications',
+  'notification_prompt_message':
+      'To receive updates and reminders, we recommend enabling notifications so you don\'t miss anything.',
+  'notification_prompt_enable': 'Enable notifications',
+  'notification_prompt_later': 'Later',
   'language': 'Language',
   'about_app': 'About App',
 
@@ -333,7 +342,9 @@ const Map<String, String> en = {
   'registration_successful': 'Registration successful',
   'registration_successful_message': 'Registration completed successfully',
   'logout_confirmation': 'Are you sure you want to logout from the app?',
-  'app_name': 'Ajar App',
+  'exit_app_confirmation': "You're about to leave the app. Continue?",
+  'exit_app': 'Exit',
+  'app_name': 'Diplomasi App',
   'verification_code_required': 'You must have a verification code',
   'seconds': 'seconds',
   'camera': 'Camera',
@@ -357,4 +368,16 @@ const Map<String, String> en = {
   // Listing Details
   'contact_whatsapp': 'Contact the owner via WhatsApp',
   'error_launching_whatsapp': 'Error launching WhatsApp',
+  'help_center': 'Help Center',
+
+  // App update & banned
+  'force_update_title': 'Update required',
+  'force_update_message': 'Please update the app to continue. Download the latest version from the store.',
+  'suggest_update_title': 'New update available',
+  'suggest_update_message': 'A newer version of the app is available with improvements. We recommend updating.',
+  'update_button': 'Update',
+  'later_button': 'Later',
+  'banned_title': 'Account banned',
+  'banned_message': 'Your account has been banned. For inquiries, contact the help center.',
+  'close_app': 'Close',
 };
