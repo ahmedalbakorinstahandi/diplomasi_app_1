@@ -4,12 +4,12 @@ import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/core/constants/steps.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
-import 'package:diplomasi_app/controllers/profile/profile_controller.dart';
+import 'package:diplomasi_app/data/resource/remote/user/auth_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-/// Dialog shown when the user is banned. Actions: Help center, Logout, Close app.
+/// Dialog shown when the user is banned. Actions: Help center, Logout (API + clear), Close app.
 class BannedUserDialog extends StatelessWidget {
   const BannedUserDialog({super.key});
 
@@ -17,7 +17,7 @@ class BannedUserDialog extends StatelessWidget {
     return Get.dialog<void>(
       const BannedUserDialog(),
       barrierDismissible: false,
-      barrierColor: Colors.black54,
+      barrierColor: Colors.transparent,
     );
   }
 
@@ -26,15 +26,13 @@ class BannedUserDialog extends StatelessWidget {
     Get.toNamed(AppRoutes.helpCenter);
   }
 
-  void _logout() {
-    if (Get.isRegistered<ProfileControllerImp>()) {
-      Get.find<ProfileControllerImp>().performLogout();
-    } else {
-      Get.back();
-      Shared.clear();
-      Shared.setValue(StorageKeys.step, Steps.login);
-      Get.offAllNamed(AppRoutes.login);
-    }
+  Future<void> _logout() async {
+    Get.back();
+    final authData = AuthData();
+    await authData.logout();
+    Shared.clear();
+    Shared.setValue(StorageKeys.step, Steps.login);
+    Get.offAllNamed(AppRoutes.login);
   }
 
   void _closeApp() {
@@ -127,14 +125,22 @@ class BannedUserDialog extends StatelessWidget {
               SizedBox(height: height(10)),
               SizedBox(
                 width: double.infinity,
-                child: TextButton(
+                child: OutlinedButton.icon(
                   onPressed: _closeApp,
-                  child: Text(
+                  icon: Icon(Icons.close_rounded, size: emp(20), color: colors.textSecondary),
+                  label: Text(
                     'close_app'.tr,
                     style: TextStyle(
                       fontSize: emp(15),
                       color: colors.textSecondary,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: colors.borderStrong),
+                    padding: EdgeInsets.symmetric(vertical: height(14)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                 ),

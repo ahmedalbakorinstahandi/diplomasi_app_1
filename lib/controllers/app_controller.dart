@@ -161,11 +161,15 @@ class AppControllerImp extends AppController {
       userModel = UserModel.fromJson(response.data);
 
       // Optional update suggestion (at most once per 24h), piggybacked on getMyInfo
-      final appUpdate = response.body is Map ? (response.body as Map)['app_update'] : null;
+      final appUpdate = response.body is Map
+          ? (response.body as Map)['app_update']
+          : null;
       final suggest = appUpdate is Map && (appUpdate['suggest'] == true);
       if (suggest) {
         const twentyFourHoursMs = 24 * 60 * 60 * 1000;
-        final lastAt = Shared.getValue(StorageKeys.lastUpdateSuggestionAt, initialValue: 0) as int;
+        final lastAt =
+            Shared.getValue(StorageKeys.lastUpdateSuggestionAt, initialValue: 0)
+                as int;
         final now = DateTime.now().millisecondsSinceEpoch;
         if (lastAt == 0 || (now - lastAt) >= twentyFourHoursMs) {
           final storeAndroid = appUpdate['store_link_android']?.toString();
@@ -175,7 +179,10 @@ class AppControllerImp extends AppController {
             storeLinkIos: storeIos,
             onLater: () {},
           ).then((_) {
-            Shared.setValue(StorageKeys.lastUpdateSuggestionAt, DateTime.now().millisecondsSinceEpoch);
+            Shared.setValue(
+              StorageKeys.lastUpdateSuggestionAt,
+              DateTime.now().millisecondsSinceEpoch,
+            );
           });
         }
       }
