@@ -6,6 +6,7 @@ import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/core/functions/print.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
+import 'package:diplomasi_app/core/functions/timezone_helper.dart';
 import 'package:diplomasi_app/core/localization/changelocale.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'internet_connectivity_service.dart';
@@ -42,6 +43,8 @@ class ApiService {
 
           options.headers['Accept-Language'] = LocaleController.languageCode;
           options.headers['X-Context'] = 'app';
+          final timezoneHeaders = await getTimezoneHeaders();
+          options.headers.addAll(timezoneHeaders);
           if (accessToken != null) {
             options.headers['Authorization'] = 'Bearer $accessToken';
           }

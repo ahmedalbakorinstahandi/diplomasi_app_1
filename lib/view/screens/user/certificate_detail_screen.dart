@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
+import 'package:diplomasi_app/core/functions/format_date.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/core/widgets/custom_scaffold.dart';
 import 'package:diplomasi_app/controllers/user/certificate_detail_controller.dart';
@@ -7,7 +8,6 @@ import 'package:diplomasi_app/data/model/user/certificate_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 
 class CertificateDetailScreen extends StatelessWidget {
   const CertificateDetailScreen({super.key});
@@ -189,7 +189,7 @@ class CertificateDetailScreen extends StatelessWidget {
                             _InfoRow(
                               icon: Icons.calendar_today,
                               label: 'تاريخ الإصدار',
-                              value: _formatDateForDisplay(
+                              value: formatDateOnly(
                                 certificate.issuedAt,
                               ),
                             ),
@@ -297,16 +297,6 @@ class CertificateDetailScreen extends StatelessWidget {
         );
       },
     );
-  }
-
-  String _formatDateForDisplay(String dateString) {
-    try {
-      DateTime date = DateTime.parse(dateString);
-      String formatted = DateFormat('yyyy-MM-dd', 'ar').format(date);
-      return formatted;
-    } catch (e) {
-      return dateString;
-    }
   }
 
   void _showCertificateImagePreview(BuildContext context, String imageUrl) {

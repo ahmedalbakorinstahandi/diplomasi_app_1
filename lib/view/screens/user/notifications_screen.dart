@@ -1,6 +1,7 @@
 import 'package:diplomasi_app/controllers/user/notifications_controller.dart';
 import 'package:diplomasi_app/core/classes/handling_data_view.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
+import 'package:diplomasi_app/core/functions/format_date.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/core/services/notification_navigation_service.dart';
 import 'package:diplomasi_app/core/widgets/custom_scaffold.dart';
@@ -41,7 +42,7 @@ class NotificationsScreen extends StatelessWidget {
                       children: [
                         ...controller.notifications.map(
                           (dateGroup) => NotificationDateSection(
-                            date: _formatDate(dateGroup['date']),
+                            date: formatDateRelative(dateGroup['date']),
                             notifications: (dateGroup['notifications'] as List)
                                 .map(
                                   (notification) => NotificationCard(
@@ -64,44 +65,6 @@ class NotificationsScreen extends StatelessWidget {
     );
   }
 
-  String _formatDate(String dateString) {
-    try {
-      DateTime date = DateTime.parse(dateString);
-      DateTime now = DateTime.now();
-      DateTime today = DateTime(now.year, now.month, now.day);
-      DateTime yesterday = today.subtract(const Duration(days: 1));
-      DateTime dateOnly = DateTime(date.year, date.month, date.day);
-
-      if (dateOnly.isAtSameMomentAs(today)) {
-        return 'اليوم';
-      } else if (dateOnly.isAtSameMomentAs(yesterday)) {
-        return 'أمس';
-      } else {
-        return '${date.day} ${_getMonthName(date.month)}';
-      }
-    } catch (e) {
-      return dateString;
-    }
-  }
-
-  String _getMonthName(int month) {
-    List<String> months = [
-      '',
-      'يناير',
-      'فبراير',
-      'مارس',
-      'أبريل',
-      'مايو',
-      'يونيو',
-      'يوليو',
-      'أغسطس',
-      'سبتمبر',
-      'أكتوبر',
-      'نوفمبر',
-      'ديسمبر',
-    ];
-    return months[month];
-  }
 }
 
 class NotificationDateSection extends StatelessWidget {
@@ -140,17 +103,6 @@ class NotificationDateSection extends StatelessWidget {
 class NotificationCard extends StatelessWidget {
   const NotificationCard({super.key, required this.notification});
   final NotificationModel notification;
-
-  String _formatTime(String dateTimeString) {
-    try {
-      DateTime dateTime = DateTime.parse(dateTimeString);
-      String hour = dateTime.hour.toString().padLeft(2, '0');
-      String minute = dateTime.minute.toString().padLeft(2, '0');
-      return '$hour:$minute';
-    } catch (e) {
-      return dateTimeString;
-    }
-  }
 
   Future<void> _handleNotificationTap() async {
     await Get.find<NotificationNavigationService>().handleStoredNotification(
@@ -194,7 +146,7 @@ class NotificationCard extends StatelessWidget {
                 SizedBox(width: width(8)),
                 // Time
                 Text(
-                  _formatTime(notification.createdAt),
+                  formatTimeOnly(notification.createdAt),
                   style: TextStyle(
                     fontSize: emp(12),
                     fontWeight: FontWeight.w500,

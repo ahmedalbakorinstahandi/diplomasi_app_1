@@ -1,9 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
+import 'package:diplomasi_app/core/functions/format_date.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/data/model/user/certificate_model.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class CertificateCard extends StatelessWidget {
   final CertificateModel certificate;
@@ -20,16 +20,6 @@ class CertificateCard extends StatelessWidget {
     this.onShare,
     this.isDownloading = false,
   });
-
-  String _formatDateForDisplay(String dateString) {
-    try {
-      DateTime date = DateTime.parse(dateString);
-      String formatted = DateFormat('yyyy-MM-dd', 'ar').format(date);
-      return formatted;
-    } catch (e) {
-      return dateString;
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -179,7 +169,7 @@ class CertificateCard extends StatelessWidget {
                       ),
                       SizedBox(width: width(8)),
                       Text(
-                        'تاريخ الإصدار: ${_formatDateForDisplay(certificate.issuedAt)}',
+                        'تاريخ الإصدار: ${formatDateOnly(certificate.issuedAt)}',
                         style: TextStyle(
                           fontSize: emp(14),
                           fontWeight: FontWeight.w400,

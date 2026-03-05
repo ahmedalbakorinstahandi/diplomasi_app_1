@@ -1,5 +1,6 @@
 import 'package:diplomasi_app/controllers/user/billing_history_controller.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
+import 'package:diplomasi_app/core/functions/format_date.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/core/widgets/custom_scaffold.dart';
 import 'package:flutter/material.dart';
@@ -196,7 +197,9 @@ class _InvoicesTab extends StatelessWidget {
                       final amountMinor =
                           (invoice['amount_minor'] as num?)?.toDouble() ?? 0;
                       final currency = invoice['currency']?.toString() ?? 'SAR';
-                      final issuedAt = invoice['issued_at']?.toString() ?? '-';
+                      final issuedAt = invoice['issued_at'] != null
+                          ? formatDateTime(invoice['issued_at']?.toString())
+                          : '-';
 
                       return _BillingCard(
                         title: invoiceNumber,
@@ -437,9 +440,15 @@ class _InvoicesTab extends StatelessWidget {
     final status = invoice['status']?.toString() ?? '-';
     final amountMinor = (invoice['amount_minor'] as num?)?.toDouble() ?? 0;
     final currency = invoice['currency']?.toString() ?? 'SAR';
-    final issuedAt = invoice['issued_at']?.toString() ?? '-';
-    final dueAt = invoice['due_at']?.toString() ?? '-';
-    final paidAt = invoice['paid_at']?.toString() ?? '-';
+    final issuedAt = invoice['issued_at'] != null
+        ? formatDateTime(invoice['issued_at']?.toString())
+        : '-';
+    final dueAt = invoice['due_at'] != null
+        ? formatDateTime(invoice['due_at']?.toString())
+        : '-';
+    final paidAt = invoice['paid_at'] != null
+        ? formatDateTime(invoice['paid_at']?.toString())
+        : '-';
 
     Get.dialog(
       AlertDialog(
@@ -545,8 +554,9 @@ class _PaymentsTab extends StatelessWidget {
                       final amountMinor =
                           (payment['amount_minor'] as num?)?.toDouble() ?? 0;
                       final currency = payment['currency']?.toString() ?? 'SAR';
-                      final finalizedAt =
-                          payment['finalized_at']?.toString() ?? '-';
+                      final finalizedAt = payment['finalized_at'] != null
+                          ? formatDateTime(payment['finalized_at']?.toString())
+                          : '-';
 
                       return _BillingCard(
                         title: 'Ref: $merchantReference',
@@ -814,13 +824,6 @@ class _DateRangeRow extends StatelessWidget {
     required this.onToPick,
   });
 
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'غير محدد';
-    final m = date.month.toString().padLeft(2, '0');
-    final d = date.day.toString().padLeft(2, '0');
-    return '${date.year}-$m-$d';
-  }
-
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -836,7 +839,9 @@ class _DateRangeRow extends StatelessWidget {
               );
               onFromPick(picked);
             },
-            child: Text('من: ${_formatDate(from)}'),
+            child: Text(
+              'من: ${from != null ? formatDateByDate(from!) : 'غير محدد'}',
+            ),
           ),
         ),
         SizedBox(width: width(10)),
@@ -851,7 +856,9 @@ class _DateRangeRow extends StatelessWidget {
               );
               onToPick(picked);
             },
-            child: Text('إلى: ${_formatDate(to)}'),
+            child: Text(
+              'إلى: ${to != null ? formatDateByDate(to!) : 'غير محدد'}',
+            ),
           ),
         ),
       ],

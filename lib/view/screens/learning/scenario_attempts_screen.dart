@@ -1,6 +1,7 @@
 import 'package:diplomasi_app/core/classes/api_response.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
+import 'package:diplomasi_app/core/functions/format_date.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/core/widgets/custom_scaffold.dart';
 import 'package:diplomasi_app/data/resource/remote/learning/scenarios_data.dart';
@@ -59,16 +60,6 @@ class _ScenarioAttemptsScreenState extends State<ScenarioAttemptsScreen> {
           _isLoading = false;
         });
       }
-    }
-  }
-
-  String _formatDate(dynamic value) {
-    if (value == null) return '-';
-    try {
-      final dt = DateTime.parse(value.toString()).toLocal();
-      return '${dt.year}/${dt.month.toString().padLeft(2, '0')}/${dt.day.toString().padLeft(2, '0')} - ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-    } catch (_) {
-      return value.toString();
     }
   }
 
@@ -184,7 +175,7 @@ class _ScenarioAttemptsScreenState extends State<ScenarioAttemptsScreen> {
                                 ),
                                 SizedBox(height: height(4)),
                                 Text(
-                                  'بدأت: ${_formatDate(attempt['started_at'])}',
+                                  'بدأت: ${formatDateTime(attempt['started_at']?.toString())}',
                                   style: TextStyle(color: colors.textSecondary),
                                 ),
                               ],

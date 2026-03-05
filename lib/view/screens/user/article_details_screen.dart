@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:diplomasi_app/controllers/user/article_details_controller.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
+import 'package:diplomasi_app/core/functions/format_date.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/core/widgets/custom_scaffold.dart';
 import 'package:diplomasi_app/data/model/user/article_model.dart';
@@ -10,58 +11,6 @@ import 'package:get/get.dart';
 
 class ArticleDetailsScreen extends StatelessWidget {
   const ArticleDetailsScreen({super.key});
-
-  String _getMonthName(int month) {
-    List<String> months = [
-      '',
-      'يناير',
-      'فبراير',
-      'مارس',
-      'أبريل',
-      'مايو',
-      'يونيو',
-      'يوليو',
-      'أغسطس',
-      'سبتمبر',
-      'أكتوبر',
-      'نوفمبر',
-      'ديسمبر',
-    ];
-    return months[month];
-  }
-
-  String _formatDate(String? dateString) {
-    if (dateString == null) return '';
-    try {
-      DateTime date = DateTime.parse(dateString);
-      DateTime now = DateTime.now();
-      DateTime today = DateTime(now.year, now.month, now.day);
-      DateTime yesterday = today.subtract(const Duration(days: 1));
-      DateTime dateOnly = DateTime(date.year, date.month, date.day);
-
-      if (dateOnly.isAtSameMomentAs(today)) {
-        return 'اليوم';
-      } else if (dateOnly.isAtSameMomentAs(yesterday)) {
-        return 'أمس';
-      } else {
-        return '${date.day} ${_getMonthName(date.month)} ${date.year}';
-      }
-    } catch (e) {
-      return dateString;
-    }
-  }
-
-  String _getTime(String? dateString) {
-    if (dateString == null) return '';
-    try {
-      DateTime dateTime = DateTime.parse(dateString);
-      String hour = dateTime.hour.toString().padLeft(2, '0');
-      String minute = dateTime.minute.toString().padLeft(2, '0');
-      return '$hour:$minute';
-    } catch (e) {
-      return '';
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -178,7 +127,7 @@ class ArticleDetailsScreen extends StatelessWidget {
                             ),
                             SizedBox(width: width(4)),
                             Text(
-                              '${_formatDate(article.publishedAt)} ${_getTime(article.publishedAt)}',
+                              formatDateTime(article.publishedAt),
                               style: TextStyle(
                                 fontSize: emp(12),
                                 color: scheme.onPrimary.withOpacity(0.85),

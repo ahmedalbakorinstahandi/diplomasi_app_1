@@ -2,6 +2,7 @@ import 'package:diplomasi_app/core/classes/api_response.dart';
 import 'package:diplomasi_app/core/classes/api_service.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
+import 'package:diplomasi_app/core/functions/timezone_helper.dart';
 import 'package:diplomasi_app/routes/api.dart';
 import 'package:get/get.dart';
 import 'package:dio/dio.dart' hide Response;
@@ -48,7 +49,7 @@ class CertificatesData {
 
   Future<dio.Response> downloadCertificate(int id) async {
     // Create a new Dio instance for downloading binary data
-    final dio = Dio();
+    final dioClient = Dio();
     final accessToken = Shared.getValue(StorageKeys.accessToken);
 
     final endpoint = EndPoints.certificateDownload.replaceAll(
@@ -57,13 +58,16 @@ class CertificatesData {
     );
 
     if (accessToken != null) {
-      dio.options.headers['Authorization'] = 'Bearer $accessToken';
+      dioClient.options.headers['Authorization'] = 'Bearer $accessToken';
     }
-    dio.options.headers['X-Context'] = 'app';
-    dio.options.headers['Accept'] = 'image/png';
-    dio.options.responseType = ResponseType.bytes;
+    dioClient.options.headers['X-Context'] = 'app';
+    dioClient.options.headers['Accept'] = 'image/png';
+    dioClient.options.responseType = ResponseType.bytes;
 
-    return await dio.get(endpoint);
+    final timezoneHeaders = await getTimezoneHeaders();
+    dioClient.options.headers.addAll(timezoneHeaders);
+
+    return await dioClient.get(endpoint);
   }
 
   Future<ApiResponse> verifyCertificate(String certificateCode) async {
