@@ -1,8 +1,9 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/data/model/learning/lesson_question_model.dart';
+import 'package:diplomasi_app/data/model/learning/lesson_question_option_model.dart';
 import 'package:diplomasi_app/view/widgets/learning/question_card.dart';
+import 'package:diplomasi_app/view/widgets/learning/question_text_with_attachment.dart';
 import 'package:flutter/material.dart';
 
 class TrueFalseQuestion extends StatefulWidget {
@@ -48,56 +49,41 @@ class _TrueFalseQuestionState extends State<TrueFalseQuestion> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Question text or image
-          if (widget.question.attachedPath != null) ...[
-            Container(
-              width: double.infinity,
-              height: height(200),
-              decoration: BoxDecoration(
-                color: colors.backgroundSecondary,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: CachedNetworkImage(
-                  imageUrl: widget.question.attachedPath!,
-                  fit: BoxFit.cover,
-                  errorWidget: (context, error, stackTrace) {
-                    return Container(
-                      height: height(200),
-                      color: colors.border,
-                      child: Icon(Icons.image_not_supported, color: colors.textSecondary, size: width(40)),
-                    );
-                  },
-                ),
+          // Question text + optional image
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(width(16)),
+            decoration: BoxDecoration(
+              color: colors.backgroundSecondary,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: QuestionTextWithAttachment(
+              text: widget.question.questionText,
+              imageUrl: widget.question.attachedPath,
+              imageHeight: height(220),
+              textAlign: TextAlign.center,
+              imageAlignment: Alignment.center,
+              textStyle: TextStyle(
+                fontSize: emp(16),
+                color: scheme.onSurface,
               ),
             ),
-            SizedBox(height: height(16)),
-          ],
-          
-          if (widget.question.questionText.isNotEmpty) ...[
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(width(16)),
-              decoration: BoxDecoration(
-                color: colors.backgroundSecondary,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                widget.question.questionText,
-                style: TextStyle(
-                  fontSize: emp(16),
-                  color: scheme.onSurface,
-                ),
-              ),
-            ),
-            SizedBox(height: height(20)),
-          ],
+          ),
+
+          SizedBox(height: height(20)),
           
           // True/False options
-          _buildOption(context, trueOption, 'صح'),
+          _buildOption(
+            context,
+            trueOption,
+            'صح',
+          ),
           SizedBox(height: height(12)),
-          _buildOption(context, falseOption, 'خطأ'),
+          _buildOption(
+            context,
+            falseOption,
+            'خطأ',
+          ),
           
           SizedBox(height: height(24)),
           
@@ -161,7 +147,11 @@ class _TrueFalseQuestionState extends State<TrueFalseQuestion> {
     );
   }
 
-  Widget _buildOption(BuildContext context, option, String label) {
+  Widget _buildOption(
+    BuildContext context,
+    LessonQuestionOptionModel option,
+    String label,
+  ) {
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
     final isSelected = selectedOptionId == option.id;
@@ -204,9 +194,16 @@ class _TrueFalseQuestionState extends State<TrueFalseQuestion> {
         child: Row(
           children: [
             Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
+              child: QuestionTextWithAttachment(
+                text: label,
+                imageUrl: option.attachedPath,
+                imageHeight: height(180),
+                imageWidth: width(240),
+                imageFit: BoxFit.cover,
+                imageAlignment: Alignment.center,
+                textAlign: TextAlign.center,
+                imageBackgroundColor: backgroundColor,
+                textStyle: TextStyle(
                   fontSize: emp(16),
                   color: scheme.onSurface,
                 ),

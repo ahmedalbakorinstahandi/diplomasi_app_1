@@ -2,6 +2,7 @@ import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/data/model/learning/lesson_question_model.dart';
 import 'package:diplomasi_app/view/widgets/learning/question_card.dart';
+import 'package:diplomasi_app/view/widgets/learning/question_text_with_attachment.dart';
 import 'package:flutter/material.dart';
 
 class MultipleChoiceQuestion extends StatefulWidget {
@@ -53,7 +54,7 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
 
           SizedBox(height: height(16)),
 
-          // Question text
+          // Question text + optional image
           Container(
             width: double.infinity,
             padding: EdgeInsets.all(width(16)),
@@ -61,9 +62,13 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
               color: colors.backgroundSecondary,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(
-              widget.question.questionText,
-              style: TextStyle(fontSize: emp(16), color: scheme.onSurface),
+            child: QuestionTextWithAttachment(
+              text: widget.question.questionText,
+              imageUrl: widget.question.attachedPath,
+              imageHeight: height(220),
+              textAlign: TextAlign.center,
+              imageAlignment: Alignment.center,
+              textStyle: TextStyle(fontSize: emp(16), color: scheme.onSurface),
             ),
           ),
 
@@ -119,9 +124,16 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        option.optionText,
-                        style: TextStyle(
+                      child: QuestionTextWithAttachment(
+                        text: option.optionText,
+                        imageUrl: option.attachedPath,
+                        imageHeight: height(180),
+                        imageWidth: width(240),
+                        imageFit: BoxFit.cover,
+                        imageAlignment: Alignment.center,
+                        textAlign: TextAlign.center,
+                        imageBackgroundColor: backgroundColor,
+                        textStyle: TextStyle(
                           fontSize: emp(16),
                           color: scheme.onSurface,
                         ),

@@ -2,6 +2,7 @@ import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/data/model/learning/lesson_question_model.dart';
 import 'package:diplomasi_app/view/widgets/learning/question_card.dart';
+import 'package:diplomasi_app/view/widgets/learning/question_text_with_attachment.dart';
 import 'package:flutter/material.dart';
 
 class SingleChoiceQuestion extends StatefulWidget {
@@ -45,7 +46,7 @@ class _SingleChoiceQuestionState extends State<SingleChoiceQuestion> {
             SizedBox(height: height(16)),
           ],
 
-          // Question text
+          // Question text + optional image
           Container(
             width: double.infinity,
             padding: EdgeInsets.all(width(16)),
@@ -53,12 +54,13 @@ class _SingleChoiceQuestionState extends State<SingleChoiceQuestion> {
               color: colors.backgroundSecondary,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(
-              widget.question.questionText,
-              style: TextStyle(
-                fontSize: emp(16),
-                color: scheme.onSurface,
-              ),
+            child: QuestionTextWithAttachment(
+              text: widget.question.questionText,
+              imageUrl: widget.question.attachedPath,
+              imageHeight: height(220),
+              textAlign: TextAlign.center,
+              imageAlignment: Alignment.center,
+              textStyle: TextStyle(fontSize: emp(16), color: scheme.onSurface),
             ),
           ),
 
@@ -88,28 +90,34 @@ class _SingleChoiceQuestionState extends State<SingleChoiceQuestion> {
             }
 
             return GestureDetector(
-              onTap: isAnswered ? null : () {
-                setState(() {
-                  selectedOptionId = option.id;
-                });
-              },
+              onTap: isAnswered
+                  ? null
+                  : () {
+                      setState(() {
+                        selectedOptionId = option.id;
+                      });
+                    },
               child: Container(
                 margin: EdgeInsets.only(bottom: height(12)),
                 padding: EdgeInsets.all(width(16)),
                 decoration: BoxDecoration(
                   color: backgroundColor,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: borderColor,
-                    width: 1,
-                  ),
+                  border: Border.all(color: borderColor, width: 1),
                 ),
                 child: Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        option.optionText,
-                        style: TextStyle(
+                      child: QuestionTextWithAttachment(
+                        text: option.optionText,
+                        imageUrl: option.attachedPath,
+                        imageHeight: height(180),
+                        imageWidth: width(240),
+                        imageFit: BoxFit.cover,
+                        imageAlignment: Alignment.center,
+                        textAlign: TextAlign.center,
+                        imageBackgroundColor: backgroundColor,
+                        textStyle: TextStyle(
                           fontSize: emp(16),
                           color: scheme.onSurface,
                         ),
@@ -130,12 +138,12 @@ class _SingleChoiceQuestionState extends State<SingleChoiceQuestion> {
                               size: emp(14),
                             )
                           : isAnswered && isWrong
-                              ? Icon(
-                                  Icons.close,
-                                  color: colors.onError,
-                                  size: emp(14),
-                                )
-                              : null,
+                          ? Icon(
+                              Icons.close,
+                              color: colors.onError,
+                              size: emp(14),
+                            )
+                          : null,
                     ),
                   ],
                 ),
@@ -205,4 +213,3 @@ class _SingleChoiceQuestionState extends State<SingleChoiceQuestion> {
     );
   }
 }
-

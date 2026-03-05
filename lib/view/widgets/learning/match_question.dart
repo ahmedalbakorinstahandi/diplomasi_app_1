@@ -6,6 +6,7 @@ import 'package:diplomasi_app/data/model/learning/lesson_answer_model.dart';
 import 'package:diplomasi_app/data/model/learning/lesson_question_model.dart';
 import 'package:diplomasi_app/data/model/learning/lesson_question_option_model.dart';
 import 'package:diplomasi_app/view/widgets/learning/question_card.dart';
+import 'package:diplomasi_app/view/widgets/learning/question_text_with_attachment.dart';
 import 'package:flutter/material.dart';
 
 /// نقطة بداية ونهاية ولون لخط ربط زوج
@@ -253,20 +254,35 @@ class _MatchQuestionState extends State<MatchQuestion> {
       leftOptions = widget.question.options.take(half).toList();
       rightOptions = widget.question.options.skip(half).toList();
     }
+    final hasAnyOptionImage = [...leftOptions, ...rightOptions].any(
+      (o) => (o.attachedPath ?? '').trim().isNotEmpty,
+    );
 
     return QuestionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Instruction
-          Text(
-            widget.question.questionText.trim().isNotEmpty
-                ? widget.question.questionText
-                : 'صل بين العناصر',
-            style: TextStyle(
-              fontSize: emp(18),
-              fontWeight: FontWeight.w600,
-              color: scheme.onSurface,
+          // Question text + optional image
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(width(16)),
+            decoration: BoxDecoration(
+              color: colors.backgroundSecondary,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: QuestionTextWithAttachment(
+              text: widget.question.questionText.trim().isNotEmpty
+                  ? widget.question.questionText
+                  : 'صل بين العناصر',
+              imageUrl: widget.question.attachedPath,
+              imageHeight: height(220),
+              textAlign: TextAlign.center,
+              imageAlignment: Alignment.center,
+              textStyle: TextStyle(
+                fontSize: emp(18),
+                fontWeight: FontWeight.w600,
+                color: scheme.onSurface,
+              ),
             ),
           ),
 
@@ -414,18 +430,27 @@ class _MatchQuestionState extends State<MatchQuestion> {
                                 ),
                                 alignment: Alignment.centerRight,
                                 child: Stack(
+                                  fit: StackFit.expand,
                                   clipBehavior: Clip.none,
                                   children: [
-                                    Align(
-                                      alignment: Alignment.centerRight,
-                                      child: Text(
-                                        leftOption.optionText,
-                                        style: TextStyle(
-                                          fontSize: emp(14),
-                                          color: scheme.onSurface,
-                                        ),
-                                        textAlign: TextAlign.right,
+                                    QuestionTextWithAttachment(
+                                      text: leftOption.optionText,
+                                      imageUrl: leftOption.attachedPath,
+                                      textMinHeight: height(30),
+                                      textMaxLines: 4,
+                                      pinImageToBottom: true,
+                                      imageHeight: height(68),
+                                      imageFit: BoxFit.contain,
+                                      imageAspectRatio: 4 / 3,
+                                      imageWidthFactor: 0.8,
+                                      imageAlignment: Alignment.center,
+                                      reserveImageSpace: hasAnyOptionImage,
+                                      imageBackgroundColor: leftBg,
+                                      textStyle: TextStyle(
+                                        fontSize: emp(14),
+                                        color: scheme.onSurface,
                                       ),
+                                      textAlign: TextAlign.center,
                                     ),
                                     if (getPairNumberForLeft(leftOption.id) !=
                                         null)
@@ -531,18 +556,27 @@ class _MatchQuestionState extends State<MatchQuestion> {
                                 ),
                                 alignment: Alignment.centerRight,
                                 child: Stack(
+                                  fit: StackFit.expand,
                                   clipBehavior: Clip.none,
                                   children: [
-                                    Align(
-                                      alignment: Alignment.centerRight,
-                                      child: Text(
-                                        rightOption.optionText,
-                                        style: TextStyle(
-                                          fontSize: emp(14),
-                                          color: scheme.onSurface,
-                                        ),
-                                        textAlign: TextAlign.right,
+                                    QuestionTextWithAttachment(
+                                      text: rightOption.optionText,
+                                      imageUrl: rightOption.attachedPath,
+                                      textMinHeight: height(30),
+                                      textMaxLines: 4,
+                                      pinImageToBottom: true,
+                                      imageHeight: height(68),
+                                      imageFit: BoxFit.contain,
+                                      imageAspectRatio: 4 / 3,
+                                      imageWidthFactor: 0.8,
+                                      imageAlignment: Alignment.center,
+                                      reserveImageSpace: hasAnyOptionImage,
+                                      imageBackgroundColor: rightBg,
+                                      textStyle: TextStyle(
+                                        fontSize: emp(14),
+                                        color: scheme.onSurface,
                                       ),
+                                      textAlign: TextAlign.center,
                                     ),
                                     if (getPairNumberForRight(rightOption.id) !=
                                         null)
