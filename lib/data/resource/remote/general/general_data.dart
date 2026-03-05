@@ -8,6 +8,11 @@ import 'package:get/get.dart';
 class GeneralData {
   ApiService apiService = Get.find();
 
+  /// Suggested app update check. Call at most once per 24h. Backend uses X-App-Version header.
+  Future<ApiResponse> checkAppUpdateSuggest() async {
+    return await apiService.get(EndPoints.appUpdateCheck);
+  }
+
   Future<ApiResponse<ImageDataModel>> uploadImage({
     required File imageFile,
     required String folder,

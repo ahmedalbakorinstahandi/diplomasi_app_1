@@ -55,17 +55,22 @@ class ApiResponse<T> {
   bool get isSuccess => success && statusCode != null && statusCode! < 400;
 
   /// Handles global response keys: force update, banned user. Call from toString() and on every response path.
+  /// Shows each dialog at most once (no duplicate when multiple requests return the same key).
   void runGlobalHandlers() {
     if (key == 'app.force_update') {
-      final d = data is Map ? data as Map<String, dynamic>? : null;
-      ForceUpdateDialog.show(
-        storeLinkAndroid: d?['store_link_android']?.toString(),
-        storeLinkIos: d?['store_link_ios']?.toString(),
-      );
+      if (Get.isDialogOpen != true) {
+        final d = data is Map ? data as Map<String, dynamic>? : null;
+        ForceUpdateDialog.show(
+          storeLinkAndroid: d?['store_link_android']?.toString(),
+          storeLinkIos: d?['store_link_ios']?.toString(),
+        );
+      }
       return;
     }
     if (key == 'messages.user.is_banned') {
-      BannedUserDialog.show();
+      if (Get.isDialogOpen != true) {
+        BannedUserDialog.show();
+      }
       return;
     }
 

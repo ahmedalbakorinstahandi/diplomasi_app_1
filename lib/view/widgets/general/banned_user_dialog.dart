@@ -10,16 +10,23 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 /// Dialog shown when the user is banned. Actions: Help center, Logout (API + clear), Close app.
-class BannedUserDialog extends StatelessWidget {
+class BannedUserDialog extends StatefulWidget {
   const BannedUserDialog({super.key});
 
   static Future<void> show() async {
     return Get.dialog<void>(
       const BannedUserDialog(),
       barrierDismissible: false,
-      barrierColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.35),
     );
   }
+
+  @override
+  State<BannedUserDialog> createState() => _BannedUserDialogState();
+}
+
+class _BannedUserDialogState extends State<BannedUserDialog> {
+  bool _isLoggingOut = false;
 
   void _openHelpCenter() {
     Get.back();
@@ -27,9 +34,12 @@ class BannedUserDialog extends StatelessWidget {
   }
 
   Future<void> _logout() async {
-    Get.back();
+    if (_isLoggingOut) return;
+    setState(() => _isLoggingOut = true);
     final authData = AuthData();
     await authData.logout();
+    if (!mounted) return;
+    Get.back();
     Shared.clear();
     Shared.setValue(StorageKeys.step, Steps.login);
     Get.offAllNamed(AppRoutes.login);
@@ -45,12 +55,16 @@ class BannedUserDialog extends StatelessWidget {
     final colors = Get.theme.extension<AppColors>() ?? AppColors.light;
     final scheme = Get.theme.colorScheme;
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: scheme.surface,
-        child: Padding(
+    return PopScope(
+      canPop: false,
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Dialog(
+          elevation: 24,
+          shadowColor: Colors.black26,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          backgroundColor: scheme.surface,
+          child: Padding(
           padding: EdgeInsets.symmetric(horizontal: width(24), vertical: height(28)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -109,9 +123,18 @@ class BannedUserDialog extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: _logout,
-                  icon: Icon(Icons.logout_rounded, size: emp(20)),
-                  label: Text('logout'.tr),
+                  onPressed: _isLoggingOut ? null : _logout,
+                  icon: _isLoggingOut
+                      ? SizedBox(
+                          width: emp(20),
+                          height: emp(20),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: scheme.error,
+                          ),
+                        )
+                      : Icon(Icons.logout_rounded, size: emp(20)),
+                  label: Text(_isLoggingOut ? '${'logout'.tr}...' : 'logout'.tr),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: scheme.error,
                     side: BorderSide(color: scheme.error),
@@ -149,6 +172,7 @@ class BannedUserDialog extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

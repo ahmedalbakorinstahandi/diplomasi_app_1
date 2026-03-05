@@ -28,7 +28,7 @@ class HomeScreen extends StatelessWidget {
     return GetBuilder<HomeControllerImp>(
       init: HomeControllerImp(),
       builder: (controller) {
-        print(Shared.getValue(StorageKeys.lastUpdateSuggestionAt));
+        // print(Shared.getValue(StorageKeys.lastUpdateSuggestionAt));
         // Shared.remove(StorageKeys.lastUpdateSuggestionAt);
         final colors = context.appColors;
         final scheme = Theme.of(context).colorScheme;

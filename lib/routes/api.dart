@@ -105,6 +105,7 @@ final class EndPoints {
   static String uploadImage = "$baseApi/general/upload-image";
   static String verifyCertificate =
       "$baseApi/general/certificates/verify/{certificateCode}";
+  static String appUpdateCheck = "$baseApi/general/app-update-check";
 
   // settings
   static String setting = "$baseApi/general/settings/{idOrKey}";
