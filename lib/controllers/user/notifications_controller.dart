@@ -1,5 +1,6 @@
 import 'package:diplomasi_app/core/classes/api_response.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
+import 'package:diplomasi_app/core/functions/format_date.dart';
 import 'package:diplomasi_app/data/model/user/notification_model.dart';
 import 'package:diplomasi_app/data/resource/remote/user/notifications_data.dart';
 import 'package:flutter/material.dart';
@@ -84,24 +85,22 @@ class NotificationsControllerImp extends NotificationsController {
         }
       }
 
-      // Group notifications by date
+      // Group by local calendar day (UTC from API → convert to device timezone)
       List groupedNotifications = [];
 
       for (var notification in unsortedNotifications) {
-        String date = notification.createdAt.split(' ')[0];
+        final String date = formatDateOnly(notification.createdAt);
+        if (date.isEmpty) continue;
 
-        // Check if date group exists
         var dateGroup = groupedNotifications.firstWhere(
           (element) => element['date'] == date,
           orElse: () {
-            // Create new date group if it doesn't exist
             var newGroup = {'date': date, 'notifications': []};
             groupedNotifications.add(newGroup);
             return newGroup;
           },
         );
 
-        // Add notification to date group
         dateGroup['notifications'].add(notification);
       }
 
@@ -139,10 +138,11 @@ class NotificationsControllerImp extends NotificationsController {
       //   }
       // }
 
-      // Regroup notifications
+      // Regroup by local calendar day (same as getNotifications)
       List groupedNotifications = [];
       for (var notification in unsortedNotifications) {
-        String date = notification.createdAt.split(' ')[0];
+        final String date = formatDateOnly(notification.createdAt);
+        if (date.isEmpty) continue;
         var dateGroup = groupedNotifications.firstWhere(
           (element) => element['date'] == date,
           orElse: () {

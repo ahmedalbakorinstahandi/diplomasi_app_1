@@ -5,6 +5,7 @@ import 'package:diplomasi_app/core/constants/assets.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/core/services/notification_prompt_service.dart';
+import 'package:diplomasi_app/core/services/push_notification_service.dart';
 import 'package:diplomasi_app/view/widgets/general/suggest_update_dialog.dart';
 import 'package:diplomasi_app/data/model/users/user_model.dart';
 import 'package:diplomasi_app/data/resource/remote/general/general_data.dart';
@@ -78,6 +79,9 @@ class AppControllerImp extends AppController {
   @override
   void onReady() {
     super.onReady();
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      Get.find<PushNotificationService>().handlePendingInitialMessageIfAny();
+    });
     SchedulerBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(milliseconds: 800), () {
         NotificationPromptService().maybeShowPrompt();

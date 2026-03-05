@@ -9,10 +9,25 @@ class NotificationNavigationService extends GetxService {
     await handlePayload(type: notification.type, payload: notification.data);
   }
 
+  /// Notification types that are informational only; no navigation and no "فتح" action.
+  static const _informationalOnlyTypes = {
+    'login_new_device',
+    'account_verified',
+    'password_changed',
+  };
+
+  /// Whether this type should not show "فتح" or respond to tap.
+  static bool isInformationalOnly(String? type) =>
+      type != null && _informationalOnlyTypes.contains(type);
+
   Future<void> handlePayload({
     String? type,
     Map<String, dynamic>? payload,
   }) async {
+    if (type != null && _informationalOnlyTypes.contains(type)) {
+      return;
+    }
+
     final data = payload ?? <String, dynamic>{};
 
     final deepLink = _extractString(data, ['url', 'link', 'deep_link']);
@@ -55,14 +70,12 @@ class NotificationNavigationService extends GetxService {
       case 'course_completed':
         Get.toNamed(AppRoutes.cources);
         return;
-      case 'account_verified':
-      case 'password_changed':
-      case 'login_new_device':
       case 'account_banned':
         Get.toNamed(AppRoutes.profile);
         return;
       default:
-        Get.toNamed(AppRoutes.notifications);
+        // No valid target: do not navigate (notification has no destination).
+        break;
     }
   }
 

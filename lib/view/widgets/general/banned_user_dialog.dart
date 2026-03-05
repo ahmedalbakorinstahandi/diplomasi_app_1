@@ -29,7 +29,7 @@ class _BannedUserDialogState extends State<BannedUserDialog> {
   bool _isLoggingOut = false;
 
   void _openHelpCenter() {
-    Get.back();
+    // لا نغلق الـ dialog — نفتح مركز المساعدة فوقه حتى عند الرجوع تبقى نافذة الحظر ظاهرة
     Get.toNamed(AppRoutes.helpCenter);
   }
 

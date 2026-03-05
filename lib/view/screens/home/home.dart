@@ -1,10 +1,8 @@
 import 'package:diplomasi_app/controllers/home/home_controller.dart';
 import 'package:diplomasi_app/core/classes/handling_data_view.dart';
-import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/constants/assets.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
-import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/core/constants/variables.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/core/widgets/custom_scaffold.dart';

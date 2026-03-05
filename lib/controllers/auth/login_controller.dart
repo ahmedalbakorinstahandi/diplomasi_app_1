@@ -4,6 +4,7 @@ import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/core/services/push_notification_service.dart';
 import 'package:diplomasi_app/data/resource/remote/user/auth_data.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
@@ -30,6 +31,14 @@ class LoginControllerImp extends LoginController {
     email = TextEditingController();
     password = TextEditingController();
     super.onInit();
+  }
+
+  @override
+  void onReady() {
+    super.onReady();
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      Get.find<PushNotificationService>().handlePendingInitialMessageIfAny();
+    });
   }
 
   @override

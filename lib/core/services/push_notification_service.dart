@@ -15,6 +15,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 class PushNotificationService extends GetxService {
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   bool _isInitialized = false;
+  RemoteMessage? _pendingInitialMessage;
 
   Future<void> init() async {
     if (_isInitialized) return;
@@ -33,8 +34,17 @@ class PushNotificationService extends GetxService {
 
     final initialMessage = await _messaging.getInitialMessage();
     if (initialMessage != null) {
-      await _handleTapMessage(initialMessage);
+      _pendingInitialMessage = initialMessage;
     }
+  }
+
+  /// Call after the navigator is ready (e.g. from AppScreen / Login onReady).
+  /// Handles the notification that opened the app from a cold start.
+  Future<void> handlePendingInitialMessageIfAny() async {
+    final message = _pendingInitialMessage;
+    if (message == null) return;
+    _pendingInitialMessage = null;
+    await _handleTapMessage(message);
   }
 
   Future<String?> getDeviceToken() async {

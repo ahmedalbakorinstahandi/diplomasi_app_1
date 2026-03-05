@@ -104,6 +104,10 @@ class NotificationCard extends StatelessWidget {
   const NotificationCard({super.key, required this.notification});
   final NotificationModel notification;
 
+  bool get _hasNavigationAction =>
+      notification.hasAction &&
+      !NotificationNavigationService.isInformationalOnly(notification.type);
+
   Future<void> _handleNotificationTap() async {
     await Get.find<NotificationNavigationService>().handleStoredNotification(
       notification,
@@ -115,7 +119,7 @@ class NotificationCard extends StatelessWidget {
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
     return InkWell(
-      onTap: notification.hasAction ? _handleNotificationTap : null,
+      onTap: _hasNavigationAction ? _handleNotificationTap : null,
       borderRadius: BorderRadius.circular(width(16)),
       child: Container(
         margin: EdgeInsets.only(bottom: height(12)),
@@ -172,7 +176,7 @@ class NotificationCard extends StatelessWidget {
             // Action Button and Read Indicator Row
             Row(
               children: [
-                if (notification.hasAction)
+                if (_hasNavigationAction)
                   GestureDetector(
                     onTap: _handleNotificationTap,
                     child: Text(
