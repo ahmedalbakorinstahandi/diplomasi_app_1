@@ -1,6 +1,26 @@
 import 'package:diplomasi_app/core/localization/changelocale.dart';
 import 'package:intl/intl.dart';
 
+/// In RTL (e.g. Arabic), wraps value in LRE+PDF so date/time display left-to-right and direction doesn't feel reversed.
+const String _lre = '\u202A';
+const String _pdf = '\u202C';
+
+String _wrapLtrIfRtl(String value) {
+  if (LocaleController.languageCode == 'ar') {
+    return '$_lre$value$_pdf';
+  }
+  return value;
+}
+
+/// Time string: English digits, AM/PM as ص/م when Arabic.
+String _formatTimeLtr(DateTime dateTime) {
+  final s = DateFormat('hh:mm a', 'en').format(dateTime);
+  if (LocaleController.languageCode == 'ar') {
+    return s.replaceAll(' AM', ' ص').replaceAll(' PM', ' م');
+  }
+  return s;
+}
+
 /// Parses an API UTC timestamp (e.g. ISO 8601) and returns local DateTime for display.
 /// Backend always returns UTC; use this so UI shows device local time.
 DateTime parseUtcToLocal(String date) {
@@ -13,39 +33,37 @@ String formatDateOnly(String? date) {
   if (date == null || date.isEmpty) return '';
   try {
     final dateTime = parseUtcToLocal(date);
-    return DateFormat(
-      'yyyy-MM-dd',
-      LocaleController.languageCode,
-    ).format(dateTime);
+    return _wrapLtrIfRtl(
+      DateFormat('yyyy-MM-dd', LocaleController.languageCode).format(dateTime),
+    );
   } catch (_) {
     return date;
   }
 }
 
-/// Date + time with hours, minutes, seconds and AM/PM.
-/// Output: e.g. "2026-03-05 02:30:45 م" or "2026-03-05 10:15:00 ص".
+/// Date + time with hours, minutes and AM/PM. Time digits always English (0-9).
+/// Output: e.g. "2026-03-05 02:30 م" or "2026-03-05 10:15 ص".
 String formatDateTime(String? date) {
   if (date == null || date.isEmpty) return '';
   try {
     final dateTime = parseUtcToLocal(date);
-    return DateFormat(
-      'yyyy-MM-dd hh:mm:ss a',
+    final dateStr = DateFormat(
+      'yyyy-MM-dd',
       LocaleController.languageCode,
     ).format(dateTime);
+    final timeStr = _formatTimeLtr(dateTime);
+    return _wrapLtrIfRtl('$dateStr $timeStr');
   } catch (_) {
     return date;
   }
 }
 
-/// Time only — hours, minutes, seconds, AM/PM.
+/// Time only — hours, minutes, AM/PM. Digits always English (0-9).
 String formatTimeOnly(String? date) {
   if (date == null || date.isEmpty) return '';
   try {
     final dateTime = parseUtcToLocal(date);
-    return DateFormat(
-      'hh:mm:ss a',
-      LocaleController.languageCode,
-    ).format(dateTime);
+    return _wrapLtrIfRtl(_formatTimeLtr(dateTime));
   } catch (_) {
     return date;
   }
@@ -99,7 +117,9 @@ String formatDateWithLanguage(String date) {
 
 /// Date only from DateTime (e.g. for date picker display).
 String formatDateByDate(DateTime date) {
-  return DateFormat('yyyy-MM-dd', LocaleController.languageCode).format(date);
+  return _wrapLtrIfRtl(
+    DateFormat('yyyy-MM-dd', LocaleController.languageCode).format(date),
+  );
 }
 
 /// Date only, neutral locale (legacy).
@@ -107,7 +127,7 @@ String formatDate(String date) {
   if (date.isEmpty) return '';
   try {
     final dateTime = parseUtcToLocal(date);
-    return DateFormat('yyyy-MM-dd').format(dateTime);
+    return _wrapLtrIfRtl(DateFormat('yyyy-MM-dd').format(dateTime));
   } catch (_) {
     return date;
   }
@@ -125,7 +145,7 @@ String formatTime24Hour(String dateTimeString) {
     final dateTime = parseUtcToLocal(dateTimeString);
     final h = dateTime.hour.toString().padLeft(2, '0');
     final m = dateTime.minute.toString().padLeft(2, '0');
-    return '$h:$m';
+    return _wrapLtrIfRtl('$h:$m');
   } catch (_) {
     return dateTimeString;
   }
