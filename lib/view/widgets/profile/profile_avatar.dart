@@ -33,18 +33,14 @@ class ProfileAvatar extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(150),
-                  child: CachedNetworkImage(
-                    imageUrl: user?.avatar ?? '',
-                    fit: BoxFit.cover,
-                    errorWidget: (context, url, error) => Container(
-                      color: colors.border,
-                      child: Icon(
-                        Icons.person,
-                        color: colors.textSecondary,
-                        size: emp(40),
-                      ),
-                    ),
-                  ),
+                  child: _avatarUrlValid(user?.avatar)
+                      ? CachedNetworkImage(
+                          imageUrl: user!.avatar!,
+                          fit: BoxFit.cover,
+                          errorWidget: (context, url, error) =>
+                              _buildPlaceholder(colors),
+                        )
+                      : _buildPlaceholder(colors),
                 ),
               ),
               SizedBox(height: height(16)),
@@ -72,6 +68,22 @@ class ProfileAvatar extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  static bool _avatarUrlValid(String? url) {
+    final u = url?.trim();
+    return u != null && u.isNotEmpty;
+  }
+
+  static Widget _buildPlaceholder(AppColors colors) {
+    return Container(
+      color: colors.border,
+      child: Icon(
+        Icons.person,
+        color: colors.textSecondary,
+        size: emp(40),
+      ),
     );
   }
 }

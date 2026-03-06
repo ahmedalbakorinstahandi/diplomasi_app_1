@@ -56,15 +56,21 @@ class HomeHeader extends StatelessWidget {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(100),
-                    child: CachedNetworkImage(
-                      imageUrl: user?.avatar ?? '',
-                      fit: BoxFit.cover,
-                      errorWidget: (context, url, error) => Icon(
-                        Icons.person,
-                        color: scheme.onPrimary,
-                        size: emp(24),
-                      ),
-                    ),
+                    child: _avatarUrlValid(user?.avatar)
+                        ? CachedNetworkImage(
+                            imageUrl: user!.avatar!,
+                            fit: BoxFit.cover,
+                            errorWidget: (context, url, error) => Icon(
+                              Icons.person,
+                              color: scheme.onPrimary,
+                              size: emp(24),
+                            ),
+                          )
+                        : Icon(
+                            Icons.person,
+                            color: scheme.onPrimary,
+                            size: emp(24),
+                          ),
                   ),
                 ),
               ),
@@ -139,4 +145,10 @@ class HomeHeader extends StatelessWidget {
       ),
     );
   }
+
+  static bool _avatarUrlValid(String? url) {
+    final u = url?.trim();
+    return u != null && u.isNotEmpty;
+  }
 }
+

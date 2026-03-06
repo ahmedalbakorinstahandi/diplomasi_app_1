@@ -38,6 +38,7 @@ abstract class PlansController extends GetxController {
   Future<bool> deletePaymentMethod(int id);
   bool isCurrentPlan(PlanModel plan);
   bool get hasBlockingCurrentSubscription;
+  bool get isRenewalPending;
 }
 
 class PlansControllerImp extends PlansController {
@@ -480,6 +481,8 @@ class PlansControllerImp extends PlansController {
 
   bool get hasBlockingActiveSubscription {
     if (currentSubscription == null) return false;
+    // فترة انتظار التجديد: لا نسمح بشراء باقة جديدة
+    if (currentSubscription?['renewal_pending'] == true) return true;
     final status = (currentSubscription?['status'] ?? '')
         .toString()
         .toLowerCase();
@@ -491,7 +494,35 @@ class PlansControllerImp extends PlansController {
     );
     if (endDate == null) return true;
 
-    return !endDate.isBefore(DateTime.now());
+    final now = DateTime.now();
+    if (endDate.isBefore(now)) {
+      // انتهى العد التنازلي محلياً: إذا التجديد التلقائي مفعل نعتبره "جارٍ التجديد" حتى يرد الـ API
+      final autoRenew = currentSubscription?['auto_renew'] == true;
+      final cancelAtPeriodEnd =
+          currentSubscription?['cancel_at_period_end'] == true;
+      if (autoRenew && !cancelAtPeriodEnd) return true;
+      return false;
+    }
+    return true;
+  }
+
+  /// true عندما الاشتراك الحالي في فترة انتظار التجديد (عرض "جارٍ التجديد").
+  /// يشمل: renewal_pending من الـ API، أو انتهاء العد التنازلي محلياً مع تفعيل التجديد التلقائي.
+  bool get isRenewalPending {
+    if (currentSubscription?['renewal_pending'] == true) return true;
+    final status = (currentSubscription?['status'] ?? '')
+        .toString()
+        .toLowerCase();
+    if (status != 'active') return false;
+    final autoRenew = currentSubscription?['auto_renew'] == true;
+    final cancelAtPeriodEnd =
+        currentSubscription?['cancel_at_period_end'] == true;
+    if (!autoRenew || cancelAtPeriodEnd) return false;
+    final endDate = DateTime.tryParse(
+      (currentSubscription?['end_date'] ?? '').toString(),
+    );
+    if (endDate == null) return false;
+    return endDate.isBefore(DateTime.now());
   }
 
   @override

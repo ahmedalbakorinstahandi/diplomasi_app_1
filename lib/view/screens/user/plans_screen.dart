@@ -30,6 +30,7 @@ class PlansScreen extends StatelessWidget {
               // Header (تعرض في الزاوية "غير مشترك حالياً" عند عدم الاشتراك)
               PlansHeader(
                 hasActiveSubscription: controller.currentSubscription != null,
+                isRenewalPending: controller.isRenewalPending,
               ),
               Padding(
                 padding: EdgeInsets.symmetric(
@@ -113,7 +114,9 @@ class PlansScreen extends StatelessWidget {
                                 plan: planModel,
                                 isFeatured: isFeatured,
                                 actionLabel: isCurrentPlan
-                                    ? 'هذه خطتك الحالية'
+                                    ? (controller.isRenewalPending
+                                        ? 'جارٍ التجديد'
+                                        : 'هذه خطتك الحالية')
                                     : purchaseBlocked
                                     ? 'لديك خطة مفعلة'
                                     : 'شراء الآن',
@@ -139,6 +142,8 @@ class PlansScreen extends StatelessWidget {
                                     : null,
                                 onCountdownFinished: isCurrentPlan
                                     ? () {
+                                        // تحديث الواجهة فوراً لعرض "جارٍ التجديد" دون انتظار الـ API
+                                        controller.update();
                                         if (!controller.isBillingLoading) {
                                           controller.loadBillingState();
                                         }

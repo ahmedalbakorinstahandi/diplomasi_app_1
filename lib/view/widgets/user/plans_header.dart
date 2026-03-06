@@ -4,10 +4,12 @@ import 'package:get/get.dart';
 
 class PlansHeader extends StatelessWidget {
   final bool hasActiveSubscription;
+  final bool isRenewalPending;
 
   const PlansHeader({
     super.key,
     this.hasActiveSubscription = true,
+    this.isRenewalPending = false,
   });
 
   @override
@@ -54,7 +56,7 @@ class PlansHeader extends StatelessWidget {
               textDirection: TextDirection.rtl,
             ),
           ),
-          // زاوية الـ app bar: حالة الاشتراك عندما المستخدم غير مشترك
+          // زاوية الـ app bar: حالة الاشتراك (غير مشترك / جارٍ التجديد)
           if (!hasActiveSubscription)
             Container(
               padding: EdgeInsets.symmetric(
@@ -81,6 +83,42 @@ class PlansHeader extends StatelessWidget {
                   SizedBox(width: width(6)),
                   Text(
                     'غير مشترك حالياً',
+                    style: TextStyle(
+                      fontSize: emp(12),
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onPrimary,
+                    ),
+                    textDirection: TextDirection.rtl,
+                  ),
+                ],
+              ),
+            )
+          else if (isRenewalPending)
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: width(10),
+                vertical: height(6),
+              ),
+              decoration: BoxDecoration(
+                color: scheme.onPrimary.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: scheme.onPrimary.withOpacity(0.5),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                textDirection: TextDirection.rtl,
+                children: [
+                  Icon(
+                    Icons.autorenew,
+                    size: emp(16),
+                    color: scheme.onPrimary,
+                  ),
+                  SizedBox(width: width(6)),
+                  Text(
+                    'جارٍ التجديد',
                     style: TextStyle(
                       fontSize: emp(12),
                       fontWeight: FontWeight.w700,

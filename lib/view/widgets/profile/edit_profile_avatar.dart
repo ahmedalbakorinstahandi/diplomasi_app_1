@@ -75,9 +75,10 @@ class EditProfileAvatar extends StatelessWidget {
     if (selectedImage != null) {
       return Image.file(selectedImage!, fit: BoxFit.cover);
     }
-    if (currentAvatarUrl != null) {
+    final url = currentAvatarUrl?.trim();
+    if (url != null && url.isNotEmpty) {
       return CachedNetworkImage(
-        imageUrl: currentAvatarUrl!,
+        imageUrl: url,
         fit: BoxFit.cover,
         errorWidget: (context, url, error) => _buildPlaceholder(context),
       );
