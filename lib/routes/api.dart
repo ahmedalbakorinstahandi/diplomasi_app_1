@@ -33,6 +33,8 @@ final class EndPoints {
       "$baseApi/user/billing/subscription/resume";
   static String billingSubscriptionRetryPayment =
       "$baseApi/user/billing/subscription/retry-payment";
+  static String iosPurchaseVerify = "$baseApi/user/ios/purchase/verify";
+  static String iosPurchaseRestore = "$baseApi/user/ios/purchase/restore";
   static String billingPaymentsVerify = "$baseApi/user/billing/payments/verify";
   static String billingPaymentMethods = "$baseApi/user/billing/payment-methods";
   static String billingPaymentMethodSetDefault =

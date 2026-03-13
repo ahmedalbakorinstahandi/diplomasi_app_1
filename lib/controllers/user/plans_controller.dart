@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:diplomasi_app/core/classes/api_response.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
+import 'package:diplomasi_app/core/services/iap_service.dart';
 import 'package:diplomasi_app/data/model/user/plan_model.dart';
 import 'package:diplomasi_app/data/resource/remote/user/billing_data.dart';
 import 'package:diplomasi_app/data/resource/remote/user/plans_data.dart';
@@ -27,6 +30,9 @@ abstract class PlansController extends GetxController {
 
   PlansData plansData = PlansData();
   BillingData billingData = BillingData();
+  IapService? iapService;
+
+  bool get isIOS => Platform.isIOS;
 
   Future<void> getPlans();
   Future<void> loadBillingState();
@@ -34,6 +40,7 @@ abstract class PlansController extends GetxController {
   Future<void> resumeSubscription();
   Future<void> retryPayment();
   Future<void> purchasePlan(PlanModel plan, {int? paymentMethodId});
+  Future<void> restorePurchases();
   Future<bool> setDefaultPaymentMethod(int id);
   Future<bool> deletePaymentMethod(int id);
   bool isCurrentPlan(PlanModel plan);
@@ -59,9 +66,19 @@ class PlansControllerImp extends PlansController {
 
   @override
   void onInit() {
+    if (Platform.isIOS) {
+      iapService = IapService();
+      iapService!.initialize();
+    }
     getPlans();
     loadBillingState();
     super.onInit();
+  }
+
+  @override
+  void onClose() {
+    iapService?.dispose();
+    super.onClose();
   }
 
   @override
@@ -104,9 +121,10 @@ class PlansControllerImp extends PlansController {
     paymentMethods = [];
     defaultPaymentMethodId = null;
 
-    final methodsResponse = await billingData.getPaymentMethods();
-    if (methodsResponse.isSuccess &&
-        methodsResponse.data is Map<String, dynamic>) {
+    if (!Platform.isIOS) {
+      final methodsResponse = await billingData.getPaymentMethods();
+      if (methodsResponse.isSuccess &&
+          methodsResponse.data is Map<String, dynamic>) {
       final payload = methodsResponse.data as Map<String, dynamic>;
       final methods = payload['methods'];
       if (methods is List) {
@@ -126,7 +144,7 @@ class PlansControllerImp extends PlansController {
           .whereType<int>()
           .cast<int?>()
           .firstWhere((id) => id != null, orElse: () => null);
-    } else if (methodsResponse.isSuccess && methodsResponse.data is List) {
+      } else if (methodsResponse.isSuccess && methodsResponse.data is List) {
       // Backward compatibility with old API shape: data = [...]
       final methods = methodsResponse.data as List;
       hasPaymentMethod = methods.isNotEmpty;
@@ -157,6 +175,7 @@ class PlansControllerImp extends PlansController {
       defaultPaymentMethodStatus = defaultMethod?['status']?.toString();
       canRetryPayment = defaultPaymentMethodStatus == 'active';
       defaultPaymentMethodId = defaultMethod?['id'] as int?;
+      }
     }
 
     isBillingLoading = false;
@@ -292,6 +311,27 @@ class PlansControllerImp extends PlansController {
     actionPlanId = plan.id;
     update();
 
+    if (Platform.isIOS && iapService != null) {
+      try {
+        await iapService!.purchasePlan(plan);
+        customSnackBar(
+          text: 'تمت عملية الشراء بنجاح.',
+          snackType: SnackBarType.correct,
+        );
+      } catch (e) {
+        final message = e is Exception ? e.toString().replaceFirst('Exception: ', '') : e.toString();
+        customSnackBar(
+          text: message.isNotEmpty ? message : 'تعذر إتمام عملية الشراء.',
+          snackType: SnackBarType.error,
+        );
+      }
+      isActionLoading = false;
+      actionPlanId = null;
+      await loadBillingState();
+      update();
+      return;
+    }
+
     final response = await billingData.purchasePlan(
       planId: plan.id,
       paymentMethodId: paymentMethodId,
@@ -346,6 +386,37 @@ class PlansControllerImp extends PlansController {
     isActionLoading = false;
     actionPlanId = null;
     await loadBillingState();
+    update();
+  }
+
+  @override
+  Future<void> restorePurchases() async {
+    if (!Platform.isIOS || iapService == null) return;
+    if (plans.isEmpty) {
+      customSnackBar(
+        text: 'لا توجد خطط محمّلة للاستعادة.',
+        snackType: SnackBarType.info,
+      );
+      return;
+    }
+    try {
+      final planModels = plans
+          .whereType<Map<String, dynamic>>()
+          .map((e) => PlanModel.fromJson(e))
+          .toList();
+      await iapService!.restorePurchases(planModels);
+      customSnackBar(
+        text: 'تمت استعادة المشتريات. جاري تحديث الحالة.',
+        snackType: SnackBarType.correct,
+      );
+      await loadBillingState();
+    } catch (e) {
+      final message = e is Exception ? e.toString().replaceFirst('Exception: ', '') : e.toString();
+      customSnackBar(
+        text: message.isNotEmpty ? message : 'تعذر استعادة المشتريات.',
+        snackType: SnackBarType.error,
+      );
+    }
     update();
   }
 

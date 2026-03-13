@@ -11,6 +11,8 @@ class PlanModel {
   final List<String> features;
   final String createdAt;
   final String updatedAt;
+  /// معرف منتج Apple (للـ iOS فقط). إن لم يرده الخادم نستخدم price الافتراضي.
+  final String? iosProductId;
 
   PlanModel({
     required this.id,
@@ -25,13 +27,16 @@ class PlanModel {
     required this.features,
     required this.createdAt,
     required this.updatedAt,
+    this.iosProductId,
   });
 
   factory PlanModel.fromJson(Map<String, dynamic> json) {
+    final priceRaw = json['price'];
+    final price = priceRaw != null ? priceRaw.toString() : '0';
     return PlanModel(
       id: json['id'] as int,
       name: json['name'] as String,
-      price: json['price'] as String,
+      price: price,
       interval: json['interval'] as String? ?? 'monthly',
       intervalLabel: json['interval_label'] as String?,
       description: json['description'] as String? ?? '',
@@ -45,6 +50,7 @@ class PlanModel {
           [],
       createdAt: json['created_at'] as String? ?? '',
       updatedAt: json['updated_at'] as String? ?? '',
+      iosProductId: json['ios_product_id'] as String?,
     );
   }
 
@@ -62,6 +68,7 @@ class PlanModel {
       'features': features,
       'created_at': createdAt,
       'updated_at': updatedAt,
+      if (iosProductId != null) 'ios_product_id': iosProductId,
     };
   }
 

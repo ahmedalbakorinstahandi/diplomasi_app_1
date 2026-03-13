@@ -160,4 +160,22 @@ class BillingData {
       params: {'include_pdf': includePdf ? 1 : 0},
     );
   }
+
+  /// إرسال إيصال Apple للتحقق من الشراء وتفعيل الاشتراك.
+  Future<ApiResponse> verifyApplePurchase({
+    required int planId,
+    required String productId,
+    required String transactionId,
+    required String receipt,
+  }) async {
+    return await apiService.post(
+      EndPoints.iosPurchaseVerify,
+      data: {
+        'plan_id': planId,
+        'product_id': productId,
+        'transaction_id': transactionId,
+        'receipt': receipt,
+      },
+    );
+  }
 }

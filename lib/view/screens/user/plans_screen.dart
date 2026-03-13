@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:diplomasi_app/core/classes/handling_data_view.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
@@ -58,22 +60,38 @@ class PlansScreen extends StatelessWidget {
                     ),
                     SizedBox(width: width(8)),
                     const Spacer(),
-                    OutlinedButton.icon(
-                      onPressed: () async {
-                        await Get.to(() => const PaymentMethodsScreen());
-                        await controller.loadBillingState();
-                      },
-                      icon: Icon(Icons.credit_card, color: scheme.onSurface),
-                      label: Text(
-                        'وسائل الدفع',
-                        style: TextStyle(
-                          fontSize: emp(14),
-                          fontWeight: FontWeight.w500,
-
-                          color: scheme.onSurface,
+                    if (!Platform.isIOS)
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          await Get.to(() => const PaymentMethodsScreen());
+                          await controller.loadBillingState();
+                        },
+                        icon: Icon(Icons.credit_card, color: scheme.onSurface),
+                        label: Text(
+                          'وسائل الدفع',
+                          style: TextStyle(
+                            fontSize: emp(14),
+                            fontWeight: FontWeight.w500,
+                            color: scheme.onSurface,
+                          ),
                         ),
                       ),
-                    ),
+                    if (Platform.isIOS) ...[
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          await controller.restorePurchases();
+                        },
+                        icon: Icon(Icons.restore, color: scheme.onSurface),
+                        label: Text(
+                          'استعادة المشتريات',
+                          style: TextStyle(
+                            fontSize: emp(14),
+                            fontWeight: FontWeight.w500,
+                            color: scheme.onSurface,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -208,6 +226,11 @@ class PlansScreen extends StatelessWidget {
     controller.update();
 
     try {
+      if (Platform.isIOS) {
+        await controller.purchasePlan(plan);
+        return;
+      }
+
       await _refreshBillingState(controller);
       if (controller.hasBlockingCurrentSubscription &&
           !controller.isCurrentPlan(plan)) {
