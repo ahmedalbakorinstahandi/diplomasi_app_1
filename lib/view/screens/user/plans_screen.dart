@@ -14,6 +14,7 @@ import 'package:diplomasi_app/view/screens/user/add_payment_method_screen.dart';
 import 'package:diplomasi_app/view/screens/user/payment_methods_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PlansScreen extends StatelessWidget {
   const PlansScreen({super.key});
@@ -441,6 +442,25 @@ class PlansScreen extends StatelessWidget {
     PlansControllerImp controller,
   ) {
     final scheme = Theme.of(context).colorScheme;
+
+    if (Platform.isIOS) {
+      return SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: () async {
+            final uri = Uri.parse(
+              'https://apps.apple.com/account/subscriptions',
+            );
+            if (await canLaunchUrl(uri)) {
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            }
+          },
+          icon: Icon(Icons.settings, size: 18, color: scheme.primary),
+          label: const Text('إدارة الاشتراك'),
+        ),
+      );
+    }
+
     final status = (controller.currentSubscription?['status'] ?? '')
         .toString()
         .toLowerCase();

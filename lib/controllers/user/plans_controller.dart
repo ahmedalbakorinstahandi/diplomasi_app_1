@@ -184,6 +184,7 @@ class PlansControllerImp extends PlansController {
 
   @override
   Future<void> cancelSubscription() async {
+    if (Platform.isIOS) return;
     if (isActionLoading || currentSubscription == null) return;
     isActionLoading = true;
     update();
@@ -203,6 +204,7 @@ class PlansControllerImp extends PlansController {
 
   @override
   Future<void> resumeSubscription() async {
+    if (Platform.isIOS) return;
     if (isActionLoading || currentSubscription == null) return;
     isActionLoading = true;
     update();
@@ -222,6 +224,7 @@ class PlansControllerImp extends PlansController {
 
   @override
   Future<void> retryPayment() async {
+    if (Platform.isIOS) return;
     if (isActionLoading || _isRetryPolling || currentSubscription == null) {
       return;
     }
