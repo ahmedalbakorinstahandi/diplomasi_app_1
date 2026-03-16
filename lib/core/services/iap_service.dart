@@ -123,6 +123,8 @@ class IapService {
     final productIds = {productId};
     final response = await _iap.queryProductDetails(productIds);
     if (response.notFoundIDs.isNotEmpty) {
+      print(response.notFoundIDs);
+      print(response.error.toString());
       throw Exception(
         'المنتج غير موجود في المتجر. تأكد من إنشاء المنتج في App Store Connect '
         'بمعرّف مطابق تماماً: $productId',

@@ -68,12 +68,12 @@ class VerifyCodeControllerImp extends VerifyCodeController {
     update();
 
     final pushService = Get.find<PushNotificationService>();
-    final deviceToken = await pushService.getDeviceToken();
+    //final deviceToken = await pushService.getDeviceToken();
 
     var response = await authData.verifyOtp(
       email: email,
       otp: otp,
-      deviceToken: deviceToken,
+      deviceToken: "deviceToken",
     );
 
     if (response.isSuccess) {

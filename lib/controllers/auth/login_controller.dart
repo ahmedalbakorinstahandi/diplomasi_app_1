@@ -60,12 +60,12 @@ class LoginControllerImp extends LoginController {
       update();
 
       final pushService = Get.find<PushNotificationService>();
-      final deviceToken = await pushService.getDeviceToken();
+     // final deviceToken = await pushService.getDeviceToken();
 
       var response = await authData.login(
         email: email.text,
         password: password.text,
-        deviceToken: deviceToken,
+        deviceToken: "deviceToken",
       );
 
       if (response.isSuccess) {

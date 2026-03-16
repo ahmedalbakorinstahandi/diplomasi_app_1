@@ -28,7 +28,7 @@ void main() async {
     PushNotificationService(),
     permanent: true,
   );
-  await pushNotificationService.init();
+  //await pushNotificationService.init();
 
   // Theme controller needs SharedPreferences (services) ready.
   Get.put(ThemeControllerImp(), permanent: true);
