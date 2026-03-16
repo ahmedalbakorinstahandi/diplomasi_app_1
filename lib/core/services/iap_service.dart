@@ -119,10 +119,14 @@ class IapService {
     if (!_isAvailable) {
       throw Exception('الشراء داخل التطبيق غير متاح حالياً');
     }
-    final productIds = {plan.iosProductId!};
+    final productId = plan.iosProductId!;
+    final productIds = {productId};
     final response = await _iap.queryProductDetails(productIds);
     if (response.notFoundIDs.isNotEmpty) {
-      throw Exception('المنتج غير موجود في المتجر');
+      throw Exception(
+        'المنتج غير موجود في المتجر. تأكد من إنشاء المنتج في App Store Connect '
+        'بمعرّف مطابق تماماً: $productId',
+      );
     }
     final productDetails = response.productDetails;
     if (productDetails.isEmpty) {
