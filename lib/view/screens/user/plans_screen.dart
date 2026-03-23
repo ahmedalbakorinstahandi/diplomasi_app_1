@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:diplomasi_app/core/classes/handling_data_view.dart';
+import 'package:diplomasi_app/core/constants/variables.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
@@ -61,7 +60,7 @@ class PlansScreen extends StatelessWidget {
                     ),
                     SizedBox(width: width(8)),
                     const Spacer(),
-                    if (!Platform.isIOS)
+                    if (!isEffectiveIOS)
                       OutlinedButton.icon(
                         onPressed: () async {
                           await Get.to(() => const PaymentMethodsScreen());
@@ -77,7 +76,7 @@ class PlansScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                    if (Platform.isIOS) ...[
+                    if (isEffectiveIOS) ...[
                       OutlinedButton.icon(
                         onPressed: () async {
                           await controller.restorePurchases();
@@ -134,8 +133,8 @@ class PlansScreen extends StatelessWidget {
                                 isFeatured: isFeatured,
                                 actionLabel: isCurrentPlan
                                     ? (controller.isRenewalPending
-                                        ? 'جارٍ التجديد'
-                                        : 'هذه خطتك الحالية')
+                                          ? 'جارٍ التجديد'
+                                          : 'هذه خطتك الحالية')
                                     : purchaseBlocked
                                     ? 'لديك خطة مفعلة'
                                     : 'شراء الآن',
@@ -227,7 +226,7 @@ class PlansScreen extends StatelessWidget {
     controller.update();
 
     try {
-      if (Platform.isIOS) {
+      if (isEffectiveIOS) {
         await controller.purchasePlan(plan);
         return;
       }
@@ -443,7 +442,7 @@ class PlansScreen extends StatelessWidget {
   ) {
     final scheme = Theme.of(context).colorScheme;
 
-    if (Platform.isIOS) {
+    if (isEffectiveIOS) {
       return SizedBox(
         width: double.infinity,
         child: OutlinedButton.icon(

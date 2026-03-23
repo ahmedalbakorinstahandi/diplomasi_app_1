@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:diplomasi_app/core/classes/api_response.dart';
+import 'package:diplomasi_app/core/constants/variables.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
@@ -32,7 +31,7 @@ abstract class PlansController extends GetxController {
   BillingData billingData = BillingData();
   IapService? iapService;
 
-  bool get isIOS => Platform.isIOS;
+  bool get isIOS => isEffectiveIOS;
 
   Future<void> getPlans();
   Future<void> loadBillingState();
@@ -66,7 +65,7 @@ class PlansControllerImp extends PlansController {
 
   @override
   void onInit() {
-    if (Platform.isIOS) {
+    if (isEffectiveIOS) {
       iapService = IapService();
       iapService!.initialize();
     }
@@ -121,7 +120,7 @@ class PlansControllerImp extends PlansController {
     paymentMethods = [];
     defaultPaymentMethodId = null;
 
-    if (!Platform.isIOS) {
+    if (!isEffectiveIOS) {
       final methodsResponse = await billingData.getPaymentMethods();
       if (methodsResponse.isSuccess &&
           methodsResponse.data is Map<String, dynamic>) {
@@ -184,7 +183,7 @@ class PlansControllerImp extends PlansController {
 
   @override
   Future<void> cancelSubscription() async {
-    if (Platform.isIOS) return;
+    if (isEffectiveIOS) return;
     if (isActionLoading || currentSubscription == null) return;
     isActionLoading = true;
     update();
@@ -204,7 +203,7 @@ class PlansControllerImp extends PlansController {
 
   @override
   Future<void> resumeSubscription() async {
-    if (Platform.isIOS) return;
+    if (isEffectiveIOS) return;
     if (isActionLoading || currentSubscription == null) return;
     isActionLoading = true;
     update();
@@ -224,7 +223,7 @@ class PlansControllerImp extends PlansController {
 
   @override
   Future<void> retryPayment() async {
-    if (Platform.isIOS) return;
+    if (isEffectiveIOS) return;
     if (isActionLoading || _isRetryPolling || currentSubscription == null) {
       return;
     }
@@ -314,7 +313,7 @@ class PlansControllerImp extends PlansController {
     actionPlanId = plan.id;
     update();
 
-    if (Platform.isIOS && iapService != null) {
+    if (isEffectiveIOS && iapService != null) {
       try {
         await iapService!.purchasePlan(plan);
         customSnackBar(
@@ -394,7 +393,7 @@ class PlansControllerImp extends PlansController {
 
   @override
   Future<void> restorePurchases() async {
-    if (!Platform.isIOS || iapService == null) return;
+    if (!isEffectiveIOS || iapService == null) return;
     if (plans.isEmpty) {
       customSnackBar(
         text: 'لا توجد خطط محمّلة للاستعادة.',

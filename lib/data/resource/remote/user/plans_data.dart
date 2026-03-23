@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:diplomasi_app/core/classes/api_response.dart';
+import 'package:diplomasi_app/core/constants/variables.dart';
 import 'package:diplomasi_app/core/classes/api_service.dart';
 import 'package:diplomasi_app/routes/api.dart';
 import 'package:get/get.dart';
@@ -10,7 +9,7 @@ class PlansData {
 
   Future<ApiResponse> getPlans() async {
     final params = <String, dynamic>{};
-    if (Platform.isIOS) {
+    if (isEffectiveIOS) {
       params['platform'] = 'ios';
     }
     return await apiService.get(EndPoints.plans, params: params.isEmpty ? null : params);

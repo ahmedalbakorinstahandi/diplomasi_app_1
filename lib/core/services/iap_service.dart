@@ -83,9 +83,7 @@ class IapService {
     final productId = purchase.productID;
     final transactionId = purchase.purchaseID ?? '';
     if (receipt.isEmpty || transactionId.isEmpty) {
-      _pendingVerification?.completeError(
-        Exception('بيانات الإيصال ناقصة'),
-      );
+      _pendingVerification?.completeError(Exception('بيانات الإيصال ناقصة'));
       _pendingVerification = null;
       _pendingPlan = null;
       return;
@@ -116,12 +114,15 @@ class IapService {
     if (plan.iosProductId == null || plan.iosProductId!.isEmpty) {
       throw Exception('هذه الخطة غير متاحة للشراء عبر التطبيق');
     }
-    if (!_isAvailable) {
-      throw Exception('الشراء داخل التطبيق غير متاح حالياً');
-    }
+    // TODO: Uncomment this later
+    // if (!_isAvailable) {
+    //   throw Exception('الشراء داخل التطبيق غير متاح حالياً');
+    // }
     final productId = plan.iosProductId!;
     final productIds = {productId};
+    print('starting to query product details');
     final response = await _iap.queryProductDetails(productIds);
+    print('response: $response');
     if (response.notFoundIDs.isNotEmpty) {
       throw Exception(
         'المنتج غير موجود في المتجر. تأكد من إنشاء المنتج في App Store Connect '
