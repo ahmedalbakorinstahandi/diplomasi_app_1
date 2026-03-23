@@ -227,6 +227,7 @@ class PlansScreen extends StatelessWidget {
 
     try {
       if (isEffectiveIOS) {
+        print('Starting iOS purchase flow for plan ${plan.id}');
         await controller.purchasePlan(plan);
         return;
       }

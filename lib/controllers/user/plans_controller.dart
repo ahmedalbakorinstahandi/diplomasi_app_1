@@ -124,56 +124,57 @@ class PlansControllerImp extends PlansController {
       final methodsResponse = await billingData.getPaymentMethods();
       if (methodsResponse.isSuccess &&
           methodsResponse.data is Map<String, dynamic>) {
-      final payload = methodsResponse.data as Map<String, dynamic>;
-      final methods = payload['methods'];
-      if (methods is List) {
-        paymentMethods = methods
-            .whereType<Map<String, dynamic>>()
-            .map((e) => Map<String, dynamic>.from(e))
-            .toList();
-        hasPaymentMethod = paymentMethods.isNotEmpty;
-      }
-
-      hasDefaultPaymentMethod = payload['has_default_payment_method'] == true;
-      defaultPaymentMethodStatus = payload['default_method_status']?.toString();
-      canRetryPayment = payload['can_retry'] == true;
-      defaultPaymentMethodId = paymentMethods
-          .where((m) => m['is_default'] == true)
-          .map((m) => m['id'])
-          .whereType<int>()
-          .cast<int?>()
-          .firstWhere((id) => id != null, orElse: () => null);
-      } else if (methodsResponse.isSuccess && methodsResponse.data is List) {
-      // Backward compatibility with old API shape: data = [...]
-      final methods = methodsResponse.data as List;
-      hasPaymentMethod = methods.isNotEmpty;
-
-      Map<String, dynamic>? defaultMethod;
-      for (final item in methods) {
-        if (item is! Map<String, dynamic>) continue;
-        if (item['is_default'] == true) {
-          defaultMethod = item;
-          break;
+        final payload = methodsResponse.data as Map<String, dynamic>;
+        final methods = payload['methods'];
+        if (methods is List) {
+          paymentMethods = methods
+              .whereType<Map<String, dynamic>>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
+          hasPaymentMethod = paymentMethods.isNotEmpty;
         }
-      }
-      if (defaultMethod == null) {
+
+        hasDefaultPaymentMethod = payload['has_default_payment_method'] == true;
+        defaultPaymentMethodStatus = payload['default_method_status']
+            ?.toString();
+        canRetryPayment = payload['can_retry'] == true;
+        defaultPaymentMethodId = paymentMethods
+            .where((m) => m['is_default'] == true)
+            .map((m) => m['id'])
+            .whereType<int>()
+            .cast<int?>()
+            .firstWhere((id) => id != null, orElse: () => null);
+      } else if (methodsResponse.isSuccess && methodsResponse.data is List) {
+        // Backward compatibility with old API shape: data = [...]
+        final methods = methodsResponse.data as List;
+        hasPaymentMethod = methods.isNotEmpty;
+
+        Map<String, dynamic>? defaultMethod;
         for (final item in methods) {
           if (item is! Map<String, dynamic>) continue;
-          if (item['status'] == 'active') {
+          if (item['is_default'] == true) {
             defaultMethod = item;
             break;
           }
         }
-      }
+        if (defaultMethod == null) {
+          for (final item in methods) {
+            if (item is! Map<String, dynamic>) continue;
+            if (item['status'] == 'active') {
+              defaultMethod = item;
+              break;
+            }
+          }
+        }
 
-      paymentMethods = methods
-          .whereType<Map<String, dynamic>>()
-          .map((e) => Map<String, dynamic>.from(e))
-          .toList();
-      hasDefaultPaymentMethod = defaultMethod != null;
-      defaultPaymentMethodStatus = defaultMethod?['status']?.toString();
-      canRetryPayment = defaultPaymentMethodStatus == 'active';
-      defaultPaymentMethodId = defaultMethod?['id'] as int?;
+        paymentMethods = methods
+            .whereType<Map<String, dynamic>>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList();
+        hasDefaultPaymentMethod = defaultMethod != null;
+        defaultPaymentMethodStatus = defaultMethod?['status']?.toString();
+        canRetryPayment = defaultPaymentMethodStatus == 'active';
+        defaultPaymentMethodId = defaultMethod?['id'] as int?;
       }
     }
 
@@ -307,7 +308,9 @@ class PlansControllerImp extends PlansController {
 
   @override
   Future<void> purchasePlan(PlanModel plan, {int? paymentMethodId}) async {
+    print(  'Attempting to purchase plan ${plan.id} with payment method ID: $paymentMethodId');
     if (isActionLoading) return;
+    print(  'Attemptingggggg to purchase plan ${plan.id} with payment method ID: $paymentMethodId');
 
     isActionLoading = true;
     actionPlanId = plan.id;
@@ -321,7 +324,9 @@ class PlansControllerImp extends PlansController {
           snackType: SnackBarType.correct,
         );
       } catch (e) {
-        final message = e is Exception ? e.toString().replaceFirst('Exception: ', '') : e.toString();
+        final message = e is Exception
+            ? e.toString().replaceFirst('Exception: ', '')
+            : e.toString();
         customSnackBar(
           text: message.isNotEmpty ? message : 'تعذر إتمام عملية الشراء.',
           snackType: SnackBarType.error,
@@ -413,7 +418,9 @@ class PlansControllerImp extends PlansController {
       );
       await loadBillingState();
     } catch (e) {
-      final message = e is Exception ? e.toString().replaceFirst('Exception: ', '') : e.toString();
+      final message = e is Exception
+          ? e.toString().replaceFirst('Exception: ', '')
+          : e.toString();
       customSnackBar(
         text: message.isNotEmpty ? message : 'تعذر استعادة المشتريات.',
         snackType: SnackBarType.error,

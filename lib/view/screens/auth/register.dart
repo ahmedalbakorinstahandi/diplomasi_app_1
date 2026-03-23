@@ -107,21 +107,21 @@ class RegisterScreen extends StatelessWidget {
                             fieldName: 'البريد الإلكتروني',
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        //const SizedBox(height: 24),
                         // Phone field
-                        AuthInputField(
-                          label: 'رقم الهاتف',
-                          hintText: 'أدخل رقم الهاتف',
-                          controller: controller.phone,
-                          keyboardType: TextInputType.phone,
-                          textDirection: TextDirection.ltr,
-                          iconPath: Assets.icons.svg.phone,
+                        // AuthInputField(
+                        //   label: 'رقم الهاتف',
+                        //   hintText: 'أدخل رقم الهاتف',
+                        //   controller: controller.phone,
+                        //   keyboardType: TextInputType.phone,
+                        //   textDirection: TextDirection.ltr,
+                        //   iconPath: Assets.icons.svg.phone,
                           // validator: (value) => MyValidator.validate(
                           //   value,
                           //   type: ValidatorType.phone,
                           //   fieldName: 'رقم الهاتف',
                           // ),
-                        ),
+                      //  ),
                         const SizedBox(height: 24),
                         // Password field
                         AuthPasswordField(
