@@ -112,7 +112,7 @@ class ProfileScreen extends StatelessWidget {
                                 ),
                                 if (isVisible)
                                   ProfileItem(
-                                    title: 'الباقات',
+                                    title: 'subscription_page_title'.tr,
                                     icon: Assets.icons.svg.subscriptions,
                                     onTap: () {
                                       Get.toNamed(AppRoutes.plans);

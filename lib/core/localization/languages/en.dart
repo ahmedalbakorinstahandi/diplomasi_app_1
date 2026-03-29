@@ -370,6 +370,14 @@ const Map<String, String> en = {
   'error_launching_whatsapp': 'Error launching WhatsApp',
   'help_center': 'Help Center',
 
+  'terms_conditions': 'Terms of Use',
+  'privacy_policy': 'Privacy Policy',
+  'subscription_page_title': 'Subscription plans',
+
+  'subscription_legal_prefix': 'By continuing, you agree to our ',
+  'subscription_legal_between': ' and ',
+  'subscription_legal_suffix': '.',
+
   // App update & banned
   'force_update_title': 'Update required',
   'force_update_message': 'Please update the app to continue. Download the latest version from the store.',

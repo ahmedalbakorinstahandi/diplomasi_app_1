@@ -1,3 +1,4 @@
+import 'package:diplomasi_app/core/functions/legal_platform.dart';
 import 'package:diplomasi_app/data/resource/remote/general/settings_data.dart';
 import 'package:get/get.dart';
 
@@ -22,7 +23,9 @@ class TermsConditionsControllerImp extends TermsConditionsController {
   Future<void> getTermsConditions() async {
     isLoading = true;
     update();
-    var response = await settingsData.get(idOrKey: "legal.terms_conditions");
+    var response = await settingsData.getFirstSuccessfulKey(
+      legalTermsSettingsKeys(),
+    );
     if (response.isSuccess) {
       termsConditions = response.data['value'];
     }

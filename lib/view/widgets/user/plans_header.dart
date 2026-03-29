@@ -47,7 +47,7 @@ class PlansHeader extends StatelessWidget {
           // Title
           Expanded(
             child: Text(
-              'خطط الاشتراك',
+              'subscription_page_title'.tr,
               style: TextStyle(
                 fontSize: emp(24),
                 fontWeight: FontWeight.bold,

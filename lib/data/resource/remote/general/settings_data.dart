@@ -12,4 +12,14 @@ class SettingsData {
       pathVariables: {'idOrKey': idOrKey},
     );
   }
+
+  /// Tries keys in order; returns first successful response, or the last attempt.
+  Future<ApiResponse> getFirstSuccessfulKey(Iterable<String> keys) async {
+    ApiResponse? last;
+    for (final idOrKey in keys) {
+      last = await get(idOrKey: idOrKey);
+      if (last.isSuccess) return last;
+    }
+    return last!;
+  }
 }

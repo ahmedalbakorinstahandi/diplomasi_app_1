@@ -361,6 +361,11 @@ const Map<String, String> ar = {
   'privacy_policy': 'سياسة الخصوصية',
   'help_center': 'مركز المساعدة',
   'terms_conditions': 'الشروط والأحكام',
+  'subscription_page_title': 'خطط الاشتراك',
+
+  'subscription_legal_prefix': 'بمتابعتك، فإنك توافق على ',
+  'subscription_legal_between': ' و ',
+  'subscription_legal_suffix': '.',
 
   // App update & banned
   'force_update_title': 'تحديث مطلوب',

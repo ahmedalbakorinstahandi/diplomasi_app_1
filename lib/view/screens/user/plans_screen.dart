@@ -9,6 +9,7 @@ import 'package:diplomasi_app/data/model/user/plan_model.dart';
 import 'package:diplomasi_app/view/shimmers/user/presentation/shimmer/plans_screen_shimmer.dart';
 import 'package:diplomasi_app/view/widgets/user/plan_card.dart';
 import 'package:diplomasi_app/view/widgets/user/plans_header.dart';
+import 'package:diplomasi_app/view/widgets/user/subscription_legal_consent.dart';
 import 'package:diplomasi_app/view/screens/user/add_payment_method_screen.dart';
 import 'package:diplomasi_app/view/screens/user/payment_methods_screen.dart';
 import 'package:flutter/material.dart';
@@ -95,6 +96,8 @@ class PlansScreen extends StatelessWidget {
                   ],
                 ),
               ),
+              const SubscriptionLegalConsent(),
+              SizedBox(height: height(8)),
               // SizedBox(height: height(16)),
               Expanded(
                 child: HandlingListDataView(
@@ -205,7 +208,15 @@ class PlansScreen extends StatelessWidget {
     final confirm = await Get.dialog<bool>(
       AlertDialog(
         title: const Text('تأكيد الشراء'),
-        content: Text('هل تريد شراء باقة "${plan.name}"؟'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('هل تريد شراء باقة "${plan.name}"؟'),
+            SizedBox(height: height(14)),
+            const SubscriptionLegalConsent(compact: true),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
@@ -350,6 +361,8 @@ class PlansScreen extends StatelessWidget {
                       );
                     }),
                     const SizedBox(height: 8),
+                    const SubscriptionLegalConsent(compact: true),
+                    const SizedBox(height: 12),
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
