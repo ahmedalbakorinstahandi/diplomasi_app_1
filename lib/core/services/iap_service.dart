@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:diplomasi_app/core/functions/print.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:diplomasi_app/data/model/user/plan_model.dart';
 import 'package:diplomasi_app/data/resource/remote/user/billing_data.dart';
@@ -120,12 +121,12 @@ class IapService {
     // }
     final productId = plan.iosProductId!;
     final productIds = {productId};
-    print('starting to query product details');
+    printDebug('starting to query product details');
     final response = await _iap.queryProductDetails(productIds);
-    print('response: $response');
+    printDebug('response: $response');
     if (response.notFoundIDs.isNotEmpty) {
-      print(response.notFoundIDs);
-      print(response.error.toString());
+      printDebug(response.notFoundIDs);
+      printDebug(response.error.toString());
       throw Exception(
         'المنتج غير موجود في المتجر. تأكد من إنشاء المنتج في App Store Connect '
         'بمعرّف مطابق تماماً: $productId',
