@@ -73,16 +73,25 @@ String formatTimeOnly(String? date) {
 String formatDateRelative(String? dateString) {
   if (dateString == null || dateString.isEmpty) return dateString ?? '';
   try {
-    final date = parseUtcToLocal(dateString);
+    DateTime date;
+
+    // If we receive a pure date string like "2026-03-31"
+    if (dateString.length == 10 && RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(dateString)) {
+      date = DateFormat('yyyy-MM-dd').parse(dateString);
+    } else {
+      // Fallback to existing UTC → local parsing for full timestamps
+      date = parseUtcToLocal(dateString);
+    }
+
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
     final dateOnly = DateTime(date.year, date.month, date.day);
+    final dayDiff = dateOnly.difference(today).inDays;
 
-    if (dateOnly.isAtSameMomentAs(today)) {
+    if (dayDiff == 0) {
       return 'اليوم';
     }
-    if (dateOnly.isAtSameMomentAs(yesterday)) {
+    if (dayDiff == -1) {
       return 'أمس';
     }
     return '${date.day} ${_monthNameAr(date.month)}';

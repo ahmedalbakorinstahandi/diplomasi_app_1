@@ -42,49 +42,30 @@ class AuthInputField extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: colors.border,
-                width: 1,
-              ),
-            ),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          textDirection: textDirection ?? TextDirection.rtl,
+          textAlign: TextAlign.right,
+          enabled: enabled,
+          style: TextStyle(fontSize: 16, color: scheme.onSurface),
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: TextStyle(fontSize: 14, color: colors.textMuted),
+            border: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+            prefixIcon: iconPath != null
+                ? MySvgIcon(
+                    path: iconPath!,
+                    padding: 10,
+                    color: colors.textMuted,
+                  )
+                : null,
+            suffixIcon: suffixIcon,
           ),
-          child: TextFormField(
-            controller: controller,
-            keyboardType: keyboardType,
-            textDirection: textDirection ?? TextDirection.rtl,
-            textAlign: TextAlign.right,
-            enabled: enabled,
-            style: TextStyle(
-              fontSize: 16,
-              color: scheme.onSurface,
-            ),
-            decoration: InputDecoration(
-              hintText: hintText,
-              hintStyle: TextStyle(
-                fontSize: 14,
-                color: colors.textMuted,
-              ),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 12,
-              ),
-              prefixIcon: iconPath != null
-                  ? MySvgIcon(
-                      path: iconPath!,
-                      padding: 10,
-                      color: colors.textMuted,
-                    )
-                  : null,
-              suffixIcon: suffixIcon,
-            ),
-            validator: validator,
-          ),
+          validator: validator,
         ),
       ],
     );
   }
 }
-

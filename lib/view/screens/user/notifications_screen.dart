@@ -41,17 +41,26 @@ class NotificationsScreen extends StatelessWidget {
                       padding: EdgeInsets.all(width(16)),
                       children: [
                         ...controller.notifications.map(
-                          (dateGroup) => NotificationDateSection(
-                            date: formatDateRelative(dateGroup['date']),
-                            notifications: (dateGroup['notifications'] as List)
-                                .map(
-                                  (notification) => NotificationCard(
-                                    notification:
-                                        notification as NotificationModel,
-                                  ),
-                                )
-                                .toList(),
-                          ),
+                          (dateGroup) {
+                            final notificationsForDate =
+                                (dateGroup['notifications'] as List);
+                            final firstNotification =
+                                notificationsForDate.first as NotificationModel;
+
+                            return NotificationDateSection(
+                              date: formatDateRelative(
+                                firstNotification.createdAt,
+                              ),
+                              notifications: notificationsForDate
+                                  .map(
+                                    (notification) => NotificationCard(
+                                      notification:
+                                          notification as NotificationModel,
+                                    ),
+                                  )
+                                  .toList(),
+                            );
+                          },
                         ),
                       ],
                     ),
