@@ -2,14 +2,16 @@ class UserModel {
   final int id;
   final String firstName;
   final String lastName;
-  final int phoneVerified;
-  final int emailVerified;
+  final bool phoneVerified;
+  final bool emailVerified;
   final String? avatar;
-  final String email;
-  final String phone;
+  final String? email;
+  final String? phone;
   final String address;
   final String language;
   final String status;
+  final bool isGuest;
+  final String accountState;
   //approved
   final bool approved;
   final String createdAt;
@@ -29,6 +31,8 @@ class UserModel {
     required this.address,
     required this.language,
     required this.status,
+    required this.isGuest,
+    required this.accountState,
     required this.approved,
     required this.createdAt,
     required this.updatedAt,
@@ -37,18 +41,31 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final parsedIsGuest = json['is_guest'] == true || json['is_guest'] == 1;
+    final parsedEmailVerified =
+        json['email_verified'] == true || json['email_verified'] == 1;
+    final parsedAccountState = (json['account_state'] ?? '').toString();
+
     return UserModel(
       id: json['id'],
       firstName: json['first_name'],
       lastName: json['last_name'],
-      phoneVerified: json['phone_verified'],
-      emailVerified: json['email_verified'],
+      phoneVerified: json['phone_verified'] == true || json['phone_verified'] == 1,
+      emailVerified: parsedEmailVerified,
       avatar: json['avatar'],
       email: json['email'],
       phone: json['phone'],
       address: json['address'] ?? '',
-      language: json['language'],
+      language: json['language'] ?? 'ar',
       status: json['status'] ?? "",
+      isGuest: parsedIsGuest,
+      accountState: parsedAccountState.isNotEmpty
+          ? parsedAccountState
+          : (parsedIsGuest
+                ? 'guest'
+                : (parsedEmailVerified
+                      ? 'registered_verified'
+                      : 'registered_unverified')),
       approved: json['approved'] ?? false,
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],

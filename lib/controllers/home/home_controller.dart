@@ -2,6 +2,7 @@ import 'package:diplomasi_app/core/classes/api_response.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
+import 'package:diplomasi_app/core/constants/variables.dart';
 import 'package:diplomasi_app/data/model/learning/level_model.dart';
 import 'package:diplomasi_app/data/model/user/certificate_model.dart';
 import 'package:diplomasi_app/data/resource/remote/learning/levels_data.dart';
@@ -83,8 +84,16 @@ class HomeControllerImp extends HomeController {
   }
 
   Future<void> _bootstrapSubscriptionState() async {
-    if (_didBootstrapSubscriptionState || _isBootstrappingSubscriptionState) return;
+    if (_didBootstrapSubscriptionState || _isBootstrappingSubscriptionState)
+      return;
     _didBootstrapSubscriptionState = true;
+
+    if (currentAccountState != 'registered_verified') {
+      _persistSubscriptionSnapshot(null);
+      shouldShowPremiumBanner = true;
+      update();
+      return;
+    }
 
     if (!_shouldFetchSubscriptionOnAppOpen) {
       update();

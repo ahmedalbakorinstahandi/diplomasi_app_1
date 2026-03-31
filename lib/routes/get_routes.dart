@@ -38,6 +38,7 @@ List<GetPage<dynamic>>? getPages = [
   GetPage(name: '/', page: () => const SplashScreenScreen()),
   GetPage(name: AppRoutes.onboarding, page: () => const OnboardingScreen()),
   GetPage(name: AppRoutes.splash, page: () => const SplashScreenScreen()),
+  // GetPage(name: AppRoutes.authEntry, page: () => const AuthEntryScreen()),
   GetPage(name: AppRoutes.login, page: () => const LoginScreen()),
   GetPage(name: AppRoutes.register, page: () => const RegisterScreen()),
   GetPage(

@@ -44,6 +44,22 @@ bool get isUserLoggedIn {
       Steps.homeApp;
 }
 
+String get currentAccountState {
+  final fromStorage = Shared.getValue(StorageKeys.accountState, initialValue: '');
+  if (fromStorage is String && fromStorage.isNotEmpty) {
+    return fromStorage;
+  }
+
+  final user = getUserData();
+  if (user == null) {
+    return 'unauthenticated';
+  }
+
+  return user.accountState;
+}
+
+bool get isGuestAccount => currentAccountState == 'guest';
+
 int get notificationsUnreadCount {
   return Shared.getValue('notifications_unread_count', initialValue: 0);
 }
@@ -55,5 +71,5 @@ bool get isDarkMode {
 }
 
 bool get isVisible {
-  return !Platform.isIOS || (getUserData()?.approved ?? false);
+  return true;
 }

@@ -5,6 +5,7 @@ import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/constants/variables.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/core/widgets/icon_svg.dart';
+import 'package:diplomasi_app/view/widgets/general/account_upgrade_sheet.dart';
 import 'package:diplomasi_app/view/widgets/general/notification_button.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -18,6 +19,20 @@ class HomeHeader extends StatelessWidget {
     final statusBarHeight = MediaQuery.of(context).padding.top;
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
+    final isGuest = currentAccountState == 'guest';
+
+    Future<void> handleProfileTap() async {
+      if (isGuest) {
+        await AccountUpgradeSheet.show(
+          context: context,
+          title: 'أنشئ حسابك للمتابعة',
+          description:
+              'للوصول لملفك الشخصي ومزامنة بياناتك، سجّل دخولك أو انضم الآن.',
+        );
+        return;
+      }
+      Get.toNamed(AppRoutes.editProfile);
+    }
 
     return Container(
       width: getWidth(),
@@ -43,9 +58,7 @@ class HomeHeader extends StatelessWidget {
             children: [
               // Profile picture
               InkWell(
-                onTap: () {
-                  Get.toNamed(AppRoutes.editProfile);
-                },
+                onTap: handleProfileTap,
                 child: Container(
                   width: width(40),
                   height: width(40),
@@ -75,12 +88,15 @@ class HomeHeader extends StatelessWidget {
                 ),
               ),
               SizedBox(width: width(16)),
-              Text(
-                '${user?.firstName}',
-                style: TextStyle(
-                  fontSize: emp(16),
-                  fontWeight: FontWeight.w600,
-                  color: scheme.onPrimary,
+              InkWell(
+                onTap: handleProfileTap,
+                child: Text(
+                  '${user?.firstName ?? 'متعلم'}',
+                  style: TextStyle(
+                    fontSize: emp(16),
+                    fontWeight: FontWeight.w600,
+                    color: scheme.onPrimary,
+                  ),
                 ),
               ),
               SizedBox(width: width(16)),

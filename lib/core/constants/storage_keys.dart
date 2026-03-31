@@ -4,6 +4,7 @@ abstract class StorageKeys {
   static String get profile => 'profile';
   static String get homeData => 'home_data';
   static String get accessToken => 'access_token';
+  static String get accountState => 'account_state';
   static String get fcmToken => 'fcm_token';
   static String get notificationPromptShownAt => 'notification_prompt_shown_at';
   static String get start => 'start';

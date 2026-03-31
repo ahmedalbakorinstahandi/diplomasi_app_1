@@ -16,9 +16,13 @@ abstract class LoginController extends GetxController {
 
   bool isLogin = false;
 
+  bool isGuestLoading = false;
+
   GlobalKey<FormState> formState = GlobalKey<FormState>();
 
   AuthData authData = AuthData();
+
+  Future<void> continueAsGuest();
 
   login();
 }
@@ -59,8 +63,7 @@ class LoginControllerImp extends LoginController {
       isLogin = true;
       update();
 
-      final pushService = Get.find<PushNotificationService>();
-     // final deviceToken = await pushService.getDeviceToken();
+      // final deviceToken = await Get.find<PushNotificationService>().getDeviceToken();
 
       var response = await authData.login(
         email: email.text,
@@ -75,6 +78,13 @@ class LoginControllerImp extends LoginController {
           StorageKeys.accessToken,
           response.response['access_token'],
         );
+        Shared.setValue('user-data', response.data);
+        if (response.data != null && response.data['account_state'] != null) {
+          Shared.setValue(
+            StorageKeys.accountState,
+            response.data['account_state'],
+          );
+        }
 
         Shared.setValue(StorageKeys.step, Steps.homeApp);
 
@@ -84,5 +94,34 @@ class LoginControllerImp extends LoginController {
       isLogin = false;
       update();
     }
+  }
+
+  @override
+  Future<void> continueAsGuest() async {
+    if (isGuestLoading) return;
+    isGuestLoading = true;
+    update();
+
+    final response = await authData.startGuest(deviceToken: "deviceToken");
+    if (response.isSuccess) {
+      Shared.setValue(
+        StorageKeys.accessToken,
+        response.response['access_token'],
+      );
+      Shared.setValue('user-data', response.data);
+      if (response.data != null && response.data['account_state'] != null) {
+        Shared.setValue(
+          StorageKeys.accountState,
+          response.data['account_state'],
+        );
+      }
+      Shared.setValue(StorageKeys.step, Steps.homeApp);
+      Get.offAllNamed(AppRoutes.app);
+    } else {
+      customSnackBar(text: response.message ?? "حدث خطأ");
+    }
+
+    isGuestLoading = false;
+    update();
   }
 }

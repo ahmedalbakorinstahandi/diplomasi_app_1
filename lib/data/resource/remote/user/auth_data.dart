@@ -22,6 +22,13 @@ class AuthData {
     );
   }
 
+  Future<ApiResponse> startGuest({String? deviceToken}) async {
+    return await apiService.post(
+      EndPoints.guestStart,
+      data: {'device_token': deviceToken},
+    );
+  }
+
   Future<ApiResponse> register({
     required String firstName,
     required String lastName,
@@ -39,6 +46,27 @@ class AuthData {
         'phone': phone,
         'password': password,
         'role': 'user',
+        'password_confirmation': passwordConfirmation,
+      },
+    );
+  }
+
+  Future<ApiResponse> registerFromGuest({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String phone,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    return await apiService.post(
+      EndPoints.registerFromGuest,
+      data: {
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+        'phone': phone,
+        'password': password,
         'password_confirmation': passwordConfirmation,
       },
     );

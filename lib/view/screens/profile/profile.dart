@@ -23,6 +23,9 @@ class ProfileScreen extends StatelessWidget {
       init: ProfileControllerImp(),
       builder: (controller) {
         final colors = context.appColors;
+        final scheme = Theme.of(context).colorScheme;
+        final isGuest = currentAccountState == 'guest';
+        final isVerifiedAccount = currentAccountState == 'registered_verified';
         return GetBuilder<ThemeControllerImp>(
           builder: (themeController) {
             // Helper function to get current theme mode name
@@ -63,26 +66,105 @@ class ProfileScreen extends StatelessWidget {
                           physics: const NeverScrollableScrollPhysics(),
                           padding: EdgeInsets.symmetric(horizontal: width(14)),
                           children: [
-                            SizedBox(height: height(175)),
                             // Account Management Section
-                            ProfileSection(
-                              items: [
-                                ProfileItem(
-                                  title: 'تعديل الملف الشخصي',
-                                  icon: Assets.icons.svg.edit,
-                                  onTap: () async {
-                                    await Get.toNamed(AppRoutes.editProfile);
-                                  },
+                            if (!isGuest) ...[
+                              SizedBox(height: height(175)),
+                              ProfileSection(
+                                items: [
+                                  ProfileItem(
+                                    title: 'تعديل الملف الشخصي',
+                                    icon: Assets.icons.svg.edit,
+                                    onTap: () async {
+                                      await Get.toNamed(AppRoutes.editProfile);
+                                    },
+                                  ),
+                                  ProfileItem(
+                                    title: 'تغيير كلمة المرور',
+                                    icon: Assets.icons.svg.lock,
+                                    onTap: () {
+                                      Get.toNamed(AppRoutes.changePassword);
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ],
+                            if (isGuest) ...[
+                              SizedBox(height: height(120)),
+                              Container(
+                                margin: EdgeInsets.only(bottom: height(12)),
+                                padding: EdgeInsets.all(width(14)),
+                                decoration: BoxDecoration(
+                                  color: scheme.primary.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: scheme.primary.withOpacity(0.22),
+                                  ),
                                 ),
-                                ProfileItem(
-                                  title: 'تغيير كلمة المرور',
-                                  icon: Assets.icons.svg.lock,
-                                  onTap: () {
-                                    Get.toNamed(AppRoutes.changePassword);
-                                  },
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'طوّر حسابك الآن',
+                                      style: TextStyle(
+                                        fontSize: emp(16),
+                                        fontWeight: FontWeight.w700,
+                                        color: scheme.primary,
+                                      ),
+                                    ),
+                                    SizedBox(height: height(6)),
+                                    Text(
+                                      'انضم معنا أو سجّل دخولك لفتح كل الميزات.',
+                                      style: TextStyle(
+                                        color: colors.textSecondary,
+                                        fontSize: emp(13),
+                                      ),
+                                    ),
+                                    SizedBox(height: height(10)),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: ElevatedButton(
+                                            onPressed: () =>
+                                                Get.toNamed(AppRoutes.register),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: scheme.primary,
+                                              foregroundColor: scheme.onPrimary,
+                                              minimumSize: Size(
+                                                double.infinity,
+                                                height(42),
+                                              ),
+                                            ),
+                                            child: const Text('انضم معنا'),
+                                          ),
+                                        ),
+                                        SizedBox(width: width(8)),
+                                        Expanded(
+                                          child: OutlinedButton(
+                                            onPressed: () =>
+                                                Get.toNamed(AppRoutes.login),
+                                            style: OutlinedButton.styleFrom(
+                                              minimumSize: Size(
+                                                double.infinity,
+                                                height(42),
+                                              ),
+                                              side: BorderSide(
+                                                color: scheme.primary,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              'سجّل دخول',
+                                              style: TextStyle(
+                                                color: scheme.primary,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
 
                             Divider(
                               color: colors.borderStrong,
@@ -91,13 +173,14 @@ class ProfileScreen extends StatelessWidget {
                             // User-Specific Content Section
                             ProfileSection(
                               items: [
-                                ProfileItem(
-                                  title: 'شهاداتي',
-                                  icon: Assets.icons.svg.badge,
-                                  onTap: () {
-                                    Get.toNamed(AppRoutes.certificates);
-                                  },
-                                ),
+                                if (isVerifiedAccount)
+                                  ProfileItem(
+                                    title: 'شهاداتي',
+                                    icon: Assets.icons.svg.badge,
+                                    onTap: () {
+                                      Get.toNamed(AppRoutes.certificates);
+                                    },
+                                  ),
                                 // ProfileItem(
                                 //   title: 'الأرشيف',
                                 //   icon: Assets.icons.svg.fileEdit,
@@ -110,7 +193,7 @@ class ProfileScreen extends StatelessWidget {
                                     Get.toNamed(AppRoutes.glossary);
                                   },
                                 ),
-                                if (isVisible)
+                                if (isVisible && isVerifiedAccount)
                                   ProfileItem(
                                     title: 'subscription_page_title'.tr,
                                     icon: Assets.icons.svg.subscriptions,
@@ -118,7 +201,7 @@ class ProfileScreen extends StatelessWidget {
                                       Get.toNamed(AppRoutes.plans);
                                     },
                                   ),
-                                if (isVisible)
+                                if (isVisible && isVerifiedAccount)
                                   ProfileItem(
                                     title: 'الفواتير والمدفوعات',
                                     icon: Assets.icons.svg.fileEdit,
@@ -225,19 +308,21 @@ class ProfileScreen extends StatelessWidget {
                                   onTap: controller.shareApp,
                                   isLoading: controller.isShareAppInProgress,
                                 ),
-                                ProfileItem(
-                                  title: 'تسجيل الخروج',
-                                  icon: Assets.icons.svg.logout,
-                                  onTap: controller.logout,
-                                  isLoading: controller.isLoggingOut,
-                                ),
-                                ProfileItem(
-                                  title: 'حذف الحساب',
-                                  icon: Assets.icons.svg.trash,
-                                  onTap: controller.requestAccountDeletion,
-                                  isLoading:
-                                      controller.isRequestingDeletionCode,
-                                ),
+                                if (!isGuest)
+                                  ProfileItem(
+                                    title: 'تسجيل الخروج',
+                                    icon: Assets.icons.svg.logout,
+                                    onTap: controller.logout,
+                                    isLoading: controller.isLoggingOut,
+                                  ),
+                                if (isVerifiedAccount)
+                                  ProfileItem(
+                                    title: 'حذف الحساب',
+                                    icon: Assets.icons.svg.trash,
+                                    onTap: controller.requestAccountDeletion,
+                                    isLoading:
+                                        controller.isRequestingDeletionCode,
+                                  ),
                               ],
                             ),
                             SizedBox(height: height(24)),

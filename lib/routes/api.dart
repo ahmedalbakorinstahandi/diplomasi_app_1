@@ -6,7 +6,9 @@ final class EndPoints {
   static const String baseApi = 'https://backend.diplomasi.app/api/v1';
 
   static String login = "$baseApi/auth/login";
+  static String guestStart = "$baseApi/auth/guest";
   static String register = "$baseApi/auth/register";
+  static String registerFromGuest = "$baseApi/auth/register-from-guest";
   static String forgotPassword = "$baseApi/auth/forgot-password";
   static String verifyOtp = "$baseApi/auth/verify-otp";
   static String resetPassword = "$baseApi/auth/reset-password";

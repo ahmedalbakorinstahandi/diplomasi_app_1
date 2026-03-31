@@ -2,6 +2,7 @@ abstract class AppRoutes {
   static String splash = '/splash';
   static String onboarding = '/onboarding';
   static String selectLanguage = '/selectLanguage';
+  // static String authEntry = '/auth-entry';
   static String login = '/login';
   static String register = '/register';
   static String authSuccess = '/auth-success';

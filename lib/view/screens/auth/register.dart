@@ -116,12 +116,12 @@ class RegisterScreen extends StatelessWidget {
                         //   keyboardType: TextInputType.phone,
                         //   textDirection: TextDirection.ltr,
                         //   iconPath: Assets.icons.svg.phone,
-                          // validator: (value) => MyValidator.validate(
-                          //   value,
-                          //   type: ValidatorType.phone,
-                          //   fieldName: 'رقم الهاتف',
-                          // ),
-                      //  ),
+                        // validator: (value) => MyValidator.validate(
+                        //   value,
+                        //   type: ValidatorType.phone,
+                        //   fieldName: 'رقم الهاتف',
+                        // ),
+                        //  ),
                         const SizedBox(height: 24),
                         // Password field
                         AuthPasswordField(

@@ -1,5 +1,8 @@
 import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
+import 'package:diplomasi_app/core/constants/storage_keys.dart';
+import 'package:diplomasi_app/core/constants/variables.dart';
+import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/data/resource/remote/user/auth_data.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
@@ -66,17 +69,30 @@ class RegisterControllerImp extends RegisterController {
       isRegister = true;
       update();
 
-      var response = await authData.register(
-        firstName: firstName.text,
-        lastName: lastName.text,
-        email: email.text,
-        phone: phone.text,
-        password: password.text,
-        passwordConfirmation: confirmPassword.text,
-      );
+      final bool convertingFromGuest = isGuestAccount;
+      var response = convertingFromGuest
+          ? await authData.registerFromGuest(
+              firstName: firstName.text,
+              lastName: lastName.text,
+              email: email.text,
+              phone: phone.text,
+              password: password.text,
+              passwordConfirmation: confirmPassword.text,
+            )
+          : await authData.register(
+              firstName: firstName.text,
+              lastName: lastName.text,
+              email: email.text,
+              phone: phone.text,
+              password: password.text,
+              passwordConfirmation: confirmPassword.text,
+            );
 
       if (response.isSuccess) {
         customSnackBar(text: response.message ?? "تم إنشاء الحساب بنجاح");
+        if (response.data != null && response.data['account_state'] != null) {
+          Shared.setValue(StorageKeys.accountState, response.data['account_state']);
+        }
         // Navigate to verify code screen
         Get.toNamed(
           AppRoutes.verifyCode,

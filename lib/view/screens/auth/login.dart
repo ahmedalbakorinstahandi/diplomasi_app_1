@@ -5,8 +5,8 @@ import 'package:diplomasi_app/core/constants/assets.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/classes/validator.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
-import 'package:diplomasi_app/core/functions/print.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
+import 'package:diplomasi_app/core/widgets/back_button.dart';
 import 'package:diplomasi_app/view/widgets/auth/auth_background.dart';
 import 'package:diplomasi_app/view/widgets/auth/auth_title.dart';
 import 'package:diplomasi_app/view/widgets/auth/auth_subtitle.dart';
@@ -28,7 +28,6 @@ class LoginScreen extends StatelessWidget {
         // Shared.setValue(StorageKeys.step, Steps.homeApp);
         final colors = context.appColors;
         final scheme = Theme.of(context).colorScheme;
-        printDebug(Shared.getValue(StorageKeys.step));
         return Scaffold(
           body: SafeArea(
             child: SizedBox(
@@ -42,10 +41,29 @@ class LoginScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 120),
+
                         // Title with sparkle icon
-                        const AuthTitle(
-                          title: 'تسجيل الدخول',
-                          icon: Icons.star,
+                        Row(
+                          children: [
+                            // if account state is guest - show arrwa back button
+                            if (Shared.getValue(StorageKeys.accountState) ==
+                                'guest') ...[
+                              CustomBackButton(
+                                color: scheme.primary,
+                                isNormal: false,
+                              ),
+                              SizedBox(width: width(10)),
+                            ],
+
+                            AuthTitle(
+                              title: 'تسجيل الدخول',
+                              icon:
+                                  Shared.getValue(StorageKeys.accountState) !=
+                                      'guest'
+                                  ? Icons.star
+                                  : null,
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 12),
                         // Welcome message
@@ -102,7 +120,6 @@ class LoginScreen extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 32),
                         // Login button
                         CustomButton(
                           text: 'تسجيل الدخول',
@@ -111,6 +128,81 @@ class LoginScreen extends StatelessWidget {
                           height: 56,
                           borderRadius: 12,
                         ),
+                        // if account state is not guest
+                        if (Shared.getValue(StorageKeys.accountState) !=
+                            'guest') ...[
+                          const SizedBox(height: 12),
+                          const SizedBox(height: 24),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: scheme.secondary.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: scheme.secondary.withOpacity(0.25),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'ابدأ فورًا بدون تسجيل',
+                                  style: TextStyle(
+                                    color: scheme.secondary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'التطبيق بمتناولك الآن، والتسجيل متاح بأي وقت.',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: colors.textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    onPressed: controller.isGuestLoading
+                                        ? null
+                                        : controller.continueAsGuest,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: scheme.secondary,
+                                      foregroundColor: scheme.onSecondary,
+                                      minimumSize: const Size(
+                                        double.infinity,
+                                        52,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: controller.isGuestLoading
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : const Text(
+                                            'الدخول كضيف',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w700,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 24),
                         // Sign up link
                         AuthLink(

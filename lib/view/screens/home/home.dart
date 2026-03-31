@@ -13,6 +13,7 @@ import 'package:diplomasi_app/view/widgets/learning/level_dropdown.dart';
 import 'package:diplomasi_app/view/widgets/learning/premium_banner.dart';
 import 'package:diplomasi_app/view/widgets/learning/progress_indicator_widget.dart';
 import 'package:diplomasi_app/view/widgets/auth/custom_button.dart';
+import 'package:diplomasi_app/view/widgets/general/account_upgrade_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
@@ -26,10 +27,21 @@ class HomeScreen extends StatelessWidget {
     return GetBuilder<HomeControllerImp>(
       init: HomeControllerImp(),
       builder: (controller) {
+        // Shared.clear();
         // print(Shared.getValue(StorageKeys.lastUpdateSuggestionAt));
         // Shared.remove(StorageKeys.lastUpdateSuggestionAt);
         final colors = context.appColors;
         final scheme = Theme.of(context).colorScheme;
+        final isVerifiedAccount = currentAccountState == 'registered_verified';
+
+        Future<void> showUpgradeSheet() async {
+          await AccountUpgradeSheet.show(
+            context: context,
+            title: 'افتح الميزة بالحساب الكامل',
+            description:
+                'للوصول للشهادات والاشتراك والمزامنة، انضم معنا أو سجّل دخولك.',
+          );
+        }
         // Shared.remove(StorageKeys.levelId);
         // Shared.remove(StorageKeys.courseId);
 
@@ -64,8 +76,9 @@ class HomeScreen extends StatelessWidget {
                       ),
                     HandlingListDataView(
                       isLoading:
-                          controller.isLoading || controller.isLoadingTracks,
-                      dataIsEmpty: controller.level == null,
+                          controller.levelTracks.isEmpty ||
+                          controller.isLoadingTracks,
+                      dataIsEmpty: controller.levelTracks.isEmpty,
                       loadingWidget: const HomeScreenShimmer(),
                       child: Column(
                         children: [
@@ -119,6 +132,10 @@ class HomeScreen extends StatelessWidget {
                                             controller.shouldShowPremiumBanner)
                                           PremiumBanner(
                                             onTap: () {
+                                              if (!isVerifiedAccount) {
+                                                showUpgradeSheet();
+                                                return;
+                                              }
                                               Get.toNamed(AppRoutes.plans);
                                             },
                                           ),
@@ -175,6 +192,10 @@ class HomeScreen extends StatelessWidget {
                                             CustomButton(
                                               text: 'عرض الشهادة',
                                               onPressed: () {
+                                                if (!isVerifiedAccount) {
+                                                  showUpgradeSheet();
+                                                  return;
+                                                }
                                                 controller.viewCertificate();
                                               },
                                               backgroundColor: scheme.secondary,

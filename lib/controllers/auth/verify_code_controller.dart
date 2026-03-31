@@ -4,6 +4,7 @@ import 'package:diplomasi_app/data/resource/remote/user/auth_data.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
+import 'package:diplomasi_app/core/constants/steps.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 
@@ -85,11 +86,26 @@ class VerifyCodeControllerImp extends VerifyCodeController {
           response.response['access_token'],
         );
       }
+      if (response.data != null) {
+        Shared.setValue('user-data', response.data);
+        if (response.data['account_state'] != null) {
+          Shared.setValue(StorageKeys.accountState, response.data['account_state']);
+        }
+      }
 
       if (isForgotPassword) {
         Get.offNamed(AppRoutes.resetPassword, arguments: {'email': email});
       } else {
-        Get.offNamed(AppRoutes.authSuccess);
+        final currentStep = Shared.getValue(
+          StorageKeys.step,
+          initialValue: Steps.login,
+        );
+
+        if (currentStep == Steps.homeApp) {
+          Get.offAllNamed(AppRoutes.app);
+        } else {
+          Get.offNamed(AppRoutes.authSuccess);
+        }
       }
     } else {
       customSnackBar(text: response.message ?? "رمز التحقق غير صحيح");

@@ -166,6 +166,7 @@ class AppControllerImp extends AppController {
     if (response.isSuccess) {
       Shared.setValue('user-data', response.data);
       userModel = UserModel.fromJson(response.data);
+      Shared.setValue(StorageKeys.accountState, userModel?.accountState ?? '');
     }
     isUserDataLoading = false;
     update();

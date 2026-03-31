@@ -104,8 +104,12 @@ class ArticleAuthor {
       id: json['id'],
       firstName: json['first_name'] ?? '',
       lastName: json['last_name'] ?? '',
-      phoneVerified: json['phone_verified'] ?? 0,
-      emailVerified: json['email_verified'] ?? 0,
+      phoneVerified: (json['phone_verified'] is bool)
+          ? (json['phone_verified'] ? 1 : 0)
+          : (json['phone_verified'] ?? 0),
+      emailVerified: (json['email_verified'] is bool)
+          ? (json['email_verified'] ? 1 : 0)
+          : (json['email_verified'] ?? 0),
       avatar: json['avatar'],
       email: json['email'] ?? '',
       phone: json['phone'] ?? '',
