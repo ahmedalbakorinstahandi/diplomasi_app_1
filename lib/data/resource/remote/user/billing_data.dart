@@ -165,7 +165,7 @@ class BillingData {
   Future<ApiResponse> verifyApplePurchase({
     required int planId,
     required String productId,
-    required String transactionId,
+    String? transactionId,
     required String receipt,
   }) async {
     return await apiService.post(
@@ -173,7 +173,8 @@ class BillingData {
       data: {
         'plan_id': planId,
         'product_id': productId,
-        'transaction_id': transactionId,
+        if (transactionId != null && transactionId.isNotEmpty)
+          'transaction_id': transactionId,
         'receipt': receipt,
       },
     );

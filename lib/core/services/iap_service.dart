@@ -1,12 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:diplomasi_app/core/functions/print.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:diplomasi_app/data/model/user/plan_model.dart';
 import 'package:diplomasi_app/data/resource/remote/user/billing_data.dart';
 
-/// خدمة شراء واستعادة المشتريات عبر Apple In-App Purchase (iOS فقط).
-/// لا تعتبر الشراء ناجحاً إلا بعد التحقق من الإيصال عبر الخادم.
+/// ???? ???? ???????? ????????? ??? Apple In-App Purchase (iOS ???).
+/// ?? ????? ?????? ?????? ??? ??? ?????? ?? ??????? ??? ??????.
 class IapService {
   final BillingData _billingData = BillingData();
   final InAppPurchase _iap = InAppPurchase.instance;
@@ -18,7 +19,7 @@ class IapService {
 
   bool get isAvailable => _isAvailable;
 
-  /// تهيئة الخدمة والاشتراك في تدفق المشتريات. استدع من شاشة الخطط عند iOS.
+  /// ????? ?????? ????????? ?? ???? ?????????. ????? ?? ???? ????? ??? iOS.
   Future<void> initialize() async {
     _isAvailable = await _iap.isAvailable();
     if (!_isAvailable) return;
@@ -32,26 +33,25 @@ class IapService {
   void _onPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) {
     for (final purchase in purchaseDetailsList) {
       if (purchase.status == PurchaseStatus.pending) {
-        // يمكن إظهار مؤشر انتظار
         continue;
       }
       if (purchase.status == PurchaseStatus.error) {
         _pendingVerification?.completeError(
-          purchase.error ?? Exception('فشل الشراء'),
+          purchase.error ?? Exception('??? ??????'),
         );
         _pendingPlan = null;
         _pendingVerification = null;
         continue;
       }
       if (purchase.status == PurchaseStatus.canceled) {
-        _pendingVerification?.completeError(Exception('تم إلغاء الشراء'));
+        _pendingVerification?.completeError(Exception('?? ????? ??????'));
         _pendingPlan = null;
         _pendingVerification = null;
         continue;
       }
       if (purchase.status == PurchaseStatus.purchased ||
           purchase.status == PurchaseStatus.restored) {
-        _verifyPurchase(purchase);
+        unawaited(_verifyPurchase(purchase));
       }
     }
   }
@@ -74,21 +74,25 @@ class IapService {
     }
     if (plan == null || plan.iosProductId == null) {
       _pendingVerification?.completeError(
-        Exception('لا توجد خطة معلقة للتحقق'),
+        Exception('?? ???? ??? ????? ??????'),
       );
       _pendingVerification = null;
       _pendingPlan = null;
       return;
     }
+
     final receipt = purchase.verificationData.serverVerificationData;
     final productId = purchase.productID;
-    final transactionId = purchase.purchaseID ?? '';
-    if (receipt.isEmpty || transactionId.isEmpty) {
-      _pendingVerification?.completeError(Exception('بيانات الإيصال ناقصة'));
+    String? transactionId = purchase.purchaseID;
+    transactionId ??= _extractTransactionIdFromVerificationData(purchase);
+
+    if (receipt.isEmpty) {
+      _pendingVerification?.completeError(Exception('?????? ??????? ?????'));
       _pendingVerification = null;
       _pendingPlan = null;
       return;
     }
+
     try {
       final response = await _billingData.verifyApplePurchase(
         planId: plan.id,
@@ -100,42 +104,77 @@ class IapService {
         _pendingVerification?.complete();
       } else {
         _pendingVerification?.completeError(
-          Exception(response.message ?? 'فشل التحقق من الخادم'),
+          Exception(response.message ?? '??? ?????? ?? ??????'),
         );
       }
     } catch (e) {
       _pendingVerification?.completeError(e);
+    } finally {
+      if (purchase.pendingCompletePurchase) {
+        await _iap.completePurchase(purchase);
+      }
     }
+
     _pendingVerification = null;
     _pendingPlan = null;
   }
 
-  /// شراء خطة على iOS. يُرجع عند نجاح التحقق من الخادم.
+  String? _extractTransactionIdFromVerificationData(PurchaseDetails purchase) {
+    final candidates = [
+      purchase.verificationData.localVerificationData,
+      purchase.verificationData.serverVerificationData,
+    ];
+
+    for (final raw in candidates) {
+      if (raw.trim().isEmpty) continue;
+      try {
+        final data = jsonDecode(raw);
+        if (data is Map<String, dynamic>) {
+          final tx = (data['transactionId'] ??
+                  data['transaction_id'] ??
+                  data['id'] ??
+                  '')
+              .toString()
+              .trim();
+          if (tx.isNotEmpty) return tx;
+        }
+      } catch (_) {
+        // serverVerificationData ?? ???? base64 ???? JSON.
+      }
+    }
+
+    return null;
+  }
+
+  /// ???? ??? ??? iOS. ????? ??? ???? ?????? ?? ??????.
   Future<void> purchasePlan(PlanModel plan) async {
     if (plan.iosProductId == null || plan.iosProductId!.isEmpty) {
-      throw Exception('هذه الخطة غير متاحة للشراء عبر التطبيق');
+      throw Exception('??? ????? ??? ????? ?????? ??? ???????');
     }
-    // TODO: Uncomment this later
-    // if (!_isAvailable) {
-    //   throw Exception('الشراء داخل التطبيق غير متاح حالياً');
-    // }
+    if (!_isAvailable) {
+      throw Exception('?????? ???? ??????? ??? ???? ??????');
+    }
+
     final productId = plan.iosProductId!;
     final productIds = {productId};
     printDebug('starting to query product details');
     final response = await _iap.queryProductDetails(productIds);
     printDebug('response: $response');
+
     if (response.notFoundIDs.isNotEmpty) {
       printDebug(response.notFoundIDs);
       printDebug(response.error.toString());
       throw Exception(
-        'المنتج غير موجود في المتجر. تأكد من إنشاء المنتج في App Store Connect '
-        'بمعرّف مطابق تماماً: $productId',
+        '?????? ??? ????? ?? ??????. ???? ?? ????? ?????? ?? App Store Connect '
+        '?????? ????? ??????: $productId',
       );
     }
+
     final productDetails = response.productDetails;
     if (productDetails.isEmpty) {
-      throw Exception('لم يتم العثور على تفاصيل المنتج');
+      throw Exception('?? ??? ?????? ??? ?????? ??????');
     }
+
     _pendingVerification = Completer<void>();
     _pendingPlan = plan;
     final param = PurchaseParam(productDetails: productDetails.first);
@@ -143,16 +182,17 @@ class IapService {
     if (!success) {
       _pendingPlan = null;
       _pendingVerification = null;
-      throw Exception('لم يتم بدء عملية الشراء');
+      throw Exception('?? ??? ??? ????? ??????');
     }
+
     return _pendingVerification!.future;
   }
 
-  /// استعادة المشتريات. يجب تمرير قائمة الخطط (المحتوية على ios_product_id) لربط كل منتج مُستعاد بالخطة.
-  /// النتائج تُعالَج عبر purchaseStream ويُرسل كل إيصال للخادم للتحقق.
+  /// ??????? ?????????. ??? ????? ????? ????? (???????? ??? ios_product_id) ???? ?? ???? ??????? ??????.
+  /// ??????? ??????? ??? purchaseStream ?????? ?? ????? ?????? ??????.
   Future<void> restorePurchases(List<PlanModel> plans) async {
     if (!_isAvailable) {
-      throw Exception('الشراء داخل التطبيق غير متاح حالياً');
+      throw Exception('?????? ???? ??????? ??? ???? ??????');
     }
     _plansForRestore = plans.where((p) => p.iosProductId != null).toList();
     await _iap.restorePurchases();
@@ -162,7 +202,7 @@ class IapService {
   void dispose() {
     _subscription?.cancel();
     _subscription = null;
-    _pendingVerification?.completeError(Exception('تم إلغاء الخدمة'));
+    _pendingVerification?.completeError(Exception('?? ????? ??????'));
     _pendingVerification = null;
     _pendingPlan = null;
   }
