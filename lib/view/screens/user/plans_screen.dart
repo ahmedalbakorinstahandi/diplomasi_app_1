@@ -60,7 +60,6 @@ class PlansScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(width: width(8)),
-                    const Spacer(),
                     if (!isEffectiveIOS)
                       OutlinedButton.icon(
                         onPressed: () async {
@@ -77,14 +76,28 @@ class PlansScreen extends StatelessWidget {
                           ),
                         ),
                       ),
+                    const Spacer(),
                     if (isEffectiveIOS) ...[
                       OutlinedButton.icon(
-                        onPressed: () async {
+                        onPressed: controller.isRestoreInProgress
+                            ? null
+                            : () async {
                           await controller.restorePurchases();
                         },
-                        icon: Icon(Icons.restore, color: scheme.onSurface),
+                        icon: controller.isRestoreInProgress
+                            ? SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: scheme.onSurface,
+                                ),
+                              )
+                            : Icon(Icons.restore, color: scheme.onSurface),
                         label: Text(
-                          'استعادة المشتريات',
+                          controller.isRestoreInProgress
+                              ? 'جاري الاستعادة...'
+                              : 'استعادة المشتريات',
                           style: TextStyle(
                             fontSize: emp(14),
                             fontWeight: FontWeight.w500,

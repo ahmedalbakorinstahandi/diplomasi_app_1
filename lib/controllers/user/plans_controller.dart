@@ -13,6 +13,7 @@ abstract class PlansController extends GetxController {
   bool isLoading = false;
   bool isBillingLoading = false;
   bool isActionLoading = false;
+  bool isRestoreInProgress = false;
   List plans = [];
   Map<String, dynamic>? currentSubscription;
   bool hasPaymentMethod = false;
@@ -399,6 +400,17 @@ class PlansControllerImp extends PlansController {
   @override
   Future<void> restorePurchases() async {
     if (!isEffectiveIOS || iapService == null) return;
+    if (isRestoreInProgress) return;
+
+    if (hasBlockingCurrentSubscription) {
+      customSnackBar(
+        text:
+            'اشتراكك مفعّل بالفعل. استخدم استعادة المشتريات فقط إذا لم تظهر مشترياتك.',
+        snackType: SnackBarType.info,
+      );
+      return;
+    }
+
     if (plans.isEmpty) {
       customSnackBar(
         text: 'لا توجد خطط محمّلة للاستعادة.',
@@ -406,17 +418,44 @@ class PlansControllerImp extends PlansController {
       );
       return;
     }
+
+    isRestoreInProgress = true;
+    update();
+    customSnackBar(
+      text: 'جاري استعادة المشتريات...',
+      snackType: SnackBarType.info,
+    );
+
     try {
       final planModels = plans
           .whereType<Map<String, dynamic>>()
           .map((e) => PlanModel.fromJson(e))
           .toList();
-      await iapService!.restorePurchases(planModels);
-      customSnackBar(
-        text: 'تمت استعادة المشتريات. جاري تحديث الحالة.',
-        snackType: SnackBarType.correct,
-      );
+      final result = await iapService!.restorePurchases(planModels);
       await loadBillingState();
+
+      if (hasBlockingCurrentSubscription) {
+        customSnackBar(
+          text: 'تمت استعادة المشتريات وتفعيل الاشتراك.',
+          snackType: SnackBarType.correct,
+        );
+      } else if (result.successCount > 0) {
+        customSnackBar(
+          text: 'تمت استعادة مشترياتك بنجاح.',
+          snackType: SnackBarType.correct,
+        );
+      } else if (result.failedCount > 0) {
+        customSnackBar(
+          text: 'تم العثور على مشتريات لكن تعذر التحقق منها. حاول مرة أخرى.',
+          snackType: SnackBarType.error,
+        );
+      } else {
+        customSnackBar(
+          text:
+              'لم يتم العثور على مشتريات سابقة لهذا الحساب. إذا كنت مشتركًا فتأكد من نفس Apple ID.',
+          snackType: SnackBarType.info,
+        );
+      }
     } catch (e) {
       final message = e is Exception
           ? e.toString().replaceFirst('Exception: ', '')
@@ -425,6 +464,8 @@ class PlansControllerImp extends PlansController {
         text: message.isNotEmpty ? message : 'تعذر استعادة المشتريات.',
         snackType: SnackBarType.error,
       );
+    } finally {
+      isRestoreInProgress = false;
     }
     update();
   }
