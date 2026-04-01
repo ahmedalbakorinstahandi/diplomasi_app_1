@@ -1,0 +1,183 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "C172C2AC",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6759599653",
+    "_askToBuyEnabled" : false,
+    "_billingGracePeriodEnabled" : false,
+    "_billingIssuesEnabled" : false,
+    "_developerTeamID" : "G47TBFJ395",
+    "_disableDialogs" : false,
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 796599051.30114102,
+    "_locale" : "en_US",
+    "_renewalBillingIssuesEnabled" : false,
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+
+    ],
+    "_timeRate" : 0
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21979933",
+      "localizations" : [
+
+      ],
+      "name" : "Courses Subscription",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "29.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6760629149",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Monthly access to all lessons & certified awards",
+              "displayName" : "Baic Plan",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "اشترك شهرياً وادرس بلا حدود مع شهادات معتمدة",
+              "displayName" : "الخطة الأساسية",
+              "locale" : "ar"
+            }
+          ],
+          "productID" : "com.diplomasi.basic.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Basic Monthly Subscription",
+          "subscriptionGroupID" : "21979933",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "279.99",
+          "familyShareable" : false,
+          "groupNumber" : 4,
+          "internalID" : "6760629300",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Annual plan, save 38% with full unlimited access",
+              "displayName" : "The comprehensive plan",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "اشتراك سنوي بخصم ٣٨٪ ووصول كامل بلا حدود",
+              "displayName" : "الخطة الشاملة",
+              "locale" : "ar"
+            }
+          ],
+          "productID" : "com.diplomasi.master.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Master Yearly Subscription",
+          "subscriptionGroupID" : "21979933",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "79.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "6760629310",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "3-month full access to all content & certificates",
+              "displayName" : "Advanced plan",
+              "locale" : "ca"
+            },
+            {
+              "description" : "وصول كامل لمدة 3 أشهر بسعر أوفر مع شهادات",
+              "displayName" : "الخطة المتقدمة",
+              "locale" : "ar"
+            }
+          ],
+          "productID" : "com.diplomasi.premium.quarterly",
+          "recurringSubscriptionPeriod" : "P3M",
+          "referenceName" : "Premium Quarterly Subscription",
+          "subscriptionGroupID" : "21979933",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "149.99",
+          "familyShareable" : false,
+          "groupNumber" : 3,
+          "internalID" : "6760629312",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "6-month access, save more & earn certificates",
+              "displayName" : "Professional plan",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "٦ أشهر وصول كامل بسعر أقل وشهادات معتمدة",
+              "displayName" : "خطة الاحتراف",
+              "locale" : "ar"
+            }
+          ],
+          "productID" : "com.diplomasi.pro.semiannual",
+          "recurringSubscriptionPeriod" : "P6M",
+          "referenceName" : "Pro Semiannual Subscription",
+          "subscriptionGroupID" : "21979933",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

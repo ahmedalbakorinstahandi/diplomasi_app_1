@@ -65,7 +65,13 @@ class IapService {
   }
 
   Future<void> _verifyPurchase(PurchaseDetails purchase) async {
+    // capture and clear immediately to avoid double-complete
+    final completer = _pendingVerification;
+    _pendingVerification = null;
+
     PlanModel? plan = _pendingPlan;
+    _pendingPlan = null;
+
     if (plan == null && _plansForRestore.isNotEmpty) {
       final match = _plansForRestore
           .where((p) => p.iosProductId == purchase.productID)
@@ -73,11 +79,7 @@ class IapService {
       plan = match.isNotEmpty ? match.first : null;
     }
     if (plan == null || plan.iosProductId == null) {
-      _pendingVerification?.completeError(
-        Exception('?? ???? ??? ????? ??????'),
-      );
-      _pendingVerification = null;
-      _pendingPlan = null;
+      completer?.completeError(Exception('لا توجد خطة معلقة للتحقق'));
       return;
     }
 
@@ -87,9 +89,7 @@ class IapService {
     transactionId ??= _extractTransactionIdFromVerificationData(purchase);
 
     if (receipt.isEmpty) {
-      _pendingVerification?.completeError(Exception('?????? ??????? ?????'));
-      _pendingVerification = null;
-      _pendingPlan = null;
+      completer?.completeError(Exception('بيانات الإيصال ناقصة'));
       return;
     }
 
@@ -101,14 +101,14 @@ class IapService {
         receipt: receipt,
       );
       if (response.success == true) {
-        _pendingVerification?.complete();
+        completer?.complete();
       } else {
-        _pendingVerification?.completeError(
-          Exception(response.message ?? '??? ?????? ?? ??????'),
+        completer?.completeError(
+          Exception(response.message ?? 'فشل التحقق من الخادم'),
         );
       }
     } catch (e) {
-      _pendingVerification?.completeError(e);
+      completer?.completeError(e);
     } finally {
       if (purchase.pendingCompletePurchase) {
         try {
@@ -118,9 +118,6 @@ class IapService {
         }
       }
     }
-
-    _pendingVerification = null;
-    _pendingPlan = null;
   }
 
   String? _extractTransactionIdFromVerificationData(PurchaseDetails purchase) {
