@@ -104,6 +104,24 @@ class IapService {
   }
 
   Future<bool> _verifyPurchase(PurchaseDetails purchase) async {
+    final expectedPurchaseProductId = _pendingPlan?.iosProductId;
+    if (expectedPurchaseProductId != null &&
+        expectedPurchaseProductId != purchase.productID) {
+      // Ignore unrelated queued transactions while waiting for selected plan purchase.
+      printDebug(
+        'Ignoring purchase event for product ${purchase.productID}; '
+        'expected $expectedPurchaseProductId',
+      );
+      if (purchase.pendingCompletePurchase) {
+        try {
+          await _iap.completePurchase(purchase);
+        } catch (e) {
+          printDebug('completePurchase failed: $e');
+        }
+      }
+      return false;
+    }
+
     PlanModel? plan = _pendingPlan;
 
     if (plan == null && _plansForRestore.isNotEmpty) {
@@ -114,16 +132,18 @@ class IapService {
     }
 
     if (plan == null || plan.iosProductId == null) {
-      _pendingVerification?.completeError(
-        Exception('No pending plan found for verification'),
-      );
-      _pendingVerification = null;
-      _pendingPlan = null;
+      if (_pendingVerification != null && _pendingPlan != null) {
+        _pendingVerification?.completeError(
+          Exception('No pending plan found for verification'),
+        );
+        _pendingVerification = null;
+        _pendingPlan = null;
+      }
       return false;
     }
 
     final receipt = purchase.verificationData.serverVerificationData;
-    final productId = purchase.productID;
+    final productId = plan.iosProductId!;
     String? transactionId = purchase.purchaseID;
     transactionId ??= _extractTransactionIdFromVerificationData(purchase);
 
@@ -209,9 +229,13 @@ class IapService {
     final productId = plan.iosProductId!;
     final productIds = {productId};
 
-    printDebug('starting to query product details');
+    printDebug('starting to query product details for: $productId');
     final response = await _iap.queryProductDetails(productIds);
     printDebug('response: $response');
+    if (response.productDetails.isNotEmpty) {
+      final returnedIds = response.productDetails.map((p) => p.id).join(', ');
+      printDebug('returned product ids: $returnedIds');
+    }
 
     if (response.notFoundIDs.isNotEmpty) {
       printDebug(response.notFoundIDs);
@@ -226,10 +250,23 @@ class IapService {
       throw Exception('No product details returned from App Store');
     }
 
+    ProductDetails? selectedProduct;
+    for (final item in productDetails) {
+      if (item.id == productId) {
+        selectedProduct = item;
+        break;
+      }
+    }
+    if (selectedProduct == null) {
+      throw Exception(
+        'Requested product not returned by store. Requested: $productId',
+      );
+    }
+
     _pendingVerification = Completer<void>();
     _pendingPlan = plan;
 
-    final param = PurchaseParam(productDetails: productDetails.first);
+    final param = PurchaseParam(productDetails: selectedProduct);
     final success = await _iap.buyNonConsumable(purchaseParam: param);
     if (!success) {
       _pendingPlan = null;
