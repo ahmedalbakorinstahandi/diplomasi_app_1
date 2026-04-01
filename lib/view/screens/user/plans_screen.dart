@@ -218,28 +218,46 @@ class PlansScreen extends StatelessWidget {
   ) async {
     if (controller.isPurchaseFlowInProgress) return;
 
+    var hasAcceptedLegal = false;
     final confirm = await Get.dialog<bool>(
-      AlertDialog(
-        title: const Text('تأكيد الشراء'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('هل تريد شراء باقة "${plan.name}"؟'),
-            SizedBox(height: height(14)),
-            const SubscriptionLegalConsent(compact: true),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Get.back(result: false),
-            child: const Text('إلغاء'),
-          ),
-          ElevatedButton(
-            onPressed: () => Get.back(result: true),
-            child: const Text('تأكيد'),
-          ),
-        ],
+      StatefulBuilder(
+        builder: (dialogContext, setState) {
+          return AlertDialog(
+            title: const Text('تأكيد الشراء'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text('هل تريد شراء باقة "${plan.name}"؟'),
+                SizedBox(height: height(14)),
+                CheckboxListTile(
+                  value: hasAcceptedLegal,
+                  onChanged: (value) {
+                    setState(() {
+                      hasAcceptedLegal = value == true;
+                    });
+                  },
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  title: const Text(
+                    'أقر بأنني قرأت الشروط والأحكام وسياسة الخصوصية.',
+                  ),
+                ),
+                const SubscriptionLegalConsent(compact: true),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Get.back(result: false),
+                child: const Text('إلغاء'),
+              ),
+              ElevatedButton(
+                onPressed: hasAcceptedLegal ? () => Get.back(result: true) : null,
+                child: const Text('تأكيد'),
+              ),
+            ],
+          );
+        },
       ),
     );
 
