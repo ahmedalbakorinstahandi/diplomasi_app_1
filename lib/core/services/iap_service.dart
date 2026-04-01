@@ -111,7 +111,11 @@ class IapService {
       _pendingVerification?.completeError(e);
     } finally {
       if (purchase.pendingCompletePurchase) {
-        await _iap.completePurchase(purchase);
+        try {
+          await _iap.completePurchase(purchase);
+        } catch (e) {
+          printDebug('completePurchase failed: $e');
+        }
       }
     }
 
