@@ -1,13 +1,15 @@
 import 'dart:io';
 
+import 'package:diplomasi_app/core/classes/api_service.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
+import 'package:diplomasi_app/core/functions/user_download_file.dart';
 import 'package:diplomasi_app/data/model/user/article_model.dart';
 import 'package:diplomasi_app/view/screens/user/pdf_preview_screen.dart';
+import 'package:file_saver/file_saver.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 class ArticleDetailsController extends GetxController {
   ArticleModel get article => Get.arguments as ArticleModel;
@@ -23,41 +25,6 @@ class ArticleDetailsController extends GetxController {
     return sanitized.trim().replaceAll(RegExp(r'\s+'), '_').isEmpty
         ? 'article_${article.id}'
         : sanitized.trim().replaceAll(RegExp(r'\s+'), '_');
-  }
-
-  Future<File> _downloadPdfToFile({
-    required String pdfUrl,
-    required String fileName,
-    required bool persistent,
-  }) async {
-    final uri = Uri.tryParse(pdfUrl);
-    if (uri == null) {
-      throw Exception('invalid_pdf_url');
-    }
-
-    final client = HttpClient();
-    try {
-      final request = await client.getUrl(uri);
-      final responseStream = await request.close();
-      if (responseStream.statusCode < 200 || responseStream.statusCode > 299) {
-        throw Exception('pdf_download_http_${responseStream.statusCode}');
-      }
-
-      final bytes = await consolidateHttpClientResponseBytes(responseStream);
-      if (bytes.isEmpty) {
-        throw Exception('empty_pdf_bytes');
-      }
-
-      final dir = persistent
-          ? await getApplicationDocumentsDirectory()
-          : await getTemporaryDirectory();
-      final path = '${dir.path}/$fileName.pdf';
-      final file = File(path);
-      await file.writeAsBytes(bytes, flush: true);
-      return file;
-    } finally {
-      client.close(force: true);
-    }
   }
 
   void previewArticlePdf() {
@@ -77,13 +44,38 @@ class ArticleDetailsController extends GetxController {
 
     try {
       final fileName = _sanitizeFileName(article.title);
-      final file = await _downloadPdfToFile(
-        pdfUrl: url,
-        fileName: fileName,
-        persistent: true,
+      final api = Get.find<ApiService>();
+      final bytes = await fetchUrlBytesWithDioFallback(
+        url,
+        (u) => api.getBytesAbsoluteUrl(u),
       );
-      customSnackBar(text: 'تم تنزيل الملف', snackType: SnackBarType.correct);
-      await Share.shareXFiles([XFile(file.path)], subject: article.title);
+      final path = await saveBytesToUserLocation(
+        name: fileName,
+        bytes: bytes,
+        fileExtension: 'pdf',
+        mimeType: MimeType.pdf,
+      );
+      if (path == null) {
+        return;
+      }
+      if (looksLikeFileSaverFailure(path)) {
+        customSnackBar(
+          text: 'تعذر حفظ الملف.',
+          snackType: SnackBarType.error,
+        );
+        return;
+      }
+      customSnackBar(text: 'تم حفظ الملف', snackType: SnackBarType.correct);
+      if (!kIsWeb) {
+        try {
+          await shareFileByPath(path, subject: article.title);
+        } catch (_) {
+          customSnackBar(
+            text: 'حُفظ الملف. يمكنك مشاركته من تطبيق الملفات.',
+            snackType: SnackBarType.info,
+          );
+        }
+      }
     } catch (_) {
       customSnackBar(text: 'تعذر تنزيل الملف.', snackType: SnackBarType.error);
     } finally {
@@ -102,12 +94,15 @@ class ArticleDetailsController extends GetxController {
 
     try {
       final fileName = _sanitizeFileName(article.title);
-      final file = await _downloadPdfToFile(
-        pdfUrl: url,
-        fileName: fileName,
-        persistent: false,
+      final api = Get.find<ApiService>();
+      final bytes = await fetchUrlBytesWithDioFallback(
+        url,
+        (u) => api.getBytesAbsoluteUrl(u),
       );
-      await Share.shareXFiles([XFile(file.path)], subject: article.title);
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/article_share_${article.id}_$fileName.pdf');
+      await file.writeAsBytes(bytes, flush: true);
+      await shareFileByPath(file.path, subject: article.title);
     } catch (_) {
       customSnackBar(text: 'تعذر مشاركة الملف.', snackType: SnackBarType.error);
     } finally {

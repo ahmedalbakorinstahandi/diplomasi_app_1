@@ -18,42 +18,29 @@ class QuestionProgressBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: width(16),
-        vertical: height(12),
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        width(16),
+        height(6),
+        width(16),
+        height(10),
       ),
-      child: Column(
-        children: [
-          // Question number and progress text
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Next button placeholder
-              SizedBox(width: width(40)),
-            ],
-          ),
-
-          // Progress bar
-          Row(
-            children: List.generate(
-              totalQuestions,
-              (index) => Expanded(
-                child: Container(
-                  height: height(8),
-                  margin: EdgeInsets.symmetric(horizontal: width(2)),
-                  decoration: BoxDecoration(
-                    color: index < answeredCount
-                        ? colors.highlight
-                        : scheme.onPrimary.withOpacity(0.25),
-                    borderRadius: BorderRadius.circular(9),
-                  ),
-                ),
+      child: Row(
+        children: List.generate(
+          totalQuestions,
+          (index) => Expanded(
+            child: Container(
+              height: height(6),
+              margin: EdgeInsets.symmetric(horizontal: width(2)),
+              decoration: BoxDecoration(
+                color: index < answeredCount
+                    ? colors.highlight
+                    : scheme.onPrimary.withOpacity(0.25),
+                borderRadius: BorderRadius.circular(8),
               ),
             ),
           ),
-          SizedBox(height: height(8)),
-        ],
+        ),
       ),
     );
   }

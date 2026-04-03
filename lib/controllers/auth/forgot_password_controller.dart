@@ -43,10 +43,7 @@ class ForgotPasswordControllerImp extends ForgotPasswordController {
           AppRoutes.verifyCode,
           arguments: {'email': email.text, 'isForgotPassword': true},
         );
-      } else {
-        customSnackBar(text: response.message ?? "حدث خطأ");
       }
-
       isLoading = false;
       update();
     }

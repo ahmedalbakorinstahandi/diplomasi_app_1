@@ -16,8 +16,8 @@ class QuestionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: width(16)),
-      padding: padding ?? EdgeInsets.all(width(20)),
+      margin: EdgeInsets.symmetric(horizontal: width(15)),
+      padding: padding ?? EdgeInsets.all(width(17)),
       decoration: BoxDecoration(
         color: colors.surfaceCard,
         borderRadius: BorderRadius.circular(12),

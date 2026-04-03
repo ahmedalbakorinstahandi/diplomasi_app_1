@@ -171,9 +171,7 @@ class RegisterScreen extends StatelessWidget {
                         AuthLink(
                           text: 'لديك حساب بالفعل؟ ',
                           linkText: 'تسجيل الدخول',
-                          onTap: () {
-                            Get.back();
-                          },
+                          onTap: controller.navigateToLoginOrBack,
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 40),

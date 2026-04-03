@@ -17,7 +17,7 @@ class AuthData {
         'email': email,
         'password': password,
         'role': 'user',
-        'device_token': deviceToken,
+        if (deviceToken != null) 'device_token': deviceToken,
       },
     );
   }
@@ -25,7 +25,7 @@ class AuthData {
   Future<ApiResponse> startGuest({String? deviceToken}) async {
     return await apiService.post(
       EndPoints.guestStart,
-      data: {'device_token': deviceToken},
+      data: {if (deviceToken != null) 'device_token': deviceToken},
     );
   }
 
@@ -58,6 +58,7 @@ class AuthData {
     required String phone,
     required String password,
     required String passwordConfirmation,
+    String? deviceToken,
   }) async {
     return await apiService.post(
       EndPoints.registerFromGuest,
@@ -68,14 +69,22 @@ class AuthData {
         'phone': phone,
         'password': password,
         'password_confirmation': passwordConfirmation,
+        if (deviceToken != null) 'device_token': deviceToken,
       },
     );
   }
 
-  Future<ApiResponse> forgotPassword({required String email}) async {
+  /// [purpose]: `password_reset` (افتراضي)، أو `account_activation` لتفعيل بريد غير مفعّل.
+  Future<ApiResponse> forgotPassword({
+    required String email,
+    String? purpose,
+  }) async {
     return await apiService.post(
       EndPoints.forgotPassword,
-      data: {'email': email},
+      data: {
+        'email': email,
+        if (purpose != null) 'purpose': purpose,
+      },
     );
   }
 
@@ -86,7 +95,11 @@ class AuthData {
   }) async {
     return await apiService.post(
       EndPoints.verifyOtp,
-      data: {'email': email, 'otp': otp, 'device_token': deviceToken},
+      data: {
+        'email': email,
+        'otp': otp,
+        if (deviceToken != null) 'device_token': deviceToken,
+      },
     );
   }
 
@@ -94,6 +107,7 @@ class AuthData {
     required String email,
     required String password,
     required String passwordConfirmation,
+    String? deviceToken,
   }) async {
     return await apiService.post(
       EndPoints.resetPassword,
@@ -101,6 +115,7 @@ class AuthData {
         'email': email,
         'password': password,
         'password_confirmation': passwordConfirmation,
+        if (deviceToken != null) 'device_token': deviceToken,
       },
     );
   }

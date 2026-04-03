@@ -168,7 +168,7 @@ class QuestionTextWithAttachment extends StatelessWidget {
                 ),
               ),
             if (!hasText) const Spacer(),
-            if (hasText) SizedBox(height: height(8)),
+            if (hasText) SizedBox(height: height(7)),
             imageSlot(),
           ],
         ),
@@ -184,7 +184,7 @@ class QuestionTextWithAttachment extends StatelessWidget {
             child: textWidget,
           ),
         if (shouldShowImage) ...[
-          if (hasText) SizedBox(height: height(10)),
+          if (hasText) SizedBox(height: height(8)),
           imageSlot(),
         ],
       ],
@@ -268,7 +268,7 @@ class AttachmentImageFrame extends StatelessWidget {
                     child: Icon(
                       Icons.zoom_in,
                       color: Colors.white,
-                      size: width(16),
+                      size: width(15),
                     ),
                   ),
                 ),

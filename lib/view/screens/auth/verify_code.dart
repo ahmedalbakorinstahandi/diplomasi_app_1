@@ -41,7 +41,12 @@ class VerifyCodeScreen extends StatelessWidget {
                               isNormal: true,
                             ),
                             SizedBox(width: width(10)),
-                            const AuthTitle(title: 'التحقق من الرمز'),
+                            AuthTitle(
+                              title: controller.showActivationSuccess &&
+                                      !controller.isForgotPassword
+                                  ? 'تفعيل الحساب'
+                                  : 'التحقق من الرمز',
+                            ),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -49,7 +54,9 @@ class VerifyCodeScreen extends StatelessWidget {
                         AuthSubtitle(
                           subtitle: controller.isForgotPassword
                               ? 'أدخل رمز التحقق المرسل إلى بريدك الإلكتروني لإعادة تعيين كلمة المرور'
-                              : 'أدخل رمز التحقق المرسل إلى بريدك الإلكتروني لتفعيل حسابك',
+                              : controller.showActivationSuccess
+                                  ? 'أدخل رمز التحقق المرسل إلى بريدك الإلكتروني لتفعيل حسابك.'
+                                  : 'أدخل رمز التحقق المرسل إلى بريدك الإلكتروني لإكمال إنشاء حسابك.',
                         ),
                         const SizedBox(height: 40),
                         // OTP Input fields
@@ -60,6 +67,9 @@ class VerifyCodeScreen extends StatelessWidget {
                             (index) => OtpInputField(
                               controller: controller.otpControllers[index],
                               autoFocus: index == 0,
+                              fieldIndex: index,
+                              otpLength: controller.otpLength,
+                              onMultiDigitPaste: controller.applyPastedOtp,
                             ),
                           ),
                         ),

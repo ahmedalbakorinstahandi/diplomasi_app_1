@@ -1,12 +1,14 @@
 import 'dart:io';
-import 'package:diplomasi_app/core/classes/api_service.dart';
+
 import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
+import 'package:diplomasi_app/core/functions/user_download_file.dart';
 import 'package:diplomasi_app/data/model/user/certificate_model.dart';
 import 'package:diplomasi_app/data/resource/remote/user/certificates_data.dart';
-import 'package:diplomasi_app/routes/api.dart';
 import 'package:dio/dio.dart';
+import 'package:file_saver/file_saver.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -74,17 +76,46 @@ class CertificateDetailControllerImp extends CertificateDetailController {
     update();
 
     try {
-      final file = await _downloadCertificateImage(certificate!);
+      final bytes = await _loadCertificateBytes(certificate!);
 
-      if (file != null) {
-        customSnackBar(
-          text: 'تم تحميل الشهادة بنجاح',
-          snackType: SnackBarType.info,
+      if (bytes != null) {
+        final name = sanitizeDownloadFileName(
+          certificate!.certificateCode,
+          fallback: 'certificate_${certificate!.id}',
         );
-
-        await Share.shareXFiles([
-          XFile(file.path),
-        ], subject: 'شهادة: ${certificate!.title}');
+        final path = await saveBytesToUserLocation(
+          name: name,
+          bytes: bytes,
+          fileExtension: 'png',
+          mimeType: MimeType.png,
+        );
+        if (path == null) {
+          return;
+        }
+        if (looksLikeFileSaverFailure(path)) {
+          customSnackBar(
+            text: 'تعذر حفظ صورة الشهادة.',
+            snackType: SnackBarType.error,
+          );
+          return;
+        }
+        customSnackBar(
+          text: 'تم حفظ الشهادة',
+          snackType: SnackBarType.correct,
+        );
+        if (!kIsWeb) {
+          try {
+            await shareFileByPath(
+              path,
+              subject: 'شهادة: ${certificate!.title}',
+            );
+          } catch (_) {
+            customSnackBar(
+              text: 'حُفظت الشهادة. يمكنك مشاركتها من تطبيق الملفات.',
+              snackType: SnackBarType.info,
+            );
+          }
+        }
       } else {
         customSnackBar(
           text: 'فشل تحميل الشهادة',
@@ -107,18 +138,21 @@ class CertificateDetailControllerImp extends CertificateDetailController {
     if (certificate == null) return;
 
     try {
-      final file = await _downloadCertificateImage(certificate!);
+      final bytes = await _loadCertificateBytes(certificate!);
 
-      if (file != null) {
-        await Share.shareXFiles([
-          XFile(file.path),
-        ], subject: 'شهادة: ${certificate!.title}');
-
+      if (bytes != null) {
+        final tempDir = await getTemporaryDirectory();
+        final file = File(
+          '${tempDir.path}/cert_share_${certificate!.id}_${certificate!.certificateCode}.png',
+        );
+        await file.writeAsBytes(bytes, flush: true);
+        await shareFileByPath(
+          file.path,
+          subject: 'شهادة: ${certificate!.title}',
+        );
         try {
           await file.delete();
-        } catch (_) {
-          // Ignore deletion errors
-        }
+        } catch (_) {}
       } else {
         await Share.share(
           'شهادة من منصة دبلوماسي\n${certificate!.title}\n${certificate!.verificationUrl}',
@@ -297,7 +331,7 @@ class CertificateDetailControllerImp extends CertificateDetailController {
     );
   }
 
-  Future<File?> _downloadCertificateImage(CertificateModel certificate) async {
+  Future<Uint8List?> _loadCertificateBytes(CertificateModel certificate) async {
     try {
       Uint8List? imageBytes;
 
@@ -306,25 +340,23 @@ class CertificateDetailControllerImp extends CertificateDetailController {
       }
 
       if (imageBytes == null) {
-        final apiService = Get.find<ApiService>();
-        final response = await apiService.get(
-          EndPoints.certificateDownload,
-          pathVariables: {'id': certificate.id.toString()},
-        );
-
-        if (response.isSuccess && response.data is Uint8List) {
-          imageBytes = response.data as Uint8List;
-        }
+        try {
+          final res = await certificatesData.downloadCertificate(certificate.id);
+          if (res.statusCode != null &&
+              res.statusCode! >= 200 &&
+              res.statusCode! < 300 &&
+              res.data != null) {
+            final data = res.data;
+            if (data is Uint8List) {
+              imageBytes = data;
+            } else if (data is List<int>) {
+              imageBytes = Uint8List.fromList(data);
+            }
+          }
+        } catch (_) {}
       }
 
-      if (imageBytes != null) {
-        final tempDir = await getTemporaryDirectory();
-        final file = File('${tempDir.path}/${certificate.certificateCode}.png');
-        await file.writeAsBytes(imageBytes);
-        return file;
-      }
-
-      return null;
+      return imageBytes;
     } catch (e) {
       return null;
     }

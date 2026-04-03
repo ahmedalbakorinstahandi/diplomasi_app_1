@@ -17,10 +17,15 @@ class UserData {
   Future<ApiResponse> changePassword({
     required String currentPassword,
     required String newPassword,
+    String? deviceToken,
   }) async {
     return await apiService.put(
       EndPoints.userMe,
-      data: {'current_password': currentPassword, 'password': newPassword},
+      data: {
+        'current_password': currentPassword,
+        'password': newPassword,
+        if (deviceToken != null) 'device_token': deviceToken,
+      },
     );
   }
 }

@@ -1,8 +1,12 @@
+import 'package:diplomasi_app/core/classes/shared_preferences.dart';
+import 'package:diplomasi_app/core/constants/routes.dart';
+import 'package:diplomasi_app/core/constants/steps.dart';
+import 'package:diplomasi_app/core/constants/storage_keys.dart';
+import 'package:diplomasi_app/core/functions/auth_device_token.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/data/resource/remote/user/auth_data.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
-import 'package:diplomasi_app/core/constants/routes.dart';
 
 abstract class ResetPasswordController extends GetxController {
   late TextEditingController password;
@@ -58,17 +62,34 @@ class ResetPasswordControllerImp extends ResetPasswordController {
       isLoading = true;
       update();
 
+      final deviceToken = await getAuthDeviceToken();
       var response = await authData.resetPassword(
         email: email,
         password: password.text,
         passwordConfirmation: confirmPassword.text,
+        deviceToken: deviceToken,
       );
 
       if (response.isSuccess) {
         customSnackBar(text: response.message ?? "تم تغيير كلمة المرور بنجاح");
-        Get.offAllNamed(AppRoutes.authSuccess);
-      } else {
-        customSnackBar(text: response.message ?? "حدث خطأ");
+        if (response.response != null &&
+            response.response['access_token'] != null) {
+          Shared.setValue(
+            StorageKeys.accessToken,
+            response.response['access_token'],
+          );
+        }
+        if (response.data != null) {
+          Shared.setValue('user-data', response.data);
+          if (response.data['account_state'] != null) {
+            Shared.setValue(
+              StorageKeys.accountState,
+              response.data['account_state'],
+            );
+          }
+        }
+        Shared.setValue(StorageKeys.step, Steps.homeApp);
+        Get.offAllNamed(AppRoutes.app);
       }
 
       isLoading = false;

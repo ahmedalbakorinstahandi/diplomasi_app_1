@@ -58,7 +58,12 @@ class ScenarioQuestionsScreen extends StatelessWidget {
                       children: [
                         // Top bar
                         Padding(
-                          padding: EdgeInsets.symmetric(horizontal: width(16)),
+                          padding: EdgeInsets.fromLTRB(
+                            width(15),
+                            height(8),
+                            width(15),
+                            height(4),
+                          ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -83,7 +88,7 @@ class ScenarioQuestionsScreen extends StatelessWidget {
                                 child: Text(
                                   controller.scenario?.title ?? 'السيناريو',
                                   style: TextStyle(
-                                    fontSize: emp(16),
+                                    fontSize: emp(15),
                                     fontWeight: FontWeight.w600,
                                     color: scheme.onPrimary,
                                   ),
@@ -117,7 +122,7 @@ class ScenarioQuestionsScreen extends StatelessWidget {
                           ),
                         ),
 
-                        SizedBox(height: height(12)),
+                        SizedBox(height: height(8)),
                       ],
                     ),
                   ),
@@ -194,7 +199,12 @@ class ScenarioQuestionsScreen extends StatelessWidget {
     }
 
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(vertical: height(20)),
+      padding: EdgeInsets.fromLTRB(
+        0,
+        height(12),
+        0,
+        height(14),
+      ),
       child: _buildQuestionWidget(context, controller),
     );
   }

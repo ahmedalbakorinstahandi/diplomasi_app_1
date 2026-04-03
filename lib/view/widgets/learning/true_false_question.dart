@@ -60,7 +60,7 @@ class _TrueFalseQuestionState extends State<TrueFalseQuestion> {
           // Question text + optional image
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(width(16)),
+            padding: EdgeInsets.all(width(14)),
             decoration: BoxDecoration(
               color: colors.backgroundSecondary,
               borderRadius: BorderRadius.circular(8),
@@ -68,17 +68,17 @@ class _TrueFalseQuestionState extends State<TrueFalseQuestion> {
             child: QuestionTextWithAttachment(
               text: widget.question.questionText,
               imageUrl: widget.question.attachedPath,
-              imageHeight: height(220),
+              imageHeight: height(190),
               textAlign: TextAlign.center,
               imageAlignment: Alignment.center,
               textStyle: TextStyle(
-                fontSize: emp(16),
+                fontSize: emp(15),
                 color: scheme.onSurface,
               ),
             ),
           ),
 
-          SizedBox(height: height(20)),
+          SizedBox(height: height(14)),
           
           // True/False options
           _buildOption(
@@ -86,25 +86,25 @@ class _TrueFalseQuestionState extends State<TrueFalseQuestion> {
             trueOption,
             'صح',
           ),
-          SizedBox(height: height(12)),
+          SizedBox(height: height(10)),
           _buildOption(
             context,
             falseOption,
             'خطأ',
           ),
           
-          SizedBox(height: height(24)),
+          SizedBox(height: height(18)),
           
           // Submit button
           if (!isAnswered)
             Container(
               width: double.infinity,
-              height: height(48),
+              height: height(46),
               decoration: BoxDecoration(
                 color: isLoading || selectedOptionId == null
                     ? scheme.primary.withOpacity(0.6)
                     : scheme.primary,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(11),
               ),
               child: Material(
                 type: MaterialType.transparency,
@@ -125,7 +125,7 @@ class _TrueFalseQuestionState extends State<TrueFalseQuestion> {
                             }
                           }
                         },
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(11),
                   child: Center(
                     child: isLoading
                         ? SizedBox(
@@ -141,7 +141,7 @@ class _TrueFalseQuestionState extends State<TrueFalseQuestion> {
                         : Text(
                             'تحقق',
                             style: TextStyle(
-                              fontSize: emp(16),
+                              fontSize: emp(15),
                               fontWeight: FontWeight.w600,
                               color: scheme.onPrimary,
                             ),
@@ -190,7 +190,10 @@ class _TrueFalseQuestionState extends State<TrueFalseQuestion> {
         });
       },
       child: Container(
-        padding: EdgeInsets.all(width(16)),
+        padding: EdgeInsets.symmetric(
+          horizontal: width(13),
+          vertical: height(11),
+        ),
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(8),
@@ -205,22 +208,22 @@ class _TrueFalseQuestionState extends State<TrueFalseQuestion> {
               child: QuestionTextWithAttachment(
                 text: label,
                 imageUrl: option.attachedPath,
-                imageHeight: height(180),
-                imageWidth: width(240),
+                imageHeight: height(148),
+                imageWidth: width(200),
                 imageFit: BoxFit.cover,
                 imageAlignment: Alignment.center,
                 textAlign: TextAlign.center,
                 imageBackgroundColor: backgroundColor,
                 textStyle: TextStyle(
-                  fontSize: emp(16),
+                  fontSize: emp(15),
                   color: scheme.onSurface,
                 ),
               ),
             ),
-            SizedBox(width: width(12)),
+            SizedBox(width: width(10)),
             Container(
-              width: width(20),
-              height: width(20),
+              width: width(19),
+              height: width(19),
               decoration: BoxDecoration(
                 color: borderColor,
                 shape: BoxShape.circle,
@@ -229,13 +232,13 @@ class _TrueFalseQuestionState extends State<TrueFalseQuestion> {
                   ? Icon(
                       Icons.check,
                       color: colors.onSuccess,
-                      size: emp(14),
+                      size: emp(13),
                     )
                   : isAnswered && isWrong
                       ? Icon(
                           Icons.close,
                           color: colors.onError,
-                          size: emp(14),
+                          size: emp(13),
                         )
                       : null,
             ),

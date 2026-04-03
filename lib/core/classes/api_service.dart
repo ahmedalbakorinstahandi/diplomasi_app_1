@@ -1,8 +1,10 @@
 import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:diplomasi_app/core/classes/api_response.dart';
+import 'package:diplomasi_app/core/constants/auth_response_keys.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/core/functions/print.dart';
@@ -89,6 +91,21 @@ class ApiService {
           },
         ),
       );
+    }
+  }
+
+  /// جلب ملف ثنائي من رابط مطلق مع نفس اعتراضات Dio (مثلاً توكن المستخدم).
+  Future<Uint8List?> getBytesAbsoluteUrl(String url) async {
+    try {
+      final response = await _dio.get<List<int>>(
+        url,
+        options: Options(responseType: ResponseType.bytes),
+      );
+      final data = response.data;
+      if (data == null || data.isEmpty) return null;
+      return Uint8List.fromList(data);
+    } on DioException {
+      return null;
     }
   }
 
@@ -279,16 +296,18 @@ class ApiService {
     dynamic body,
   }) {
     final statusCode = error.response?.statusCode;
-    final message = error.response?.data['message'];
+    final responseData = error.response?.data;
+    final message = responseData is Map ? responseData['message'] : null;
+    final errorKey = responseData is Map ? responseData['key'] : null;
     error.message;
 
     if (message != null) {
       printDebug('Error: $message');
-      if (statusCode != 500 || kDebugMode) {
+      final skipSnack = errorKey == AuthResponseKeys.accountNotVerified;
+      if (!skipSnack && (statusCode != 500 || kDebugMode)) {
         customSnackBar(text: message, snackType: SnackBarType.error);
       }
     }
-    final responseData = error.response?.data;
     final dataPayload = responseData is Map ? responseData['data'] : null;
 
     ApiResponse api = ApiResponse(
@@ -298,7 +317,7 @@ class ApiService {
       params: params,
       body: body,
       message: message,
-      key: responseData is Map ? responseData['key'] : null,
+      key: errorKey,
       data: dataPayload,
     );
 

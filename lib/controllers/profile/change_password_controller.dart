@@ -1,3 +1,8 @@
+import 'package:diplomasi_app/core/classes/shared_preferences.dart';
+import 'package:diplomasi_app/core/constants/routes.dart';
+import 'package:diplomasi_app/core/constants/steps.dart';
+import 'package:diplomasi_app/core/constants/storage_keys.dart';
+import 'package:diplomasi_app/core/functions/auth_device_token.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/data/resource/remote/user/user_data.dart';
 import 'package:flutter/material.dart';
@@ -96,17 +101,36 @@ class ChangePasswordControllerImp extends GetxController {
     isLoading = true;
     update();
 
+    final deviceToken = await getAuthDeviceToken();
     final response = await userData.changePassword(
       currentPassword: currentPasswordController.text.trim(),
       newPassword: newPasswordController.text.trim(),
+      deviceToken: deviceToken,
     );
 
     if (response.isSuccess) {
-      Get.back();
+      if (response.response != null &&
+          response.response['access_token'] != null) {
+        Shared.setValue(
+          StorageKeys.accessToken,
+          response.response['access_token'],
+        );
+      }
+      if (response.data != null) {
+        Shared.setValue('user-data', response.data);
+        if (response.data['account_state'] != null) {
+          Shared.setValue(
+            StorageKeys.accountState,
+            response.data['account_state'],
+          );
+        }
+      }
+      Shared.setValue(StorageKeys.step, Steps.homeApp);
       customSnackBar(
         text: response.message ?? 'تم تغيير كلمة المرور بنجاح',
         snackType: SnackBarType.correct,
       );
+      Get.offAllNamed(AppRoutes.app);
     }
 
     isLoading = false;

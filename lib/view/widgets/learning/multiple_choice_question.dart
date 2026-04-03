@@ -46,18 +46,18 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
           Text(
             'اختر الإجابات الصحيحة',
             style: TextStyle(
-              fontSize: emp(16),
+              fontSize: emp(15),
               fontWeight: FontWeight.w600,
               color: scheme.onSurface,
             ),
           ),
 
-          SizedBox(height: height(16)),
+          SizedBox(height: height(10)),
 
           // Question text + optional image
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(width(16)),
+            padding: EdgeInsets.all(width(14)),
             decoration: BoxDecoration(
               color: colors.backgroundSecondary,
               borderRadius: BorderRadius.circular(8),
@@ -65,14 +65,14 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
             child: QuestionTextWithAttachment(
               text: widget.question.questionText,
               imageUrl: widget.question.attachedPath,
-              imageHeight: height(220),
+              imageHeight: height(190),
               textAlign: TextAlign.center,
               imageAlignment: Alignment.center,
-              textStyle: TextStyle(fontSize: emp(16), color: scheme.onSurface),
+              textStyle: TextStyle(fontSize: emp(15), color: scheme.onSurface),
             ),
           ),
 
-          SizedBox(height: height(20)),
+          SizedBox(height: height(16)),
 
           // Options
           ...widget.question.options.map((option) {
@@ -114,8 +114,11 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                       });
                     },
               child: Container(
-                margin: EdgeInsets.only(bottom: height(12)),
-                padding: EdgeInsets.all(width(16)),
+                margin: EdgeInsets.only(bottom: height(10)),
+                padding: EdgeInsets.symmetric(
+                  horizontal: width(13),
+                  vertical: height(11),
+                ),
                 decoration: BoxDecoration(
                   color: backgroundColor,
                   borderRadius: BorderRadius.circular(8),
@@ -127,22 +130,22 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                       child: QuestionTextWithAttachment(
                         text: option.optionText,
                         imageUrl: option.attachedPath,
-                        imageHeight: height(180),
-                        imageWidth: width(240),
+                        imageHeight: height(148),
+                        imageWidth: width(200),
                         imageFit: BoxFit.cover,
                         imageAlignment: Alignment.center,
                         textAlign: TextAlign.center,
                         imageBackgroundColor: backgroundColor,
                         textStyle: TextStyle(
-                          fontSize: emp(16),
+                          fontSize: emp(15),
                           color: scheme.onSurface,
                         ),
                       ),
                     ),
-                    SizedBox(width: width(12)),
+                    SizedBox(width: width(10)),
                     Container(
-                      width: width(20),
-                      height: width(20),
+                      width: width(19),
+                      height: width(19),
                       decoration: BoxDecoration(
                         color: borderColor,
                         shape: BoxShape.circle,
@@ -155,7 +158,7 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                               color: isAnswered
                                   ? colors.onSuccess
                                   : scheme.onPrimary,
-                              size: emp(14),
+                              size: emp(13),
                             )
                           : null,
                     ),
@@ -165,18 +168,18 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
             );
           }),
 
-          SizedBox(height: height(24)),
+          SizedBox(height: height(18)),
 
           // Submit button
           if (!isAnswered)
             Container(
               width: double.infinity,
-              height: height(48),
+              height: height(46),
               decoration: BoxDecoration(
                 color: isLoading || selectedOptionIds.isEmpty
                     ? scheme.primary.withOpacity(0.6)
                     : scheme.primary,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(11),
               ),
               child: Material(
                 type: MaterialType.transparency,
@@ -197,7 +200,7 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                             }
                           }
                         },
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(11),
                   child: Center(
                     child: isLoading
                         ? SizedBox(
@@ -213,7 +216,7 @@ class _MultipleChoiceQuestionState extends State<MultipleChoiceQuestion> {
                         : Text(
                             'تحقق',
                             style: TextStyle(
-                              fontSize: emp(16),
+                              fontSize: emp(15),
                               fontWeight: FontWeight.w600,
                               color: scheme.onPrimary,
                             ),

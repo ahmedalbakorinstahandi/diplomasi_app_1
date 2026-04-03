@@ -50,6 +50,8 @@ class NotificationsScreen extends StatelessWidget {
                             return NotificationDateSection(
                               date: formatDateRelative(
                                 firstNotification.createdAt,
+                                referenceUtc:
+                                    controller.relativeDateReferenceUtc,
                               ),
                               notifications: notificationsForDate
                                   .map(

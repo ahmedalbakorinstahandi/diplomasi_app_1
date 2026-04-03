@@ -10,6 +10,9 @@ abstract class NotificationsController extends GetxController {
   List<NotificationModel> unsortedNotifications = [];
   List notifications = [];
 
+  /// From last successful GET `Date` header (UTC); aligns "اليوم/الأمس" with server time.
+  DateTime? relativeDateReferenceUtc;
+
   bool isLoading = false;
   int page = 1;
   int perPage = 20;
@@ -60,6 +63,10 @@ class NotificationsControllerImp extends NotificationsController {
     );
 
     if (response.isSuccess && response.data != null) {
+      if (response.serverResponseUtc != null) {
+        relativeDateReferenceUtc = response.serverResponseUtc;
+      }
+
       final notificationsData = response.data as List;
       final newNotifications = notificationsData
           .map(

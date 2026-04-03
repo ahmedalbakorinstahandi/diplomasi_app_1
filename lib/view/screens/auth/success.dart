@@ -64,7 +64,7 @@ class SuccessScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   // Message
                   Text(
-                    message ?? 'تم إنشاء حسابك بنجاح. يمكنك الآن تسجيل الدخول',
+                    message ?? 'تمت العملية بنجاح.',
                     style: TextStyle(fontSize: 16, color: colors.textSecondary),
                     textAlign: TextAlign.center,
                   ),

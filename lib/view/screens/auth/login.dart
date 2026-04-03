@@ -1,4 +1,5 @@
 import 'package:diplomasi_app/controllers/auth/login_controller.dart';
+import 'package:diplomasi_app/controllers/auth/register_controller.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/constants/assets.dart';
@@ -209,7 +210,12 @@ class LoginScreen extends StatelessWidget {
                           text: 'ليس لديك حساب؟ ',
                           linkText: 'إنشاء حساب جديد',
                           onTap: () {
-                            Get.toNamed(AppRoutes.register);
+                            Get.toNamed(
+                              AppRoutes.register,
+                              arguments: const {
+                                registerOpenedFromLoginArg: true,
+                              },
+                            );
                           },
                           textAlign: TextAlign.center,
                         ),

@@ -3,6 +3,37 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
 
+List<BoxShadow> _snackBarShadows(AppColors appColors, Brightness brightness) {
+  if (brightness == Brightness.dark) {
+    return [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: 0.4),
+        blurRadius: 18,
+        offset: const Offset(0, 8),
+        spreadRadius: -3,
+      ),
+      BoxShadow(
+        color: Colors.black.withValues(alpha: 0.2),
+        blurRadius: 6,
+        offset: const Offset(0, 2),
+      ),
+    ];
+  }
+  return [
+    BoxShadow(
+      color: appColors.shadow,
+      blurRadius: 24,
+      offset: const Offset(0, 8),
+      spreadRadius: -6,
+    ),
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.05),
+      blurRadius: 8,
+      offset: const Offset(0, 2),
+    ),
+  ];
+}
+
 customSnackBar({
   required String text,
   String message = '',
@@ -14,113 +45,167 @@ customSnackBar({
   String? type,
 }) {
   if (text.isEmpty) return;
-  // Close any open SnackBars
   Get.closeAllSnackbars();
 
   final appColors = Get.theme.extension<AppColors>() ?? AppColors.light;
-  final scheme = Get.theme.colorScheme;
+  final brightness = Get.theme.brightness;
 
-  // Define snackbar color and icon
-  late Color snackbarColor;
-  late Widget icon;
-  late Color onSnackbar;
+  late Color accent;
+  late IconData glyph;
 
   switch (snackType) {
     case SnackBarType.correct:
-      snackbarColor = scheme.primary;
-      onSnackbar = scheme.onPrimary;
-      icon = Container(
-        width: 21,
-        height: 21,
-        decoration: BoxDecoration(
-          color: scheme.onPrimary,
-          shape: BoxShape.circle,
-        ),
-        child: Center(child: Icon(Icons.check, color: snackbarColor, size: 18)),
-      );
+      accent = appColors.success;
+      glyph = Icons.check_rounded;
       break;
-
     case SnackBarType.info:
-      snackbarColor = appColors.info;
-      onSnackbar = scheme.onPrimary;
-      icon = Container(
-        width: 21,
-        height: 21,
-        decoration: BoxDecoration(
-          color: scheme.onPrimary,
-          shape: BoxShape.circle,
-        ),
-        child: Center(child: Icon(Icons.check, color: snackbarColor, size: 18)),
-      );
+      accent = appColors.info;
+      glyph = Icons.info_outline_rounded;
       break;
-
     case SnackBarType.error:
-      snackbarColor = scheme.error;
-      onSnackbar = scheme.onError;
-      icon = Container(
-        width: 21,
-        height: 21,
-        decoration: BoxDecoration(
-          color: scheme.onError,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(Icons.close, color: snackbarColor, size: 17),
-      );
+      accent = appColors.error;
+      glyph = Icons.error_outline_rounded;
       break;
   }
 
-  // Show Snackbar
-  Get.snackbar(
-    '',
-    '',
-    titleText: GestureDetector(
-      onTap: () {
-        if (id != null && type != null) {
-          // notificationTap(id, type);
-        }
-      },
-      child: Row(
-        children: [
-          icon,
-          const SizedBox(width: 12),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+  final iconTile = Container(
+    width: 36,
+    height: 36,
+    decoration: BoxDecoration(
+      color: accent.withValues(
+        alpha: brightness == Brightness.dark ? 0.2 : 0.14,
+      ),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: accent.withValues(alpha: 0.28)),
+    ),
+    alignment: Alignment.center,
+    child: Icon(glyph, color: accent, size: 20),
+  );
+
+  late final SnackbarController snackController;
+  snackController = Get.rawSnackbar(
+    title: '',
+    message: '',
+    titleText: LayoutBuilder(
+      builder: (context, constraints) {
+        // طرف النهاية في RTL = يسار: فاصل + X. الأيقونة داخل الصف الأول.
+        const trailingFixed = 8 + 1 + 6 + 44;
+        const iconAndGap = 36 + 12;
+        final textMax = (constraints.maxWidth - trailingFixed - iconAndGap)
+            .clamp(72.0, constraints.maxWidth);
+
+        final textStyleTitle = TextStyle(
+          color: appColors.textPrimary,
+          fontWeight: FontWeight.w600,
+          fontSize: 15,
+          height: 1.35,
+        );
+        final textStyleBody = TextStyle(
+          color: appColors.textSecondary,
+          fontWeight: FontWeight.w400,
+          fontSize: 14,
+          height: 1.35,
+        );
+
+        final textBlock = GestureDetector(
+          behavior: HitTestBehavior.deferToChild,
+          onTap: () {
+            if (id != null && type != null) {
+              // notificationTap(id, type);
+            }
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                text,
+                style: textStyleTitle,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.start,
+              ),
+              if (message.isNotEmpty) ...[
+                const SizedBox(height: 4),
                 Text(
-                  text,
-                  style: TextStyle(
-                    color: onSnackbar,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  maxLines: 2,
+                  message,
+                  style: textStyleBody,
+                  maxLines: 4,
                   overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.start,
                 ),
-                if (message.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    message,
-                    style: TextStyle(
-                      color: onSnackbar,
-                      fontWeight: FontWeight.w400,
+              ],
+            ],
+          ),
+        );
+
+        // RTL: أول عنصر = يمين. Expanded يملأ المسافة ويحشر النص والأيقونة نحو البداية؛
+        // آخر عناصر = الفاصل + X على طرف النهاية (يسار).
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    iconTile,
+                    const SizedBox(width: 12),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: textMax),
+                      child: textBlock,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(width: 1, height: 32, color: appColors.border),
+            const SizedBox(width: 6),
+            SizedBox(
+              width: 44,
+              height: 44,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => snackController.close(),
+                  customBorder: const CircleBorder(),
+                  child: Center(
+                    child: Icon(
+                      Icons.close_rounded,
+                      size: 22,
+                      color: appColors.textSecondary,
                     ),
                   ),
-                ],
-              ],
+                ),
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     ),
-    snackPosition: snackPosition,
-    margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-    padding: const EdgeInsets.all(12),
-    backgroundColor: snackbarColor,
-    colorText: onSnackbar,
     messageText: const SizedBox(),
+    snackPosition: snackPosition,
+    snackStyle: SnackStyle.FLOATING,
+    margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    backgroundColor: appColors.surfaceCard,
     dismissDirection: DismissDirection.horizontal,
-    duration: duration ?? const Duration(seconds: 3),
-    borderRadius: 8,
+    isDismissible: true,
+    duration: duration ?? const Duration(seconds: 4, milliseconds: 500),
+    borderRadius: 10,
+    borderColor: appColors.borderStrong.withValues(alpha: 0.35),
+    borderWidth: 1,
+    leftBarIndicatorColor: null,
+    boxShadows: _snackBarShadows(appColors, brightness),
+    shouldIconPulse: false,
+    forwardAnimationCurve: Curves.easeOutCubic,
+    reverseAnimationCurve: Curves.easeInCubic,
+    animationDuration: const Duration(milliseconds: 380),
+    barBlur: 0,
+    overlayBlur: 0,
   );
 }
 

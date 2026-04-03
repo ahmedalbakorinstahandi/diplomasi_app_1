@@ -84,8 +84,9 @@ class HomeControllerImp extends HomeController {
   }
 
   Future<void> _bootstrapSubscriptionState() async {
-    if (_didBootstrapSubscriptionState || _isBootstrappingSubscriptionState)
+    if (_didBootstrapSubscriptionState || _isBootstrappingSubscriptionState) {
       return;
+    }
     _didBootstrapSubscriptionState = true;
 
     if (currentAccountState != 'registered_verified') {

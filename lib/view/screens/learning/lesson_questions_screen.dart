@@ -56,9 +56,11 @@ class LessonQuestionsScreen extends StatelessWidget {
                       children: [
                         // Top bar
                         Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: width(16),
-                            // vertical: height(12),
+                          padding: EdgeInsets.fromLTRB(
+                            width(15),
+                            height(8),
+                            width(15),
+                            height(4),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -82,7 +84,7 @@ class LessonQuestionsScreen extends StatelessWidget {
                               Text(
                                 'سؤال ${controller.currentQuestionIndex + 1} من ${controller.totalQuestions}',
                                 style: TextStyle(
-                                  fontSize: emp(16),
+                                  fontSize: emp(15),
                                   fontWeight: FontWeight.w600,
                                   color: scheme.onPrimary,
                                 ),
@@ -121,7 +123,12 @@ class LessonQuestionsScreen extends StatelessWidget {
                             controller.currentQuestion == null
                         ? const LessonQuestionsScreenShimmer()
                         : SingleChildScrollView(
-                            padding: EdgeInsets.symmetric(vertical: height(20)),
+                            padding: EdgeInsets.fromLTRB(
+                              0,
+                              height(12),
+                              0,
+                              height(14),
+                            ),
                             child: _buildQuestionWidget(context, controller),
                           ),
                   ),

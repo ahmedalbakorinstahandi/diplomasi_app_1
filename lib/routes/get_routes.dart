@@ -50,7 +50,22 @@ List<GetPage<dynamic>>? getPages = [
     name: AppRoutes.resetPassword,
     page: () => const ResetPasswordScreen(),
   ),
-  GetPage(name: AppRoutes.authSuccess, page: () => const SuccessScreen()),
+  GetPage(
+    name: AppRoutes.authSuccess,
+    page: () {
+      final args = Get.arguments;
+      final map = args is Map<String, dynamic> ? args : null;
+      final navigateToApp = map?['navigateToApp'] == true;
+      return SuccessScreen(
+        title: map?['title'] as String?,
+        message: map?['message'] as String?,
+        buttonText: (map?['buttonText'] as String?) ?? 'متابعة',
+        onButtonPressed: navigateToApp
+            ? () => Get.offAllNamed(AppRoutes.app)
+            : null,
+      );
+    },
+  ),
   GetPage(name: AppRoutes.app, page: () => const AppScreen()),
 
   // Learning Routes

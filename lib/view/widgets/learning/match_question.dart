@@ -265,7 +265,7 @@ class _MatchQuestionState extends State<MatchQuestion> {
           // Question text + optional image
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(width(16)),
+            padding: EdgeInsets.all(width(14)),
             decoration: BoxDecoration(
               color: colors.backgroundSecondary,
               borderRadius: BorderRadius.circular(8),
@@ -275,18 +275,18 @@ class _MatchQuestionState extends State<MatchQuestion> {
                   ? widget.question.questionText
                   : 'صل بين العناصر',
               imageUrl: widget.question.attachedPath,
-              imageHeight: height(220),
+              imageHeight: height(190),
               textAlign: TextAlign.center,
               imageAlignment: Alignment.center,
               textStyle: TextStyle(
-                fontSize: emp(18),
+                fontSize: emp(16),
                 fontWeight: FontWeight.w600,
                 color: scheme.onSurface,
               ),
             ),
           ),
 
-          SizedBox(height: height(24)),
+          SizedBox(height: height(18)),
 
           // Match grid: الخطوط تُرسم أولاً (خلف المحتوى) ثم العمودان فوقها فتظهر التوصيلات في المسافة بين العمودين فقط
           Stack(
@@ -391,7 +391,7 @@ class _MatchQuestionState extends State<MatchQuestion> {
                   }
 
                   return Padding(
-                    padding: EdgeInsets.only(bottom: height(12)),
+                    padding: EdgeInsets.only(bottom: height(10)),
                     child: IntrinsicHeight(
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -419,7 +419,7 @@ class _MatchQuestionState extends State<MatchQuestion> {
                                     },
                               child: Container(
                                 key: _keyForLeft(leftOption.id),
-                                padding: EdgeInsets.all(width(12)),
+                                padding: EdgeInsets.all(width(10)),
                                 decoration: BoxDecoration(
                                   color: leftBg,
                                   borderRadius: BorderRadius.circular(8),
@@ -436,10 +436,10 @@ class _MatchQuestionState extends State<MatchQuestion> {
                                     QuestionTextWithAttachment(
                                       text: leftOption.optionText,
                                       imageUrl: leftOption.attachedPath,
-                                      textMinHeight: height(30),
+                                      textMinHeight: height(26),
                                       textMaxLines: 4,
                                       pinImageToBottom: true,
-                                      imageHeight: height(68),
+                                      imageHeight: height(60),
                                       imageFit: BoxFit.contain,
                                       imageAspectRatio: 4 / 3,
                                       imageWidthFactor: 0.8,
@@ -494,7 +494,7 @@ class _MatchQuestionState extends State<MatchQuestion> {
                               ),
                             ),
                           ),
-                          SizedBox(width: width(32)),
+                          SizedBox(width: width(28)),
                           Expanded(
                             child: GestureDetector(
                               onTap: isAnswered
@@ -545,7 +545,7 @@ class _MatchQuestionState extends State<MatchQuestion> {
                                     },
                               child: Container(
                                 key: _keyForRight(rightOption.id),
-                                padding: EdgeInsets.all(width(12)),
+                                padding: EdgeInsets.all(width(10)),
                                 decoration: BoxDecoration(
                                   color: rightBg,
                                   borderRadius: BorderRadius.circular(8),
@@ -562,10 +562,10 @@ class _MatchQuestionState extends State<MatchQuestion> {
                                     QuestionTextWithAttachment(
                                       text: rightOption.optionText,
                                       imageUrl: rightOption.attachedPath,
-                                      textMinHeight: height(30),
+                                      textMinHeight: height(26),
                                       textMaxLines: 4,
                                       pinImageToBottom: true,
-                                      imageHeight: height(68),
+                                      imageHeight: height(60),
                                       imageFit: BoxFit.contain,
                                       imageAspectRatio: 4 / 3,
                                       imageWidthFactor: 0.8,
@@ -629,18 +629,18 @@ class _MatchQuestionState extends State<MatchQuestion> {
             ],
           ),
 
-          SizedBox(height: height(24)),
+          SizedBox(height: height(18)),
 
           // Submit button
           if (!isAnswered)
             Container(
               width: double.infinity,
-              height: height(48),
+              height: height(46),
               decoration: BoxDecoration(
                 color: isLoading || selectedMatches.length != leftOptions.length
                     ? scheme.primary.withOpacity(0.6)
                     : scheme.primary,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(11),
               ),
               child: Material(
                 type: MaterialType.transparency,
@@ -671,7 +671,7 @@ class _MatchQuestionState extends State<MatchQuestion> {
                             }
                           }
                         },
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(11),
                   child: Center(
                     child: isLoading
                         ? SizedBox(
@@ -687,7 +687,7 @@ class _MatchQuestionState extends State<MatchQuestion> {
                         : Text(
                             'متابعة',
                             style: TextStyle(
-                              fontSize: emp(16),
+                              fontSize: emp(15),
                               fontWeight: FontWeight.w600,
                               color: scheme.onPrimary,
                             ),

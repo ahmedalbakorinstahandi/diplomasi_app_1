@@ -69,30 +69,40 @@ String formatTimeOnly(String? date) {
   }
 }
 
-/// Relative date for lists (e.g. notifications): اليوم / أمس / يوم شهر.
-String formatDateRelative(String? dateString) {
+/// Relative date for lists (e.g. notifications): اليوم / الأمس / يوم شهر.
+///
+/// [referenceUtc]: instant for "today" (e.g. HTTP `Date` from API). When the device
+/// date is wrong, pass server time so "اليوم" matches the user's real calendar day.
+String formatDateRelative(String? dateString, {DateTime? referenceUtc}) {
   if (dateString == null || dateString.isEmpty) return dateString ?? '';
   try {
     DateTime date;
 
     // If we receive a pure date string like "2026-03-31"
-    if (dateString.length == 10 && RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(dateString)) {
+    if (dateString.length == 10 &&
+        RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(dateString)) {
       date = DateFormat('yyyy-MM-dd').parse(dateString);
     } else {
       // Fallback to existing UTC → local parsing for full timestamps
       date = parseUtcToLocal(dateString);
     }
 
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
+    final anchorUtc = referenceUtc ?? DateTime.now().toUtc();
+    final anchorLocal = anchorUtc.toLocal();
+    final today = DateTime(
+      anchorLocal.year,
+      anchorLocal.month,
+      anchorLocal.day,
+    );
     final dateOnly = DateTime(date.year, date.month, date.day);
-    final dayDiff = dateOnly.difference(today).inDays;
+    // Calendar-day match avoids Duration.inDays edge cases (DST, sub-day drift).
+    final yesterday = DateTime(today.year, today.month, today.day - 1);
 
-    if (dayDiff == 0) {
+    if (dateOnly == today) {
       return 'اليوم';
     }
-    if (dayDiff == -1) {
-      return 'أمس';
+    if (dateOnly == yesterday) {
+      return 'الأمس';
     }
     return '${date.day} ${_monthNameAr(date.month)}';
   } catch (_) {

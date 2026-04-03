@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart' as dio;
 import 'package:get/get.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
@@ -18,6 +21,9 @@ class ApiResponse<T> {
   final Meta? meta;
   final String? key;
 
+  /// HTTP `Date` header parsed as UTC; use for UI labels when device clock may be wrong.
+  final DateTime? serverResponseUtc;
+
   ApiResponse({
     required this.success,
     this.statusCode,
@@ -29,9 +35,22 @@ class ApiResponse<T> {
     this.response,
     this.meta,
     this.key,
+    this.serverResponseUtc,
   });
 
+  static DateTime? _parseServerDateUtc(dio.Response response) {
+    try {
+      final raw = response.headers.value('date');
+      if (raw == null || raw.isEmpty) return null;
+      return HttpDate.parse(raw).toUtc();
+    } catch (_) {
+      return null;
+    }
+  }
+
   factory ApiResponse.fromResponse(dynamic response) {
+    final dio.Response? res =
+        response is dio.Response ? response : null;
     return ApiResponse<T>(
       success: response.data['success'] == true,
       statusCode: response.statusCode,
@@ -49,6 +68,7 @@ class ApiResponse<T> {
           ? Meta.fromJson(response.data['meta'])
           : null,
       key: response.data.containsKey('key') ? response.data['key'] : null,
+      serverResponseUtc: res != null ? _parseServerDateUtc(res) : null,
     );
   }
 

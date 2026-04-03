@@ -629,6 +629,7 @@ class PlansControllerImp extends PlansController {
 
   /// true عندما الاشتراك الحالي في فترة انتظار التجديد (عرض "جارٍ التجديد").
   /// يشمل: renewal_pending من الـ API، أو انتهاء العد التنازلي محلياً مع تفعيل التجديد التلقائي.
+  @override
   bool get isRenewalPending {
     if (currentSubscription?['renewal_pending'] == true) return true;
     final status = (currentSubscription?['status'] ?? '')

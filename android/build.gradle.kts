@@ -13,6 +13,14 @@ subprojects {
     val subprojectBuildDir = rootProject.layout.buildDirectory.dir(project.name)
     project.layout.buildDirectory.value(subprojectBuildDir)
 }
+// file_saver and older plugins pin AGP 8.1.2; force the app AGP so resolution succeeds.
+subprojects {
+    buildscript {
+        configurations.named("classpath").configure {
+            resolutionStrategy.force("com.android.tools.build:gradle:8.9.1")
+        }
+    }
+}
 subprojects {
     project.evaluationDependsOn(":app")
 }
