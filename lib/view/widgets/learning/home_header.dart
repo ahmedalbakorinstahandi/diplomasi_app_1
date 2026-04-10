@@ -91,7 +91,7 @@ class HomeHeader extends StatelessWidget {
               InkWell(
                 onTap: handleProfileTap,
                 child: Text(
-                  '${user?.firstName ?? 'متعلم'}',
+                  user?.firstName ?? 'متعلم',
                   style: TextStyle(
                     fontSize: emp(16),
                     fontWeight: FontWeight.w600,
@@ -167,4 +167,3 @@ class HomeHeader extends StatelessWidget {
     return u != null && u.isNotEmpty;
   }
 }
-

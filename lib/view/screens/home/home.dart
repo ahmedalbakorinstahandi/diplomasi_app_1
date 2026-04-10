@@ -83,31 +83,36 @@ class HomeScreen extends StatelessWidget {
                       child: Column(
                         children: [
                           Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: width(14),
+                            padding: EdgeInsets.fromLTRB(
+                              width(14),
+                              height(20),
+                              width(14),
+                              0,
                             ),
                             height: getHeight() * 0.7855,
                             child: Column(
                               children: [
                                 // Course title
                                 Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      controller.level?.course?.title ?? '',
-                                      textAlign: TextAlign.right,
-                                      style: TextStyle(
-                                        fontStyle: FontStyle.normal,
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: emp(22),
-                                        color: scheme.onSurface,
+                                    Expanded(
+                                      child: Text(
+                                        controller.level?.course?.title ?? '',
+                                        textAlign: TextAlign.right,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontStyle: FontStyle.normal,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: emp(22),
+                                          color: scheme.onSurface,
+                                        ),
                                       ),
                                     ),
-
-                                    // Levels dropdown
-                                    SizedBox(
-                                      width: width(140),
+                                    SizedBox(width: width(8)),
+                                    Flexible(
+                                      flex: 1,
                                       child: LevelDropdown(
                                         selectedLevel: controller.level,
                                         levels: controller.levels,

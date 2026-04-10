@@ -301,10 +301,17 @@ class ApiService {
     final errorKey = responseData is Map ? responseData['key'] : null;
     error.message;
 
+    Map<String, dynamic>? infoMap;
+    if (responseData is Map && responseData['info'] is Map) {
+      infoMap = Map<String, dynamic>.from(responseData['info'] as Map);
+    }
+
+    final suppressSnack = errorKey == AuthResponseKeys.accountNotVerified ||
+        _suppressSnackForBillingIosVerify(errorKey, endpoint);
+
     if (message != null) {
       printDebug('Error: $message');
-      final skipSnack = errorKey == AuthResponseKeys.accountNotVerified;
-      if (!skipSnack && (statusCode != 500 || kDebugMode)) {
+      if (!suppressSnack && (statusCode != 500 || kDebugMode)) {
         customSnackBar(text: message, snackType: SnackBarType.error);
       }
     }
@@ -319,10 +326,20 @@ class ApiService {
       message: message,
       key: errorKey,
       data: dataPayload,
+      response: responseData,
+      info: infoMap,
     );
 
     api.toString();
 
     return api;
+  }
+
+  /// Plans screen shows localized copy for Apple IAP; avoid duplicate global snack.
+  bool _suppressSnackForBillingIosVerify(String? key, String endpoint) {
+    if (key == null || !key.startsWith('billing.ios')) {
+      return false;
+    }
+    return endpoint.contains('ios/purchase/verify');
   }
 }

@@ -3,6 +3,7 @@ import 'package:diplomasi_app/core/constants/variables.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
+import 'package:diplomasi_app/core/services/iap_ownership_exception.dart';
 import 'package:diplomasi_app/core/services/iap_service.dart';
 import 'package:diplomasi_app/data/model/user/plan_model.dart';
 import 'package:diplomasi_app/data/resource/remote/user/billing_data.dart';
@@ -309,9 +310,7 @@ class PlansControllerImp extends PlansController {
 
   @override
   Future<void> purchasePlan(PlanModel plan, {int? paymentMethodId}) async {
-    print(  'Attempting to purchase plan ${plan.id} with payment method ID: $paymentMethodId');
     if (isActionLoading) return;
-    print(  'Attemptingggggg to purchase plan ${plan.id} with payment method ID: $paymentMethodId');
 
     isActionLoading = true;
     actionPlanId = plan.id;
@@ -323,6 +322,14 @@ class PlansControllerImp extends PlansController {
         customSnackBar(
           text: 'تمت عملية الشراء بنجاح.',
           snackType: SnackBarType.correct,
+        );
+      } on IapOwnershipConflictException catch (e) {
+        final hint = e.maskedOwnerEmail;
+        customSnackBar(
+          text: hint != null && hint.isNotEmpty
+              ? 'هذا الاشتراك مرتبط بحساب آخر في التطبيق ($hint). سجّل الدخول بالحساب الذي اشترى أو استعاد هذا الاشتراك.'
+              : 'هذا الاشتراك مرتبط بحساب آخر في التطبيق. سجّل الدخول بالحساب الذي اشترى أو استعاد هذا الاشتراك أولاً.',
+          snackType: SnackBarType.error,
         );
       } catch (e) {
         final message = e is Exception
@@ -434,7 +441,15 @@ class PlansControllerImp extends PlansController {
       final result = await iapService!.restorePurchases(planModels);
       await loadBillingState();
 
-      if (hasBlockingCurrentSubscription) {
+      if (result.linkedToOtherAccount) {
+        final hint = result.maskedOwnerEmail;
+        customSnackBar(
+          text: hint != null && hint.isNotEmpty
+              ? 'هذا الاشتراك مرتبط بحساب آخر في التطبيق ($hint). سجّل الدخول بالحساب الذي اشترى أو استعاد هذا الاشتراك.'
+              : 'هذا الاشتراك مرتبط بحساب آخر في التطبيق. سجّل الدخول بالحساب الذي اشترى أو استعاد هذا الاشتراك أولاً.',
+          snackType: SnackBarType.error,
+        );
+      } else if (hasBlockingCurrentSubscription) {
         customSnackBar(
           text: 'تمت استعادة المشتريات وتفعيل الاشتراك.',
           snackType: SnackBarType.correct,
@@ -456,6 +471,15 @@ class PlansControllerImp extends PlansController {
           snackType: SnackBarType.info,
         );
       }
+    } on IapOwnershipConflictException catch (e) {
+      await loadBillingState();
+      final hint = e.maskedOwnerEmail;
+      customSnackBar(
+        text: hint != null && hint.isNotEmpty
+            ? 'هذا الاشتراك مرتبط بحساب آخر في التطبيق ($hint). سجّل الدخول بالحساب الذي اشترى أو استعاد هذا الاشتراك.'
+            : 'هذا الاشتراك مرتبط بحساب آخر في التطبيق. سجّل الدخول بالحساب الذي اشترى أو استعاد هذا الاشتراك أولاً.',
+        snackType: SnackBarType.error,
+      );
     } catch (e) {
       final message = e is Exception
           ? e.toString().replaceFirst('Exception: ', '')

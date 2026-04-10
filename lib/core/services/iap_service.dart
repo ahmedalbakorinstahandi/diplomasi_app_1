@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:diplomasi_app/core/functions/print.dart';
+import 'package:diplomasi_app/core/services/iap_ownership_exception.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:diplomasi_app/data/model/user/plan_model.dart';
 import 'package:diplomasi_app/data/resource/remote/user/billing_data.dart';
@@ -12,11 +13,15 @@ class RestorePurchasesResult {
   final int successCount;
   final int failedCount;
   final bool timedOut;
+  final bool linkedToOtherAccount;
+  final String? maskedOwnerEmail;
 
   const RestorePurchasesResult({
     required this.successCount,
     required this.failedCount,
     required this.timedOut,
+    this.linkedToOtherAccount = false,
+    this.maskedOwnerEmail,
   });
 }
 
@@ -32,7 +37,12 @@ class IapService {
   Timer? _restoreSettleTimer;
   int _restoreSuccessCount = 0;
   int _restoreFailedCount = 0;
+  bool _restoreLinkedOtherAccount = false;
+  String? _restoreMaskedOwnerEmail;
   bool _isAvailable = false;
+
+  Completer<String?>? _receiptCaptureCompleter;
+  String? _receiptCaptureProductId;
 
   bool get isAvailable => _isAvailable;
 
@@ -79,6 +89,17 @@ class IapService {
 
       if (purchase.status == PurchaseStatus.purchased ||
           purchase.status == PurchaseStatus.restored) {
+        if (_receiptCaptureCompleter != null &&
+            _receiptCaptureProductId != null &&
+            purchase.productID == _receiptCaptureProductId) {
+          final r = purchase.verificationData.serverVerificationData;
+          if (r.isNotEmpty && !(_receiptCaptureCompleter?.isCompleted ?? true)) {
+            _receiptCaptureCompleter?.complete(r);
+          }
+          unawaited(_completePurchaseIfNeeded(purchase));
+          continue;
+        }
+
         unawaited(
           _verifyPurchase(purchase).then((ok) {
             if (_pendingRestore != null) {
@@ -95,6 +116,16 @@ class IapService {
     }
   }
 
+  Future<void> _completePurchaseIfNeeded(PurchaseDetails purchase) async {
+    if (purchase.pendingCompletePurchase) {
+      try {
+        await _iap.completePurchase(purchase);
+      } catch (e) {
+        printDebug('completePurchase failed: $e');
+      }
+    }
+  }
+
   void _onPurchaseError(dynamic error) {
     _pendingVerification?.completeError(
       error is Exception ? error : Exception(error.toString()),
@@ -107,18 +138,11 @@ class IapService {
     final expectedPurchaseProductId = _pendingPlan?.iosProductId;
     if (expectedPurchaseProductId != null &&
         expectedPurchaseProductId != purchase.productID) {
-      // Ignore unrelated queued transactions while waiting for selected plan purchase.
       printDebug(
         'Ignoring purchase event for product ${purchase.productID}; '
         'expected $expectedPurchaseProductId',
       );
-      if (purchase.pendingCompletePurchase) {
-        try {
-          await _iap.completePurchase(purchase);
-        } catch (e) {
-          printDebug('completePurchase failed: $e');
-        }
-      }
+      await _completePurchaseIfNeeded(purchase);
       return false;
     }
 
@@ -163,9 +187,20 @@ class IapService {
         receipt: receipt,
       );
 
-      if (response.success == true) {
+      if (response.isSuccess) {
         verified = true;
         _pendingVerification?.complete();
+      } else if (response.key == 'billing.ios.already_linked_to_another_account') {
+        final masked = response.info?['masked_owner_email']?.toString();
+        if (_pendingRestore != null) {
+          _restoreLinkedOtherAccount = true;
+          if (masked != null && masked.isNotEmpty) {
+            _restoreMaskedOwnerEmail = masked;
+          }
+        }
+        _pendingVerification?.completeError(
+          IapOwnershipConflictException(maskedOwnerEmail: masked),
+        );
       } else {
         _pendingVerification?.completeError(
           Exception(response.message ?? 'Backend verification failed'),
@@ -174,13 +209,7 @@ class IapService {
     } catch (e) {
       _pendingVerification?.completeError(e);
     } finally {
-      if (purchase.pendingCompletePurchase) {
-        try {
-          await _iap.completePurchase(purchase);
-        } catch (e) {
-          printDebug('completePurchase failed: $e');
-        }
-      }
+      await _completePurchaseIfNeeded(purchase);
     }
 
     _pendingVerification = null;
@@ -216,6 +245,50 @@ class IapService {
     return null;
   }
 
+  /// Best-effort: surface existing StoreKit receipt for [productId] (same Apple ID lineage).
+  Future<String?> _captureReceiptForProduct(
+    String productId, {
+    Duration timeout = const Duration(seconds: 3),
+  }) async {
+    if (!_isAvailable) return null;
+    _receiptCaptureCompleter = Completer<String?>();
+    _receiptCaptureProductId = productId;
+    try {
+      await _iap.restorePurchases();
+      return await _receiptCaptureCompleter!.future.timeout(
+        timeout,
+        onTimeout: () => null,
+      );
+    } catch (_) {
+      return null;
+    } finally {
+      _receiptCaptureCompleter = null;
+      _receiptCaptureProductId = null;
+    }
+  }
+
+  Future<void> _preflightPurchaseIfPossible(PlanModel plan) async {
+    final productId = plan.iosProductId;
+    if (productId == null || productId.isEmpty) return;
+
+    final receipt = await _captureReceiptForProduct(productId);
+    if (receipt == null || receipt.isEmpty) return;
+
+    final response = await _billingData.verifyApplePurchase(
+      planId: plan.id,
+      productId: productId,
+      receipt: receipt,
+      preflight: true,
+    );
+
+    if (response.isSuccess) return;
+
+    if (response.key == 'billing.ios.already_linked_to_another_account') {
+      final masked = response.info?['masked_owner_email']?.toString();
+      throw IapOwnershipConflictException(maskedOwnerEmail: masked);
+    }
+  }
+
   /// Starts iOS purchase flow and waits for backend verification result.
   Future<void> purchasePlan(PlanModel plan) async {
     if (plan.iosProductId == null || plan.iosProductId!.isEmpty) {
@@ -225,6 +298,8 @@ class IapService {
     if (!_isAvailable) {
       throw Exception('In-app purchases are currently unavailable');
     }
+
+    await _preflightPurchaseIfPossible(plan);
 
     final productId = plan.iosProductId!;
     final productIds = {productId};
@@ -286,6 +361,8 @@ class IapService {
     _pendingRestore = Completer<RestorePurchasesResult>();
     _restoreSuccessCount = 0;
     _restoreFailedCount = 0;
+    _restoreLinkedOtherAccount = false;
+    _restoreMaskedOwnerEmail = null;
     _plansForRestore = plans.where((p) => p.iosProductId != null).toList();
     await _iap.restorePurchases();
 
@@ -297,6 +374,8 @@ class IapService {
           successCount: _restoreSuccessCount,
           failedCount: _restoreFailedCount,
           timedOut: true,
+          linkedToOtherAccount: _restoreLinkedOtherAccount,
+          maskedOwnerEmail: _restoreMaskedOwnerEmail,
         ),
       ),
     ]);
@@ -313,6 +392,8 @@ class IapService {
           successCount: _restoreSuccessCount,
           failedCount: _restoreFailedCount,
           timedOut: false,
+          linkedToOtherAccount: _restoreLinkedOtherAccount,
+          maskedOwnerEmail: _restoreMaskedOwnerEmail,
         ),
       );
     });
@@ -328,6 +409,8 @@ class IapService {
     _plansForRestore = [];
     _restoreSuccessCount = 0;
     _restoreFailedCount = 0;
+    _restoreLinkedOtherAccount = false;
+    _restoreMaskedOwnerEmail = null;
   }
 
   void dispose() {

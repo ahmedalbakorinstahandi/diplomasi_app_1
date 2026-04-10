@@ -21,6 +21,9 @@ class ApiResponse<T> {
   final Meta? meta;
   final String? key;
 
+  /// Laravel `info` on error/success payloads (e.g. billing.ios masked_owner_email).
+  final Map<String, dynamic>? info;
+
   /// HTTP `Date` header parsed as UTC; use for UI labels when device clock may be wrong.
   final DateTime? serverResponseUtc;
 
@@ -35,6 +38,7 @@ class ApiResponse<T> {
     this.response,
     this.meta,
     this.key,
+    this.info,
     this.serverResponseUtc,
   });
 
@@ -51,6 +55,11 @@ class ApiResponse<T> {
   factory ApiResponse.fromResponse(dynamic response) {
     final dio.Response? res =
         response is dio.Response ? response : null;
+    final raw = response.data;
+    Map<String, dynamic>? infoMap;
+    if (raw is Map && raw['info'] is Map) {
+      infoMap = Map<String, dynamic>.from(raw['info'] as Map);
+    }
     return ApiResponse<T>(
       success: response.data['success'] == true,
       statusCode: response.statusCode,
@@ -68,6 +77,7 @@ class ApiResponse<T> {
           ? Meta.fromJson(response.data['meta'])
           : null,
       key: response.data.containsKey('key') ? response.data['key'] : null,
+      info: infoMap,
       serverResponseUtc: res != null ? _parseServerDateUtc(res) : null,
     );
   }

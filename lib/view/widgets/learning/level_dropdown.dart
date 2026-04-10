@@ -23,28 +23,34 @@ class LevelDropdown extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Container(
-      margin: EdgeInsets.symmetric(
-        // horizontal: width(20),
-        vertical: height(12),
-      ),
+      margin: EdgeInsets.only(bottom: height(4)),
       padding: EdgeInsets.symmetric(
         horizontal: width(12),
-        vertical: height(12),
+        vertical: height(10),
       ),
       decoration: BoxDecoration(
         color: colors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colors.border, width: 1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.border.withValues(alpha: 0.65)),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: PopupMenuButton<LevelModel>(
-        offset: Offset(0, height(50)),
+        padding: EdgeInsets.zero,
+        splashRadius: 22,
+        offset: Offset(0, height(44)),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Row(
-                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   if (selectedLevel?.accessStatus == 'locked') ...[
                     MySvgIcon(
@@ -64,18 +70,22 @@ class LevelDropdown extends StatelessWidget {
                   Expanded(
                     child: Text(
                       selectedLevel?.title ?? 'اختر المستوى',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: emp(15),
                         fontWeight: FontWeight.w600,
                         color: scheme.onSurface,
+                        height: 1.5,
                       ),
-                      textAlign: TextAlign.right,
+                      maxLines: 3,
+                      softWrap: true,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
             ),
-            SizedBox(width: width(8)),
+            SizedBox(width: width(6)),
             Icon(
               Icons.keyboard_arrow_down,
               color: colors.textMuted,

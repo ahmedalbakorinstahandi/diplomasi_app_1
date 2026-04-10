@@ -167,6 +167,7 @@ class BillingData {
     required String productId,
     String? transactionId,
     required String receipt,
+    bool preflight = false,
   }) async {
     return await apiService.post(
       EndPoints.iosPurchaseVerify,
@@ -176,6 +177,7 @@ class BillingData {
         if (transactionId != null && transactionId.isNotEmpty)
           'transaction_id': transactionId,
         'receipt': receipt,
+        if (preflight) 'preflight': true,
       },
     );
   }

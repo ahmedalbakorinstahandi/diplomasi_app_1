@@ -3,7 +3,6 @@ import 'package:diplomasi_app/core/functions/auth_device_token.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/constants/steps.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
-import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/data/resource/remote/user/auth_data.dart';
 import 'package:get/get.dart';
 
