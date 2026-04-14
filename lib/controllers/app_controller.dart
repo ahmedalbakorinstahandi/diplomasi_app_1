@@ -5,6 +5,7 @@ import 'package:diplomasi_app/core/constants/assets.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/core/services/app_me_response_sidecar.dart';
+import 'package:diplomasi_app/core/services/app_shell_bootstrap.dart';
 import 'package:diplomasi_app/core/services/notification_prompt_service.dart';
 import 'package:diplomasi_app/core/services/push_notification_service.dart';
 import 'package:diplomasi_app/view/widgets/general/suggest_update_dialog.dart';
@@ -45,7 +46,6 @@ abstract class AppController extends GetxController {
   GeneralData generalData = GeneralData();
   UserModel? userModel;
   bool isUserDataLoading = false;
-  bool isShellReady = false;
   Future<void> getMyInfo({bool mergeBootstrapPayload = false});
   Future<void> checkSuggestUpdateOncePerDay();
 
@@ -70,19 +70,31 @@ class AppControllerImp extends AppController {
   @override
   void onInit() {
     super.onInit();
+    final cached = Shared.getMapValueOrNull('user-data');
+    if (cached != null) {
+      try {
+        userModel = UserModel.fromJson(cached);
+      } catch (_) {}
+    }
     _runShellBootstrap();
   }
 
   Future<void> _runShellBootstrap() async {
     try {
-      await getMyInfo(mergeBootstrapPayload: true);
+      await AppShellBootstrap.ensurePreparedForCurrentToken();
+      shellBootstrapSidecarOutcome = AppShellBootstrap.lastOutcome;
+      final after = Shared.getMapValueOrNull('user-data');
+      if (after != null) {
+        try {
+          userModel = UserModel.fromJson(after);
+        } catch (_) {}
+      }
       if (shellBootstrapSidecarOutcome?.mergedAppUpdateCheckPayload != true) {
         await checkSuggestUpdateOncePerDay();
       }
       checkLevelAndCourse();
       getUnreadNotificationsCount();
     } finally {
-      isShellReady = true;
       update();
     }
   }
@@ -188,6 +200,7 @@ class AppControllerImp extends AppController {
         );
         if (mergeBootstrapPayload) {
           shellBootstrapSidecarOutcome = sidecar;
+          AppShellBootstrap.recordSuccessfulBootstrap(sidecar);
         }
       }
     }

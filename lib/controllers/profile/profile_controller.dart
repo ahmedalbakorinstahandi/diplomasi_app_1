@@ -4,6 +4,7 @@ import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
+import 'package:diplomasi_app/core/services/app_shell_bootstrap.dart';
 import 'package:diplomasi_app/core/constants/steps.dart';
 import 'package:diplomasi_app/core/constants/variables.dart';
 import 'package:diplomasi_app/data/resource/remote/general/settings_data.dart';
@@ -187,6 +188,7 @@ class ProfileControllerImp extends ProfileController {
     if (response.isSuccess) {
       Get.back();
       Shared.setValue(StorageKeys.step, Steps.login);
+      AppShellBootstrap.reset();
       Shared.clear();
       Get.offAllNamed(AppRoutes.login);
       customSnackBar(
@@ -398,6 +400,7 @@ class ProfileControllerImp extends ProfileController {
       // Logout and redirect to login
       await Future.delayed(const Duration(seconds: 1));
       Shared.setValue(StorageKeys.step, Steps.login);
+      AppShellBootstrap.reset();
       Shared.clear();
       Get.offAllNamed(AppRoutes.login);
     } else {

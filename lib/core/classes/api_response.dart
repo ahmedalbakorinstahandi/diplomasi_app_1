@@ -6,6 +6,7 @@ import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/constants/steps.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
+import 'package:diplomasi_app/core/services/app_shell_bootstrap.dart';
 import 'package:diplomasi_app/view/widgets/general/banned_user_dialog.dart';
 import 'package:diplomasi_app/view/widgets/general/force_update_dialog.dart';
 
