@@ -1,4 +1,5 @@
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
+import 'package:diplomasi_app/core/services/app_shell_bootstrap.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
@@ -40,6 +41,7 @@ class _BannedUserDialogState extends State<BannedUserDialog> {
     await authData.logout();
     if (!mounted) return;
     Get.back();
+    AppShellBootstrap.reset();
     Shared.clear();
     Shared.setValue(StorageKeys.step, Steps.login);
     Get.offAllNamed(AppRoutes.login);

@@ -107,6 +107,7 @@ class ApiResponse<T> {
 
     int step = Shared.getValue(StorageKeys.step, initialValue: Steps.login);
     if (step == Steps.homeApp && statusCode == 401) {
+      AppShellBootstrap.reset();
       Shared.clear();
       Shared.setValue(StorageKeys.step, Steps.login);
       Get.offAllNamed(AppRoutes.login);
