@@ -10,12 +10,12 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
 abstract class VerifyCodeController extends GetxController {
-  late List<TextEditingController> otpControllers;
-  late String email;
-  late bool isForgotPassword;
+  List<TextEditingController> otpControllers = [];
+  String email = '';
+  bool isForgotPassword = false;
 
   /// بعد تسجيل الدخول لحساب غير مفعّل: عرض شاشة نجاح ثم التطبيق.
-  late bool showActivationSuccess;
+  bool showActivationSuccess = false;
 
   bool isLoading = false;
   int resendTimer = 60;

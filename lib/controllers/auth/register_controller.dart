@@ -12,12 +12,12 @@ import 'package:get/get.dart';
 const registerOpenedFromLoginArg = 'registerOpenedFromLogin';
 
 abstract class RegisterController extends GetxController {
-  late TextEditingController firstName;
-  late TextEditingController lastName;
-  late TextEditingController email;
-  late TextEditingController phone;
-  late TextEditingController password;
-  late TextEditingController confirmPassword;
+  TextEditingController firstName = TextEditingController();
+  TextEditingController lastName = TextEditingController();
+  TextEditingController email = TextEditingController();
+  TextEditingController phone = TextEditingController();
+  TextEditingController password = TextEditingController();
+  TextEditingController confirmPassword = TextEditingController();
 
   bool isRegister = false;
   bool obscurePassword = true;
@@ -36,12 +36,6 @@ abstract class RegisterController extends GetxController {
 class RegisterControllerImp extends RegisterController {
   @override
   void onInit() {
-    firstName = TextEditingController();
-    lastName = TextEditingController();
-    email = TextEditingController();
-    phone = TextEditingController();
-    password = TextEditingController();
-    confirmPassword = TextEditingController();
     super.onInit();
   }
 
@@ -98,10 +92,10 @@ class RegisterControllerImp extends RegisterController {
           : null;
       var response = convertingFromGuest
           ? await authData.registerFromGuest(
-              firstName: firstName.text,
+              firstName: firstName.text.trim(),
               lastName: lastName.text,
-              email: email.text,
-              phone: phone.text,
+              email: email.text.trim(),
+              phone: phone.text.trim(),
               password: password.text,
               passwordConfirmation: confirmPassword.text,
               deviceToken: deviceToken,

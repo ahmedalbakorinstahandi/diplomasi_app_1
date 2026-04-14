@@ -212,28 +212,10 @@ class CertificateDetailScreen extends StatelessWidget {
                                       ),
                                     ),
                                     SizedBox(height: height(16)),
-                                    SvgPicture.network(
-                                      certificate.qrCode!,
-                                      width: width(150),
-                                      height: width(150),
-                                      placeholderBuilder: (context) =>
-                                          Container(
-                                            width: width(150),
-                                            height: width(150),
-                                            color: colors.backgroundSecondary,
-                                            child: Center(
-                                              child: CircularProgressIndicator(
-                                                color: scheme.primary,
-                                                strokeWidth: 2,
-                                              ),
-                                            ),
-                                          ),
-                                      errorBuilder: (context, url, error) =>
-                                          Icon(
-                                            Icons.qr_code_scanner,
-                                            size: emp(80),
-                                            color: colors.textMuted,
-                                          ),
+                                    _CertificateQrPreview(
+                                      url: certificate.qrCode!,
+                                      colors: colors,
+                                      scheme: scheme,
                                     ),
                                   ],
                                 ),
@@ -416,6 +398,73 @@ class _CertificateDetailHeader extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// الـ API يعيد رابط QR كـ PNG في `storage/.../qr/...png`؛ لا يُعرض كـ SVG.
+class _CertificateQrPreview extends StatelessWidget {
+  final String url;
+  final AppColors colors;
+  final ColorScheme scheme;
+
+  const _CertificateQrPreview({
+    required this.url,
+    required this.colors,
+    required this.scheme,
+  });
+
+  bool get _isSvgUrl {
+    final path = url.toLowerCase().split('?').first;
+    return path.endsWith('.svg');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final w = width(150);
+    final fallback = Icon(
+      Icons.qr_code_scanner,
+      size: emp(80),
+      color: colors.textMuted,
+    );
+
+    if (_isSvgUrl) {
+      return SvgPicture.network(
+        url,
+        width: w,
+        height: w,
+        placeholderBuilder: (context) => Container(
+          width: w,
+          height: w,
+          color: colors.backgroundSecondary,
+          child: Center(
+            child: CircularProgressIndicator(
+              color: scheme.primary,
+              strokeWidth: 2,
+            ),
+          ),
+        ),
+        errorBuilder: (context, _, __) => fallback,
+      );
+    }
+
+    return CachedNetworkImage(
+      imageUrl: url,
+      width: w,
+      height: w,
+      fit: BoxFit.contain,
+      placeholder: (context, _) => Container(
+        width: w,
+        height: w,
+        color: colors.backgroundSecondary,
+        child: Center(
+          child: CircularProgressIndicator(
+            color: scheme.primary,
+            strokeWidth: 2,
+          ),
+        ),
+      ),
+      errorWidget: (context, _, __) => fallback,
     );
   }
 }

@@ -35,6 +35,7 @@ class VideoCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final videoId = _getVideoId();
     final thumbnailUrl = _getThumbnailUrl();
+    final displayTitle = video.title.trim().isNotEmpty ? video.title : 'فيديو تعليمي';
 
     return GestureDetector(
       onTap: onTap,
@@ -105,7 +106,7 @@ class VideoCard extends StatelessWidget {
                         SizedBox(width: width(6)),
                         Expanded(
                           child: Text(
-                            videoId ?? 'فيديو',
+                            displayTitle,
                             style: TextStyle(
                               fontSize: emp(14),
                               fontWeight: FontWeight.w600,
@@ -121,7 +122,7 @@ class VideoCard extends StatelessWidget {
                     ),
                     SizedBox(height: height(4)),
                     Text(
-                      'فيديو تعليمي',
+                      videoId != null ? 'YouTube' : 'فيديو',
                       style: TextStyle(
                         fontSize: emp(12),
                         fontWeight: FontWeight.w400,

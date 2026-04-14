@@ -1,3 +1,4 @@
+import 'package:diplomasi_app/core/config/moyasar_env_keys.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/core/widgets/custom_scaffold.dart';
 import 'package:diplomasi_app/data/model/user/plan_model.dart';
@@ -24,16 +25,20 @@ class AddPaymentMethodScreen extends StatefulWidget {
 
 class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
   static const int _verificationAmountMinor = 100;
-  static const String _publishableKey = String.fromEnvironment(
+  static const String _fallbackPublishableKey = String.fromEnvironment(
     'MOYASAR_PUBLISHABLE_KEY',
-    defaultValue: 'pk_test_RCzfStZqmUzC6ju8sXncwE9BnerBQmbvUhrHXpG3',
+    defaultValue: '',
   );
 
   final BillingData _billingData = BillingData();
   bool _isSaving = false;
   bool _resultHandled = false;
   bool _isDisposed = false;
-  late final PaymentConfig _paymentConfig;
+  bool _configReady = false;
+  bool _configError = false;
+  String _publishableKey = '';
+  String _billingCurrency = 'USD';
+  PaymentConfig? _paymentConfig;
   late final ValueKey<String> _creditCardKey;
 
   int _toMinorUnits(String amount) {
@@ -60,22 +65,63 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
   @override
   void initState() {
     super.initState();
-    _paymentConfig = PaymentConfig(
-      publishableApiKey: _publishableKey,
-      amount: _amountMinor,
-      currency: 'SAR',
-      description: _description,
-      creditCard: CreditCardConfig(saveCard: true, manual: false),
-      metadata: {
-        'purpose': widget.mode == AddPaymentMethodMode.purchasePlan
-            ? 'plan_purchase'
-            : 'subscription_payment_method',
-        if (widget.plan != null) 'plan_id': widget.plan!.id.toString(),
-      },
-    );
     _creditCardKey = ValueKey<String>(
       'moyasar_card_${widget.mode.name}_${widget.plan?.id ?? 'none'}',
     );
+    _loadMoyasarConfig();
+  }
+
+  Future<void> _loadMoyasarConfig() async {
+    final res = await _billingData.getMoyasarPublicConfig();
+    var mode = MoyasarEnvKeys.modeFromEnv();
+    var key = '';
+    String currency = MoyasarEnvKeys.billingCurrencyFromEnv();
+    if (res.success && res.data is Map) {
+      final m = Map<String, dynamic>.from(res.data as Map);
+      mode = MoyasarEnvKeys.normalizeMode(m['mode']?.toString());
+      final c = (m['currency'] ?? '').toString().trim();
+      if (c.isNotEmpty) {
+        currency = c.toUpperCase();
+      }
+      final serverKey = (m['publishable_key'] ?? '').toString().trim();
+      final local = MoyasarEnvKeys.publishableForMode(mode);
+      key = (local != null && local.isNotEmpty) ? local : serverKey;
+    } else {
+      mode = MoyasarEnvKeys.modeFromEnv();
+      key = MoyasarEnvKeys.publishableForMode(mode) ?? '';
+    }
+    if (key.isEmpty && _fallbackPublishableKey.isNotEmpty) {
+      key = _fallbackPublishableKey.trim();
+    }
+    if (!mounted) {
+      return;
+    }
+    if (key.isEmpty) {
+      setState(() {
+        _configReady = true;
+        _configError = true;
+      });
+      return;
+    }
+    setState(() {
+      _publishableKey = key;
+      _billingCurrency = currency;
+      _paymentConfig = PaymentConfig(
+        publishableApiKey: _publishableKey,
+        amount: _amountMinor,
+        currency: _billingCurrency,
+        description: _description,
+        creditCard: CreditCardConfig(saveCard: true, manual: false),
+        metadata: {
+          'purpose': widget.mode == AddPaymentMethodMode.purchasePlan
+              ? 'plan_purchase'
+              : 'subscription_payment_method',
+          if (widget.plan != null) 'plan_id': widget.plan!.id.toString(),
+        },
+      );
+      _configReady = true;
+      _configError = false;
+    });
   }
 
   @override
@@ -84,12 +130,43 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
     super.dispose();
   }
 
+  String _moyasarNonPaymentErrorText(dynamic result) {
+    if (result is ApiError) {
+      return 'فشلت العملية: ${result.message}';
+    }
+    if (result is AuthError) {
+      return 'مفتاح Moyasar غير صالح: ${result.message}';
+    }
+    if (result is ValidationError) {
+      final msg = result.message.trim();
+      return msg.isNotEmpty
+          ? 'بيانات غير مقبولة: $msg'
+          : 'بيانات الدفع غير صالحة.';
+    }
+    if (result is UnspecifiedError) {
+      return 'فشل غير متوقع: ${result.message}';
+    }
+    if (result is NetworkError) {
+      return 'تعذر الاتصال ببوابة الدفع. تحقق من الشبكة وحاول مرة أخرى.';
+    }
+    if (result is TimeoutError) {
+      return 'انتهت مهلة الاتصال ببوابة الدفع. حاول مرة أخرى.';
+    }
+    if (result is PaymentCanceledError) {
+      return 'تم إلغاء الدفع.';
+    }
+    if (result is UnprocessableTokenError) {
+      return result.message;
+    }
+    return 'لم نتمكن من معالجة نتيجة الدفع. حاول مرة أخرى.';
+  }
+
   Future<void> _handlePaymentResult(dynamic result) async {
     if (_isSaving || _resultHandled || _isDisposed || !mounted) return;
 
     if (result is! PaymentResponse) {
       customSnackBar(
-        text: 'لم نتمكن من معالجة نتيجة الدفع. حاول مرة أخرى.',
+        text: _moyasarNonPaymentErrorText(result),
         snackType: SnackBarType.error,
       );
       return;
@@ -97,8 +174,18 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
 
     final status = result.status;
     if (status == PaymentStatus.failed) {
+      String? gatewayMsg;
+      if (result.source is CardPaymentResponseSource) {
+        gatewayMsg = (result.source as CardPaymentResponseSource).message
+            ?.trim();
+      }
+      final detail = (gatewayMsg != null && gatewayMsg.isNotEmpty)
+          ? gatewayMsg
+          : null;
       customSnackBar(
-        text: 'فشلت عملية الدفع. يرجى التحقق من بيانات البطاقة والمحاولة مرة أخرى.',
+        text: detail != null
+            ? 'فشلت عملية الدفع: $detail'
+            : 'فشلت عملية الدفع. يرجى التحقق من بيانات البطاقة والمحاولة مرة أخرى.',
         snackType: SnackBarType.error,
       );
       return;
@@ -220,8 +307,8 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
       text: isPurchaseMode
           ? 'تمت عملية الشراء بنجاح وتم حفظ البطاقة للتجديد.'
           : refundSuccess
-          ? 'تمت إضافة وسيلة الدفع بنجاح وتم رد 1 ريال.'
-          : 'تمت إضافة وسيلة الدفع بنجاح. سيصل رد 1 ريال خلال وقت قصير.',
+          ? 'تمت إضافة وسيلة الدفع بنجاح وتم رد 1.00 USD.'
+          : 'تمت إضافة وسيلة الدفع بنجاح. سيصل رد 1.00 USD خلال وقت قصير.',
       snackType: SnackBarType.correct,
     );
     if (mounted && !_isDisposed) {
@@ -250,7 +337,7 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
             const SizedBox(height: 8),
             if (widget.mode == AddPaymentMethodMode.verificationOnly) ...[
               Text(
-                'ملاحظة: سيتم تنفيذ عملية تحقق صغيرة (100 هللة).',
+                'ملاحظة: سيتم تنفيذ عملية تحقق صغيرة (1.00 USD).',
                 style: TextStyle(
                   color: scheme.onSurface.withOpacity(0.7),
                   fontSize: 12,
@@ -259,7 +346,7 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'سيتم رد مبلغ التحقق (1 ريال) تلقائيًا بعد حفظ البطاقة.',
+                'سيتم رد مبلغ التحقق (1.00 USD) تلقائيًا بعد حفظ البطاقة.',
                 style: TextStyle(
                   color: scheme.primary,
                   fontSize: 12,
@@ -269,7 +356,7 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
               ),
             ] else ...[
               Text(
-                'المبلغ الذي سيُخصم الآن: ${widget.plan?.price ?? '-'} ر.س',
+                'المبلغ الذي سيُخصم الآن: ${widget.plan?.price ?? '-'} USD',
                 style: TextStyle(
                   color: scheme.primary,
                   fontSize: 12,
@@ -279,7 +366,7 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'المبلغ شامل ضريبة القيمة المضافة 15%',
+                'الأسعار بالدولار الأمريكي (USD).',
                 style: TextStyle(
                   color: scheme.onSurface.withOpacity(0.7),
                   fontSize: 12,
@@ -288,11 +375,15 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
               ),
             ],
             const SizedBox(height: 16),
-            if (_publishableKey.isEmpty)
-              Text(
-                'MOYASAR_PUBLISHABLE_KEY غير مضبوط. شغّل التطبيق مع --dart-define.',
-                style: TextStyle(color: scheme.error),
-                textDirection: TextDirection.rtl,
+            if (!_configReady)
+              const Expanded(child: Center(child: CircularProgressIndicator()))
+            else if (_configError || _paymentConfig == null)
+              Expanded(
+                child: Text(
+                  'تعذر تحميل إعدادات Moyasar من الخادم. تحقق من الاتصال أو عرّف MOYASAR_PUBLISHABLE_KEY كبديل (--dart-define).',
+                  style: TextStyle(color: scheme.error),
+                  textDirection: TextDirection.rtl,
+                ),
               )
             else
               Expanded(
@@ -301,7 +392,7 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
                     SingleChildScrollView(
                       child: CreditCard(
                         key: _creditCardKey,
-                        config: _paymentConfig,
+                        config: _paymentConfig!,
                         locale: const Localization.ar(),
                         onPaymentResult: _handlePaymentResult,
                       ),

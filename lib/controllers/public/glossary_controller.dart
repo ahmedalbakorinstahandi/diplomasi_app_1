@@ -1,5 +1,4 @@
 import 'package:diplomasi_app/core/classes/api_response.dart';
-import 'package:diplomasi_app/data/model/public/glossary_term_model.dart';
 import 'package:diplomasi_app/data/resource/remote/public/glossary_data.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -7,8 +6,8 @@ import 'package:get/get.dart';
 abstract class GlossaryController extends GetxController {
   bool isLoading = false;
   GlossaryData glossaryData = GlossaryData();
-  List<GlossaryTermModel> glossaryTerms = [];
-  List<GlossaryTermModel> filteredTerms = [];
+  List glossaryTerms = [];
+  List filteredTerms = [];
   String searchQuery = '';
   TextEditingController searchController = TextEditingController();
 
@@ -39,14 +38,8 @@ class GlossaryControllerImp extends GlossaryController {
 
     ApiResponse response = await glossaryData.getTerms(search: searchQuery);
 
-    if (response.isSuccess && response.data != null) {
-      final termsData = response.data as List;
-      glossaryTerms = termsData
-          .map(
-            (termData) =>
-                GlossaryTermModel.fromJson(termData as Map<String, dynamic>),
-          )
-          .toList();
+    if (response.isSuccess) {
+      glossaryTerms = response.data;
 
       // Apply current search filter if exists
       if (searchQuery.isNotEmpty) {
@@ -69,8 +62,8 @@ class GlossaryControllerImp extends GlossaryController {
       filteredTerms = glossaryTerms
           .where(
             (term) =>
-                term.term.toLowerCase().contains(query.toLowerCase()) ||
-                term.definition.toLowerCase().contains(query.toLowerCase()),
+                term['term'].toLowerCase().contains(query.toLowerCase()) ||
+                term['definition'].toLowerCase().contains(query.toLowerCase()),
           )
           .toList();
     }

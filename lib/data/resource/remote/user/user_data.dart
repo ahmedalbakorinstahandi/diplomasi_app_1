@@ -10,6 +10,13 @@ class UserData {
     return await apiService.get(EndPoints.userMe);
   }
 
+  /// Updates server last_opened_app_at when the app returns to foreground (re-engagement accuracy).
+  Future<void> sendHeartbeat() async {
+    try {
+      await apiService.post(EndPoints.userHeartbeat);
+    } catch (_) {}
+  }
+
   Future<ApiResponse> updateProfile(Map<String, dynamic> data) async {
     return await apiService.put(EndPoints.userMe, data: data);
   }

@@ -10,6 +10,8 @@ class LessonInfoDialog extends StatelessWidget {
   final VoidCallback? onStartLearning;
   final bool isLocked;
   final bool isLesson; // true for lesson, false for scenario
+  final String? lockedReasonText;
+  final String startButtonText;
 
   const LessonInfoDialog({
     super.key,
@@ -18,6 +20,8 @@ class LessonInfoDialog extends StatelessWidget {
     this.onStartLearning,
     this.isLocked = false,
     this.isLesson = true,
+    this.lockedReasonText,
+    this.startButtonText = 'ابدأ التعلم',
   });
 
   @override
@@ -108,6 +112,35 @@ class LessonInfoDialog extends StatelessWidget {
 
             SizedBox(height: height(24)),
 
+            if (isLocked && lockedReasonText != null && lockedReasonText!.isNotEmpty)
+              Padding(
+                padding: EdgeInsets.only(
+                  left: width(20),
+                  right: width(20),
+                  bottom: height(12),
+                ),
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: width(12),
+                    vertical: height(10),
+                  ),
+                  decoration: BoxDecoration(
+                    color: scheme.error.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    lockedReasonText!,
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: emp(13),
+                      fontWeight: FontWeight.w600,
+                      color: scheme.error,
+                    ),
+                  ),
+                ),
+              ),
+
             // Start Learning Button
             Container(
               width: double.infinity,
@@ -139,7 +172,7 @@ class LessonInfoDialog extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'ابدأ التعلم',
+                          startButtonText,
                           style: TextStyle(
                             fontSize: emp(16),
                             fontWeight: FontWeight.w600,
@@ -173,6 +206,8 @@ class LessonInfoDialog extends StatelessWidget {
     VoidCallback? onStartLearning,
     bool isLocked = false,
     bool isLesson = true,
+    String? lockedReasonText,
+    String startButtonText = 'ابدأ التعلم',
   }) {
     showModalBottomSheet(
       context: context,
@@ -186,6 +221,8 @@ class LessonInfoDialog extends StatelessWidget {
         onStartLearning: onStartLearning,
         isLocked: isLocked,
         isLesson: isLesson,
+        lockedReasonText: lockedReasonText,
+        startButtonText: startButtonText,
       ),
     );
   }

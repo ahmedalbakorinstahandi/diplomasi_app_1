@@ -142,7 +142,7 @@ class PlanCard extends StatelessWidget {
                           ),
                           SizedBox(height: height(10)),
                           Text(
-                            '${plan.price} SAR',
+                            '${plan.price} USD',
                             style: TextStyle(
                               fontSize: emp(28),
                               fontWeight: FontWeight.w700,

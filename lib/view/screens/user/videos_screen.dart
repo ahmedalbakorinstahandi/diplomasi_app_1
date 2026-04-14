@@ -11,8 +11,15 @@ import 'package:diplomasi_app/view/widgets/user/videos_header.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class VideosScreen extends StatelessWidget {
+class VideosScreen extends StatefulWidget {
   const VideosScreen({super.key});
+
+  @override
+  State<VideosScreen> createState() => _VideosScreenState();
+}
+
+class _VideosScreenState extends State<VideosScreen> {
+  final GlobalKey _videoPlayerKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -26,23 +33,26 @@ class VideosScreen extends StatelessWidget {
               if (!controller.isVideoFullScreen) const VideosHeader(),
               // Content Section — عند ملء الشاشة: الفيديو فقط (كما في الدروس)
               Expanded(
-                child: controller.isVideoFullScreen &&
+                child:
+                    controller.isVideoFullScreen &&
                         controller.currentVideo != null
                     ? Padding(
                         padding: EdgeInsets.all(width(16)),
                         child: VideoPlayerWidget(
-                          key: ValueKey(controller.currentVideo!.id),
+                          key: _videoPlayerKey,
                           video: controller.currentVideo!,
                           autoPlay: false,
                           onFullScreenChange: controller.setVideoFullScreen,
-                          onNext: controller.currentVideoIndex <
+                          onNext:
+                              controller.currentVideoIndex <
                                   controller.videos.length - 1
                               ? () => controller.nextVideo()
                               : null,
                           onPrevious: controller.currentVideoIndex > 0
                               ? () => controller.previousVideo()
                               : null,
-                          hasNext: controller.currentVideoIndex <
+                          hasNext:
+                              controller.currentVideoIndex <
                               controller.videos.length - 1,
                           hasPrevious: controller.currentVideoIndex > 0,
                         ),
@@ -52,8 +62,8 @@ class VideosScreen extends StatelessWidget {
                           await controller.getVideos(reload: true);
                         },
                         child: HandlingListDataView(
-                          isLoading: controller.isLoading &&
-                              controller.videos.isEmpty,
+                          isLoading:
+                              controller.isLoading && controller.videos.isEmpty,
                           dataIsEmpty: controller.videos.isEmpty,
                           emptyMessage: 'لا توجد فيديوهات',
                           loadingWidget: const VideosScreenShimmer(),
@@ -65,29 +75,29 @@ class VideosScreen extends StatelessWidget {
                                     if (controller.shouldAutoPlay) {
                                       WidgetsBinding.instance
                                           .addPostFrameCallback((_) {
-                                        controller.shouldAutoPlay = false;
-                                        controller.update();
-                                      });
+                                            controller.shouldAutoPlay = false;
+                                            controller.update();
+                                          });
                                     }
                                     return Padding(
                                       padding: EdgeInsets.all(width(16)),
                                       child: VideoPlayerWidget(
-                                        key: ValueKey(
-                                            controller.currentVideo!.id),
+                                        key: _videoPlayerKey,
                                         video: controller.currentVideo!,
                                         autoPlay: controller.shouldAutoPlay,
                                         onFullScreenChange:
                                             controller.setVideoFullScreen,
-                                        onNext: controller.currentVideoIndex <
+                                        onNext:
+                                            controller.currentVideoIndex <
                                                 controller.videos.length - 1
                                             ? () => controller.nextVideo()
                                             : null,
                                         onPrevious:
                                             controller.currentVideoIndex > 0
-                                                ? () =>
-                                                    controller.previousVideo()
-                                                : null,
-                                        hasNext: controller.currentVideoIndex <
+                                            ? () => controller.previousVideo()
+                                            : null,
+                                        hasNext:
+                                            controller.currentVideoIndex <
                                             controller.videos.length - 1,
                                         hasPrevious:
                                             controller.currentVideoIndex > 0,
@@ -101,14 +111,16 @@ class VideosScreen extends StatelessWidget {
                                   child: Builder(
                                     builder: (context) {
                                       final colors = context.appColors;
-                                      final scheme =
-                                          Theme.of(context).colorScheme;
+                                      final scheme = Theme.of(
+                                        context,
+                                      ).colorScheme;
                                       return Container(
                                         height: height(250),
                                         decoration: BoxDecoration(
                                           color: colors.backgroundSecondary,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: Center(
                                           child: Text(
@@ -129,8 +141,7 @@ class VideosScreen extends StatelessWidget {
                                 child: ListView(
                                   physics:
                                       const AlwaysScrollableScrollPhysics(),
-                                  controller:
-                                      controller.videosScrollController,
+                                  controller: controller.videosScrollController,
                                   padding: EdgeInsets.symmetric(
                                     horizontal: width(16),
                                   ),
@@ -140,14 +151,15 @@ class VideosScreen extends StatelessWidget {
                                       style: TextStyle(
                                         fontSize: emp(18),
                                         fontWeight: FontWeight.w700,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurface,
                                       ),
                                     ),
                                     SizedBox(height: height(12)),
-                                    ...controller.videos.asMap().entries
-                                        .map((entry) {
+                                    ...controller.videos.asMap().entries.map((
+                                      entry,
+                                    ) {
                                       final index = entry.key;
                                       final videoData = entry.value;
                                       final video = VideoModel.fromJson(
@@ -155,8 +167,8 @@ class VideosScreen extends StatelessWidget {
                                       );
                                       return VideoCard(
                                         video: video,
-                                        isSelected: controller
-                                                .currentVideoIndex ==
+                                        isSelected:
+                                            controller.currentVideoIndex ==
                                             index,
                                         onTap: () {
                                           controller.selectVideo(index);
@@ -168,9 +180,9 @@ class VideosScreen extends StatelessWidget {
                                         padding: EdgeInsets.all(height(16)),
                                         child: Center(
                                           child: CircularProgressIndicator(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
                                           ),
                                         ),
                                       ),

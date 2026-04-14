@@ -20,6 +20,7 @@ final class EndPoints {
 
   // User Routes
   static String userMe = "$baseApi/user/me";
+  static String userHeartbeat = "$baseApi/user/me/heartbeat";
   static String notifications = "$baseApi/user/notifications";
   static String markAllRead = "$baseApi/user/notifications/mark-all-read";
   static String unreadCount = "$baseApi/user/notifications/unread-count";
@@ -110,6 +111,7 @@ final class EndPoints {
   static String verifyCertificate =
       "$baseApi/general/certificates/verify/{certificateCode}";
   static String appUpdateCheck = "$baseApi/general/app-update-check";
+  static String billingMoyasarPublic = "$baseApi/general/billing/moyasar";
 
   // settings
   static String setting = "$baseApi/general/settings/{idOrKey}";

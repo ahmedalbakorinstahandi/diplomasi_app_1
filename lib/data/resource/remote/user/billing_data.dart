@@ -6,6 +6,11 @@ import 'package:get/get.dart';
 class BillingData {
   ApiService apiService = Get.find();
 
+  /// Publishable key + mode from backend (matches dashboard / env active mode).
+  Future<ApiResponse> getMoyasarPublicConfig() async {
+    return await apiService.get(EndPoints.billingMoyasarPublic);
+  }
+
   Future<ApiResponse> getCurrentSubscription() async {
     return await apiService.get(EndPoints.billingSubscription);
   }

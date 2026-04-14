@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 class ScenarioCard extends StatelessWidget {
   final ScenarioModel scenario;
   final bool isLocked;
+  final bool isSubscriptionLocked;
   final VoidCallback? onTap;
   final bool isRightAligned;
   final bool isLast;
@@ -14,6 +15,7 @@ class ScenarioCard extends StatelessWidget {
     super.key,
     required this.scenario,
     this.isLocked = false,
+    this.isSubscriptionLocked = false,
     this.onTap,
     this.isRightAligned = true,
     this.isLast = false,
@@ -65,19 +67,25 @@ class ScenarioCard extends StatelessWidget {
                     horizontal: width(16),
                   ),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        scheme.secondary,
-                        scheme.secondary.withOpacity(0.8),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    color: isActive ? null : colors.borderStrong,
+                    gradient: isSubscriptionLocked
+                        ? null
+                        : LinearGradient(
+                            colors: [
+                              scheme.secondary,
+                              scheme.secondary.withOpacity(0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                    color: isSubscriptionLocked
+                        ? colors.borderStrong
+                        : (isActive ? null : colors.borderStrong),
                     borderRadius: borderRadius,
                     boxShadow: [
                       BoxShadow(
-                        color: scheme.secondary.withOpacity(0.3),
+                        color: isSubscriptionLocked
+                            ? colors.borderStrong.withOpacity(0.35)
+                            : scheme.secondary.withOpacity(0.3),
                         blurRadius: 12,
                         offset: Offset(0, height(4)),
                       ),
@@ -102,6 +110,7 @@ class ScenarioCard extends StatelessWidget {
                                 scenarioIsLocked,
                                 scenarioIsCompleted,
                                 isActive,
+                                isSubscriptionLocked,
                               ),
                               SizedBox(width: width(12)),
                               // Scenario title - حد أقصى سطرين
@@ -113,7 +122,9 @@ class ScenarioCard extends StatelessWidget {
                                   style: TextStyle(
                                     fontSize: width(15),
                                     fontWeight: FontWeight.w600,
-                                    color: scheme.onSecondary,
+                                    color: isSubscriptionLocked
+                                        ? colors.textPrimary
+                                        : scheme.onSecondary,
                                   ),
                                 ),
                               ),
@@ -161,20 +172,24 @@ class ScenarioCard extends StatelessWidget {
     bool isLocked,
     bool isCompleted,
     bool isActive,
+    bool isSubscriptionLocked,
   ) {
     final scheme = Theme.of(context).colorScheme;
+    final colors = context.appColors;
     if (isLocked) {
       // Locked state - show lock icon
       return Container(
         width: width(30),
         height: width(30),
         decoration: BoxDecoration(
-          color: scheme.onSecondary.withOpacity(0.2),
+          color: isSubscriptionLocked
+              ? colors.border
+              : scheme.onSecondary.withOpacity(0.2),
           shape: BoxShape.circle,
         ),
         child: Icon(
           Icons.lock_outline,
-          color: scheme.onSecondary,
+          color: isSubscriptionLocked ? colors.textSecondary : scheme.onSecondary,
           size: width(15),
         ),
       );

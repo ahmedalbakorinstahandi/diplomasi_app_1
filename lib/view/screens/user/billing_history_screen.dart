@@ -196,7 +196,7 @@ class _InvoicesTab extends StatelessWidget {
                       final status = invoice['status']?.toString() ?? '-';
                       final amountMinor =
                           (invoice['amount_minor'] as num?)?.toDouble() ?? 0;
-                      final currency = invoice['currency']?.toString() ?? 'SAR';
+                      final currency = invoice['currency']?.toString() ?? 'USD';
                       final issuedAt = invoice['issued_at'] != null
                           ? formatDateTime(invoice['issued_at']?.toString())
                           : '-';
@@ -325,7 +325,7 @@ class _InvoicesTab extends StatelessWidget {
                             controller: minCtrl,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
-                              labelText: 'أدنى مبلغ (SAR)',
+                              labelText: 'أدنى مبلغ (USD)',
                             ),
                           ),
                         ),
@@ -335,7 +335,7 @@ class _InvoicesTab extends StatelessWidget {
                             controller: maxCtrl,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
-                              labelText: 'أعلى مبلغ (SAR)',
+                              labelText: 'أعلى مبلغ (USD)',
                             ),
                           ),
                         ),
@@ -439,7 +439,7 @@ class _InvoicesTab extends StatelessWidget {
     final invoiceNumber = invoice['invoice_number']?.toString() ?? '-';
     final status = invoice['status']?.toString() ?? '-';
     final amountMinor = (invoice['amount_minor'] as num?)?.toDouble() ?? 0;
-    final currency = invoice['currency']?.toString() ?? 'SAR';
+    final currency = invoice['currency']?.toString() ?? 'USD';
     final issuedAt = invoice['issued_at'] != null
         ? formatDateTime(invoice['issued_at']?.toString())
         : '-';
@@ -553,7 +553,7 @@ class _PaymentsTab extends StatelessWidget {
                       final status = payment['status']?.toString() ?? '-';
                       final amountMinor =
                           (payment['amount_minor'] as num?)?.toDouble() ?? 0;
-                      final currency = payment['currency']?.toString() ?? 'SAR';
+                      final currency = payment['currency']?.toString() ?? 'USD';
                       final finalizedAt = payment['finalized_at'] != null
                           ? formatDateTime(payment['finalized_at']?.toString())
                           : '-';
@@ -649,7 +649,7 @@ class _PaymentsTab extends StatelessWidget {
                             controller: minCtrl,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
-                              labelText: 'أدنى مبلغ (SAR)',
+                              labelText: 'أدنى مبلغ (USD)',
                             ),
                           ),
                         ),
@@ -659,7 +659,7 @@ class _PaymentsTab extends StatelessWidget {
                             controller: maxCtrl,
                             keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
-                              labelText: 'أعلى مبلغ (SAR)',
+                              labelText: 'أعلى مبلغ (USD)',
                             ),
                           ),
                         ),

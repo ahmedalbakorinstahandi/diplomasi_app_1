@@ -288,8 +288,13 @@ class HomeControllerImp extends HomeController {
   @override
   void calculateProgress() {
     completedTracks = 0;
+    if (levelTracks.isEmpty) {
+      progressPercentage = 0;
+      return;
+    }
+
     for (int i = 0; i < levelTracks.length; i++) {
-      if (levelTracks[i]['trackable']['status'] == 'completed') {
+      if (levelTracks[i]['status'] == 'completed') {
         completedTracks++;
       }
     }

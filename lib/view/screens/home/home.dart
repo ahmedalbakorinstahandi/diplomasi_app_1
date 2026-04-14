@@ -175,9 +175,23 @@ class HomeScreen extends StatelessWidget {
                                         ),
                                         SizedBox(height: height(20)),
 
-                                        // Show buttons if level is completed
-                                        if (controller.level?.accessStatus ==
-                                            'completed') ...[
+                                        if (controller.level != null &&
+                                            controller.level!.hasCertificate) ...[
+                                          _CertificateStatusCard(
+                                            level: controller.level!,
+                                            onViewCertificate: () {
+                                              if (!isVerifiedAccount) {
+                                                showUpgradeSheet();
+                                                return;
+                                              }
+                                              controller.viewCertificate();
+                                            },
+                                          ),
+                                          SizedBox(height: height(14)),
+                                        ],
+
+                                        // Show navigation buttons if level is completed
+                                        if (controller.level?.accessStatus == 'completed') ...[
                                           // Next Level Button
                                           if (controller.getNextLevel() != null)
                                             CustomButton(
@@ -187,25 +201,6 @@ class HomeScreen extends StatelessWidget {
                                               },
                                               backgroundColor: scheme.primary,
                                             ),
-
-                                          // Certificate Button
-                                          if (controller
-                                                  .level
-                                                  ?.hasCertificate ==
-                                              true) ...[
-                                            SizedBox(height: height(12)),
-                                            CustomButton(
-                                              text: 'عرض الشهادة',
-                                              onPressed: () {
-                                                if (!isVerifiedAccount) {
-                                                  showUpgradeSheet();
-                                                  return;
-                                                }
-                                                controller.viewCertificate();
-                                              },
-                                              backgroundColor: scheme.secondary,
-                                            ),
-                                          ],
                                           SizedBox(height: height(20)),
                                         ],
                                       ],
@@ -225,6 +220,127 @@ class HomeScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _CertificateStatusCard extends StatelessWidget {
+  final dynamic level;
+  final VoidCallback onViewCertificate;
+
+  const _CertificateStatusCard({
+    required this.level,
+    required this.onViewCertificate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final eligibility = (level.certificateEligibility ?? <String, dynamic>{})
+        as Map<String, dynamic>;
+    final finalState = (eligibility['final_state'] ?? 'not_eligible').toString();
+    final isEligible = eligibility['is_eligible'] == true;
+    final regenReason =
+        eligibility['regeneration_reason']?.toString();
+    final requiresSubscription =
+        eligibility['requires_subscription_for_certificate'] == true;
+
+    String title;
+    List<String> details;
+    String? buttonText;
+
+    if (!isEligible) {
+      title = 'يمكنك متابعة التعلم الآن';
+      details = [
+        'أنت لست مستحقًا للشهادة بعد.',
+        'للحصول على الشهادة يجب إكمال جميع الدروس المطلوبة.',
+        'ويجب إكمال جميع السيناريوهات المطلوبة.',
+        if (requiresSubscription)
+          'بعض السيناريوهات مقفولة حاليًا بالاشتراك، لكنها مطلوبة للشهادة.',
+      ];
+    } else if (finalState == 'generated') {
+      title = 'أنت مستحق للشهادة';
+      details = ['الشهادة جاهزة الآن، ويمكنك عرضها أو تنزيلها مباشرة.'];
+      buttonText = 'عرض الشهادة';
+    } else if (finalState == 'eligible_regeneration_needed') {
+      title = 'أنت مستحق للشهادة';
+      if (regenReason == 'generation_failed' ||
+          regenReason == 'artifact_missing') {
+        details = [
+          if (regenReason == 'generation_failed')
+            'فشل توليد ملف الشهادة بعد إكمالك. يمكنك إعادة المحاولة من صفحة الشهادة.'
+          else
+            'ملف الشهادة غير متوفر. يمكنك إعادة إصداره من صفحة الشهادة.',
+        ];
+        buttonText = 'الحصول على الشهادة';
+      } else {
+        details = [
+          if (regenReason == 'template_changed')
+            'تم تحديث نموذج الشهادة. سيتم إعادة الإصدار من خلال الإدارة.'
+          else if (regenReason == 'certificate_deleted')
+            'سجل الشهادة غير مكتمل. يُرجى التواصل مع الدعم أو الإدارة.'
+          else
+            'ملف الشهادة يحتاج إعادة إصدار من الإدارة.',
+        ];
+        buttonText = null;
+      }
+    } else {
+      title = 'أنت مستحق للشهادة';
+      details = ['استحقاقك مكتمل، لكن لم يتم توليد ملف الشهادة بعد.'];
+      buttonText = 'الحصول على الشهادة';
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.all(width(12)),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withOpacity(0.35),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                title,
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontSize: emp(15),
+                  fontWeight: FontWeight.w700,
+                  color: scheme.onSurface,
+                ),
+              ),
+            ),
+            SizedBox(height: height(8)),
+            ...details.map(
+              (line) => Padding(
+                padding: EdgeInsets.only(bottom: height(4)),
+                child: Text(
+                  '- $line',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: emp(13),
+                    fontWeight: FontWeight.w500,
+                    color: scheme.onSurface.withOpacity(0.9),
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ),
+            if (buttonText != null) ...[
+              SizedBox(height: height(10)),
+              CustomButton(
+                text: buttonText,
+                onPressed: onViewCertificate,
+                backgroundColor: scheme.secondary,
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

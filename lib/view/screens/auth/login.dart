@@ -23,8 +23,8 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(LoginControllerImp());
     return GetBuilder<LoginControllerImp>(
+      init: LoginControllerImp(),
       builder: (controller) {
         // Shared.setValue(StorageKeys.step, Steps.homeApp);
         final colors = context.appColors;

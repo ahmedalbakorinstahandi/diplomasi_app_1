@@ -1,5 +1,12 @@
+import 'dart:async';
+
 import 'package:diplomasi_app/core/bindings/initialbindings.dart';
+import 'package:diplomasi_app/core/classes/shared_preferences.dart';
+import 'package:diplomasi_app/core/constants/storage_keys.dart';
+import 'package:diplomasi_app/core/constants/variables.dart';
 import 'package:diplomasi_app/core/localization/translation.dart';
+import 'package:diplomasi_app/data/resource/remote/user/user_data.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:diplomasi_app/core/services/notification_navigation_service.dart';
 import 'package:diplomasi_app/core/services/push_notification_service.dart';
 import 'package:diplomasi_app/core/services/services.dart';
@@ -16,6 +23,24 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {
+    // Optional: no bundled .env in some builds
+  }
+
+  // Ensure Android system bars stay visible app-wide (can be altered by video fullscreen).
+  await SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.manual,
+    overlays: SystemUiOverlay.values,
+  );
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+    ),
+  );
+
   // التطبيق يبدأ بالطول؛ الفيديو ينتقل للعرض عند الملء (من داخل مشغّل الفيديو)
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
@@ -28,7 +53,11 @@ void main() async {
     PushNotificationService(),
     permanent: true,
   );
-  //await pushNotificationService.init();
+  try {
+    await pushNotificationService.init();
+  } catch (_) {
+    // Messaging may be unavailable in some environments; app should still run.
+  }
 
   // Theme controller needs SharedPreferences (services) ready.
   Get.put(ThemeControllerImp(), permanent: true);
@@ -36,10 +65,46 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  Timer? _heartbeatDebounce;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    _heartbeatDebounce?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _scheduleHeartbeat();
+    }
+  }
+
+  void _scheduleHeartbeat() {
+    _heartbeatDebounce?.cancel();
+    _heartbeatDebounce = Timer(const Duration(milliseconds: 400), () {
+      if (!isUserLoggedIn) return;
+      final token = Shared.getValue(StorageKeys.accessToken);
+      if (token == null || token.toString().trim().isEmpty) return;
+      UserData().sendHeartbeat();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeController = Get.find<ThemeControllerImp>();

@@ -9,9 +9,9 @@ import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
 abstract class ResetPasswordController extends GetxController {
-  late TextEditingController password;
-  late TextEditingController confirmPassword;
-  late String email;
+  TextEditingController password = TextEditingController();
+  TextEditingController confirmPassword = TextEditingController();
+  String email = '';
 
   bool isLoading = false;
   bool obscurePassword = true;
@@ -32,15 +32,11 @@ class ResetPasswordControllerImp extends ResetPasswordController {
     final arguments = Get.arguments as Map<String, dynamic>?;
     email = arguments?['email'] ?? '';
 
-    password = TextEditingController();
-    confirmPassword = TextEditingController();
     super.onInit();
   }
 
   @override
   void onClose() {
-    password.dispose();
-    confirmPassword.dispose();
     super.onClose();
   }
 

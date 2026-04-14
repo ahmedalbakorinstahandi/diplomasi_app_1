@@ -33,7 +33,7 @@ class LessonVideoPlayerState extends State<LessonVideoPlayer> {
 
   void _initializePlayer() {
     String? videoId = widget.videoId;
-    
+
     // Extract video ID from URL if not provided
     if (videoId == null && widget.videoUrl.isNotEmpty) {
       videoId = YoutubePlayer.convertUrlToId(widget.videoUrl);
@@ -64,9 +64,11 @@ class LessonVideoPlayerState extends State<LessonVideoPlayer> {
           DeviceOrientation.landscapeRight,
         ]);
       } else {
-        SystemChrome.setPreferredOrientations([
-          DeviceOrientation.portraitUp,
-        ]);
+        SystemChrome.setEnabledSystemUIMode(
+          SystemUiMode.manual,
+          overlays: SystemUiOverlay.values,
+        );
+        SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
       }
       widget.onFullScreenChange?.call(isFullScreen);
     }
@@ -139,4 +141,3 @@ class LessonVideoPlayerState extends State<LessonVideoPlayer> {
     );
   }
 }
-

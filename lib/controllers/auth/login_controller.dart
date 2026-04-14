@@ -13,8 +13,8 @@ import 'package:get/get.dart';
 import '../../core/constants/routes.dart';
 
 abstract class LoginController extends GetxController {
-  late TextEditingController email;
-  late TextEditingController password;
+  TextEditingController email = TextEditingController();
+  TextEditingController password = TextEditingController();
 
   bool isLogin = false;
 
@@ -35,8 +35,6 @@ class LoginControllerImp extends LoginController {
 
   @override
   void onInit() {
-    email = TextEditingController();
-    password = TextEditingController();
     super.onInit();
   }
 
@@ -69,7 +67,7 @@ class LoginControllerImp extends LoginController {
       final deviceToken = await getAuthDeviceToken();
 
       var response = await authData.login(
-        email: email.text,
+        email: email.text.trim(),
         password: password.text,
         deviceToken: deviceToken,
       );
@@ -132,7 +130,7 @@ class LoginControllerImp extends LoginController {
     update();
 
     final sendResponse = await authData.forgotPassword(
-      email: email.text.trim(),
+      email: email.text.trim().trim(),
       purpose: 'account_activation',
     );
 
@@ -146,7 +144,7 @@ class LoginControllerImp extends LoginController {
       Get.toNamed(
         AppRoutes.verifyCode,
         arguments: {
-          'email': email.text.trim(),
+          'email': email.text.trim().trim(),
           'isForgotPassword': false,
           'showActivationSuccess': true,
         },

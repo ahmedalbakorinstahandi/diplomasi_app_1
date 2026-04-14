@@ -27,13 +27,16 @@ class MyScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final overlay = isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark;
+    final overlay =
+        (isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark)
+            .copyWith(statusBarColor: Colors.transparent);
     return Scaffold(
-      backgroundColor: backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor:
+          backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
       body: body != null
           ? AnnotatedRegion<SystemUiOverlayStyle>(
               value: overlay,
-              child: SafeArea(top: false, child: body!),
+              child: SafeArea(child: body!),
             )
           : null,
       appBar: appBar,

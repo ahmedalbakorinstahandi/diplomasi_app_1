@@ -8,9 +8,11 @@ class LevelTrackModel {
   final int trackableId;
   final String trackableType;
   final int orderIndex;
-  final String? status; // locked, open, completed
+  final String? status; // locked, locked_by_subscription, open, in_progress, completed
   final double? progressPercentage; // 0-100
   final bool? isAccessible;
+  final String? accessReason; // progress | subscription
+  final int? nextAccessibleTrackId;
   final String createdAt;
   final String updatedAt;
   final LevelModel? level;
@@ -25,6 +27,8 @@ class LevelTrackModel {
     this.status,
     this.progressPercentage,
     this.isAccessible,
+    this.accessReason,
+    this.nextAccessibleTrackId,
     required this.createdAt,
     required this.updatedAt,
     this.level,
@@ -56,6 +60,8 @@ class LevelTrackModel {
               : json['progress_percentage'] as double)
           : null,
       isAccessible: json['is_accessible'],
+      accessReason: json['access_reason'] as String?,
+      nextAccessibleTrackId: json['next_accessible_track_id'] as int?,
       createdAt: json['created_at'],
       updatedAt: json['updated_at'],
       level: json['level'] != null ? LevelModel.fromJson(json['level']) : null,
@@ -73,6 +79,8 @@ class LevelTrackModel {
       'status': status,
       'progress_percentage': progressPercentage,
       'is_accessible': isAccessible,
+      'access_reason': accessReason,
+      'next_accessible_track_id': nextAccessibleTrackId,
       'created_at': createdAt,
       'updated_at': updatedAt,
       'level': level?.toJson(),

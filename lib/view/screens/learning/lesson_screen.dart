@@ -7,6 +7,7 @@ import 'package:diplomasi_app/core/widgets/custom_scaffold.dart';
 import 'package:diplomasi_app/data/model/learning/lesson_model.dart';
 import 'package:diplomasi_app/view/shimmers/learning/presentation/shimmer/lesson_screen_shimmer.dart';
 import 'package:diplomasi_app/view/widgets/learning/lesson_complete_button.dart';
+import 'package:diplomasi_app/view/widgets/learning/lesson_completion_dialog.dart';
 import 'package:diplomasi_app/view/widgets/learning/lesson_video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -242,18 +243,33 @@ class _LessonScreenState extends State<LessonScreen> {
 
                         // Start or resume attempt first
                         await controller.startOrResumeAttempt();
-                        if (controller.attempt != null) {
-                          // Mark video as watched
-                          await controller.markVideoWatched();
-                          // Navigate to questions
-                          Get.toNamed(
-                            AppRoutes.lessonQuestions,
-                            parameters: {
-                              'lesson_id': currentLesson.id.toString(),
-                              'attempt_id': controller.attempt!.id.toString(),
-                            },
+                        if (controller.attempt == null) return;
+
+                        // درس بلا أسئلة: الباكند يُرجع محاولة منتهية بنسبة 100٪
+                        if (controller.attempt!.status == 'finished') {
+                          await controller.getLessonDetails();
+                          if (!mounted) return;
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (dialogContext) => LessonCompletionDialog(
+                              onNext: () {
+                                Navigator.of(dialogContext).pop();
+                                Get.back();
+                              },
+                            ),
                           );
+                          return;
                         }
+
+                        await controller.markVideoWatched();
+                        Get.toNamed(
+                          AppRoutes.lessonQuestions,
+                          parameters: {
+                            'lesson_id': currentLesson.id.toString(),
+                            'attempt_id': controller.attempt!.id.toString(),
+                          },
+                        );
                       },
                     ),
                 ],

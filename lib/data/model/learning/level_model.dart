@@ -17,6 +17,7 @@ class LevelModel {
   final String updatedAt;
   final CourseModel? course;
   final List<LevelTrackModel> levelTracks;
+  final Map<String, dynamic>? certificateEligibility;
 
   LevelModel({
     required this.id,
@@ -34,6 +35,7 @@ class LevelModel {
     required this.updatedAt,
     this.course,
     required this.levelTracks,
+    this.certificateEligibility,
   });
 
   factory LevelModel.fromJson(Map<String, dynamic> json) {
@@ -59,6 +61,8 @@ class LevelModel {
                 .map((levelTrack) => LevelTrackModel.fromJson(levelTrack))
                 .toList()
           : [],
+      certificateEligibility:
+          json['certificate_eligibility'] as Map<String, dynamic>?,
     );
   }
 
@@ -81,6 +85,7 @@ class LevelModel {
       'level_tracks': levelTracks
           .map((levelTrack) => levelTrack.toJson())
           .toList(),
+      'certificate_eligibility': certificateEligibility,
     };
   }
 }

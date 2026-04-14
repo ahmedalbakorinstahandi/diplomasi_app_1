@@ -57,8 +57,13 @@ class LevelTrackList extends StatelessWidget {
               final lesson = track.trackable as LessonModel;
               // Use status from track if available, otherwise from lesson
               final status = track.status ?? 'open';
+              final isSubscriptionLocked =
+                  status == 'locked_by_subscription' ||
+                  track.accessReason == 'subscription';
               final isLocked =
-                  status == 'locked' || track.level?.accessStatus == 'locked';
+                  status == 'locked' ||
+                  status == 'locked_by_subscription' ||
+                  track.level?.accessStatus == 'locked';
               Widget card = Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -88,6 +93,12 @@ class LevelTrackList extends StatelessWidget {
                         description: lesson.description,
                         isLocked: isLocked,
                         isLesson: true,
+                        lockedReasonText: isSubscriptionLocked
+                            ? 'هذا المحتوى يتطلب اشتراكًا نشطًا.'
+                            : null,
+                        startButtonText: isSubscriptionLocked
+                            ? 'يتطلب اشتراكًا'
+                            : 'ابدأ التعلم',
                         onStartLearning: isLocked
                             ? null
                             : () async {
@@ -109,8 +120,13 @@ class LevelTrackList extends StatelessWidget {
               final scenario = track.trackable as ScenarioModel;
               // Use status from track if available, otherwise from scenario
               final status = track.status;
+              final isSubscriptionLocked =
+                  status == 'locked_by_subscription' ||
+                  track.accessReason == 'subscription';
               final isLocked =
-                  status == 'locked' || track.level?.accessStatus == 'locked';
+                  status == 'locked' ||
+                  status == 'locked_by_subscription' ||
+                  track.level?.accessStatus == 'locked';
 
               Widget card = Stack(
                 clipBehavior: Clip.none,
@@ -130,6 +146,7 @@ class LevelTrackList extends StatelessWidget {
                   ScenarioCard(
                     scenario: scenario,
                     isLocked: isLocked,
+                    isSubscriptionLocked: isSubscriptionLocked,
                     isRightAligned: isRightAligned,
                     isLast: isLast,
                     onTap: () {
@@ -140,6 +157,12 @@ class LevelTrackList extends StatelessWidget {
                         description: scenario.description,
                         isLocked: isLocked,
                         isLesson: false,
+                        lockedReasonText: isSubscriptionLocked
+                            ? 'هذا السيناريو مقفول حاليًا لأنه يتطلب اشتراكًا.'
+                            : null,
+                        startButtonText: isSubscriptionLocked
+                            ? 'يتطلب اشتراكًا'
+                            : 'ابدأ التعلم',
                         onStartLearning: isLocked
                             ? null
                             : () async {

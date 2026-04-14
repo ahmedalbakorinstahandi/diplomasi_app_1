@@ -108,6 +108,10 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
             DeviceOrientation.landscapeRight,
           ]);
         } else {
+          SystemChrome.setEnabledSystemUIMode(
+            SystemUiMode.manual,
+            overlays: SystemUiOverlay.values,
+          );
           SystemChrome.setPreferredOrientations([
             DeviceOrientation.portraitUp,
           ]);
