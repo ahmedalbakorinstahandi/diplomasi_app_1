@@ -3,6 +3,7 @@ import 'package:diplomasi_app/core/classes/api_response.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
+import 'package:diplomasi_app/core/services/app_shell_bootstrap.dart';
 import 'package:diplomasi_app/core/constants/variables.dart';
 import 'package:diplomasi_app/data/model/learning/level_model.dart';
 import 'package:diplomasi_app/data/model/user/certificate_model.dart';
@@ -46,8 +47,10 @@ class HomeControllerImp extends HomeController {
   void onInit() {
     _applyBannerStateFromCache();
     _bootstrapSubscriptionState();
-    getLevels();
-    getLevelTracks();
+    Future.microtask(() async {
+      await getLevels();
+      await getLevelTracks();
+    });
     super.onInit();
   }
 
@@ -247,7 +250,16 @@ class HomeControllerImp extends HomeController {
     isLoadingLevels = true;
     update();
 
-    int courseId = Shared.getValue(StorageKeys.courseId, initialValue: 0);
+    var courseId = Shared.getValue(StorageKeys.courseId, initialValue: 0) as int;
+    if (courseId == 0) {
+      await AppShellBootstrap.ensurePreparedForCurrentToken();
+      courseId = Shared.getValue(StorageKeys.courseId, initialValue: 0) as int;
+    }
+    if (courseId == 0) {
+      isLoadingLevels = false;
+      update();
+      return;
+    }
 
     ApiResponse response = await levelsData.get(courseId: courseId);
 

@@ -1,11 +1,17 @@
 import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/services/app_me_response_sidecar.dart';
+import 'package:diplomasi_app/core/services/app_shell_bootstrap.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/data/model/user/notification_model.dart';
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class NotificationNavigationService extends GetxService {
+  Future<void> _offAllToAppHome() async {
+    await AppShellBootstrap.ensurePreparedForCurrentToken();
+    Get.offAllNamed(AppRoutes.app);
+  }
+
   Future<void> handleStoredNotification(NotificationModel notification) async {
     await handlePayload(type: notification.type, payload: notification.data);
   }
@@ -70,7 +76,7 @@ class NotificationNavigationService extends GetxService {
       case 'level_completed':
       case 'course_completed':
         if (AppMeResponseSidecar.hideCoursesLibrary) {
-          Get.offAllNamed(AppRoutes.app);
+          await _offAllToAppHome();
         } else {
           Get.toNamed(AppRoutes.cources);
         }
@@ -107,7 +113,7 @@ class NotificationNavigationService extends GetxService {
         return true;
       case 'courses':
         if (AppMeResponseSidecar.hideCoursesLibrary) {
-          Get.offAllNamed(AppRoutes.app);
+          await _offAllToAppHome();
         } else {
           Get.toNamed(AppRoutes.cources);
         }
@@ -119,7 +125,7 @@ class NotificationNavigationService extends GetxService {
           return true;
         }
         if (AppMeResponseSidecar.hideCoursesLibrary) {
-          Get.offAllNamed(AppRoutes.app);
+          await _offAllToAppHome();
         } else {
           Get.toNamed(AppRoutes.cources);
         }
@@ -135,7 +141,7 @@ class NotificationNavigationService extends GetxService {
         }
         return false;
       case 'home':
-        Get.offAllNamed(AppRoutes.app);
+        await _offAllToAppHome();
         return true;
       case 'profile':
       case 'support':

@@ -149,7 +149,7 @@ class _LessonAttemptsScreenState extends State<LessonAttemptsScreen> {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        'محاولة #${attempt.id}',
+                                        'محاولة #${attempt.attemptNumber ?? attempt.id}',
                                         style: TextStyle(
                                           fontSize: emp(16),
                                           fontWeight: FontWeight.w700,

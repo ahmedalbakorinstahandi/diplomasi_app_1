@@ -1,5 +1,7 @@
 import 'package:diplomasi_app/core/classes/api_response.dart';
 import 'package:diplomasi_app/core/classes/api_service.dart';
+import 'package:diplomasi_app/core/classes/shared_preferences.dart';
+import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/routes/api.dart';
 import 'package:get/get.dart';
 
@@ -19,6 +21,7 @@ class VideosData {
         'per_page': perPage,
         'sort_field': sortField,
         'sort_order': sortOrder,
+        'course_id': Shared.getValue(StorageKeys.courseId, initialValue: 0),
       },
     );
   }

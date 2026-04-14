@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
+import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/core/services/notification_navigation_service.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 @pragma('vm:entry-point')
@@ -99,28 +99,15 @@ class PushNotificationService extends GetxService {
       return;
     }
 
-    Get.showSnackbar(
-      GetSnackBar(
-        titleText: Text(
-          title ?? 'إشعار جديد',
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        messageText: Text(
-          body ?? '',
-          style: const TextStyle(color: Colors.white),
-        ),
-        duration: const Duration(seconds: 5),
-        snackPosition: SnackPosition.TOP,
-        margin: const EdgeInsets.all(12),
-        borderRadius: 12,
-        backgroundColor: Colors.black87,
-        onTap: (_) async {
-          await _handleTapMessage(message);
-        },
-      ),
+    final displayTitle = (title != null && title.trim().isNotEmpty)
+        ? title.trim()
+        : 'إشعار جديد';
+    final displayBody = body?.trim() ?? '';
+
+    customPushNotificationSnackBar(
+      text: displayTitle,
+      message: displayBody,
+      onOpen: () => _handleTapMessage(message),
     );
   }
 

@@ -68,7 +68,7 @@ class ProfileScreen extends StatelessWidget {
                           children: [
                             // Account Management Section
                             if (!isGuest) ...[
-                              SizedBox(height: height(175)),
+                              SizedBox(height: height(155)),
                               ProfileSection(
                                 items: [
                                   ProfileItem(

@@ -27,9 +27,8 @@ class CertificatesData {
       'sort_order': sortOrder,
     };
 
-    if (courseId != null) {
-      params['course_id'] = courseId;
-    }
+    params['course_id'] =
+        courseId ?? Shared.getValue(StorageKeys.courseId, initialValue: 0);
     if (levelId != null) {
       params['level_id'] = levelId;
     }

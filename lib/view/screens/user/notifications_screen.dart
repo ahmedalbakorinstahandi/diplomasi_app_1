@@ -40,30 +40,27 @@ class NotificationsScreen extends StatelessWidget {
                       controller: controller.notificationsScrollController,
                       padding: EdgeInsets.all(width(16)),
                       children: [
-                        ...controller.notifications.map(
-                          (dateGroup) {
-                            final notificationsForDate =
-                                (dateGroup['notifications'] as List);
-                            final firstNotification =
-                                notificationsForDate.first as NotificationModel;
+                        ...controller.notifications.map((dateGroup) {
+                          final notificationsForDate =
+                              (dateGroup['notifications'] as List);
+                          final firstNotification =
+                              notificationsForDate.first as NotificationModel;
 
-                            return NotificationDateSection(
-                              date: formatDateRelative(
-                                firstNotification.createdAt,
-                                referenceUtc:
-                                    controller.relativeDateReferenceUtc,
-                              ),
-                              notifications: notificationsForDate
-                                  .map(
-                                    (notification) => NotificationCard(
-                                      notification:
-                                          notification as NotificationModel,
-                                    ),
-                                  )
-                                  .toList(),
-                            );
-                          },
-                        ),
+                          return NotificationDateSection(
+                            date: formatDateRelative(
+                              firstNotification.createdAt,
+                              referenceUtc: controller.relativeDateReferenceUtc,
+                            ),
+                            notifications: notificationsForDate
+                                .map(
+                                  (notification) => NotificationCard(
+                                    notification:
+                                        notification as NotificationModel,
+                                  ),
+                                )
+                                .toList(),
+                          );
+                        }),
                       ],
                     ),
                   ),
@@ -75,7 +72,6 @@ class NotificationsScreen extends StatelessWidget {
       },
     );
   }
-
 }
 
 class NotificationDateSection extends StatelessWidget {

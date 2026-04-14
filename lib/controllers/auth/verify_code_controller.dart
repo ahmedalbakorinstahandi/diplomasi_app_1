@@ -4,6 +4,7 @@ import 'package:diplomasi_app/core/constants/steps.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/core/functions/auth_device_token.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
+import 'package:diplomasi_app/core/services/app_shell_bootstrap.dart';
 import 'package:diplomasi_app/data/resource/remote/user/auth_data.dart';
 import 'package:diplomasi_app/view/screens/auth/success.dart';
 import 'package:flutter/widgets.dart';
@@ -124,10 +125,14 @@ class VerifyCodeControllerImp extends VerifyCodeController {
               message:
                   'تم التحقق من بريدك الإلكتروني وتفعيل حسابك. يمكنك الآن الدخول إلى التطبيق.',
               buttonText: 'الدخول إلى التطبيق',
-              onButtonPressed: () => Get.offAllNamed(AppRoutes.app),
+              onButtonPressed: () async {
+                await AppShellBootstrap.ensurePreparedForCurrentToken();
+                Get.offAllNamed(AppRoutes.app);
+              },
             ),
           );
         } else {
+          await AppShellBootstrap.ensurePreparedForCurrentToken();
           Get.offAllNamed(AppRoutes.app);
         }
       }

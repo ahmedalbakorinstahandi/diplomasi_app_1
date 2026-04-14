@@ -4,6 +4,7 @@ import 'package:diplomasi_app/core/constants/steps.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/core/functions/auth_device_token.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
+import 'package:diplomasi_app/core/services/app_shell_bootstrap.dart';
 import 'package:diplomasi_app/data/resource/remote/user/user_data.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -130,6 +131,7 @@ class ChangePasswordControllerImp extends GetxController {
         text: response.message ?? 'تم تغيير كلمة المرور بنجاح',
         snackType: SnackBarType.correct,
       );
+      await AppShellBootstrap.ensurePreparedForCurrentToken();
       Get.offAllNamed(AppRoutes.app);
     }
 

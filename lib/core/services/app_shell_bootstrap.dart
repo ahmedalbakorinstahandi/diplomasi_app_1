@@ -11,10 +11,12 @@ class AppShellBootstrap {
 
   static String? _preparedToken;
   static AppMeSidecarOutcome? lastOutcome;
+  static Future<void>? _inFlightPrepare;
 
   static void reset() {
     _preparedToken = null;
     lastOutcome = null;
+    _inFlightPrepare = null;
   }
 
   static Future<void> ensurePreparedForCurrentToken() async {
@@ -23,6 +25,23 @@ class AppShellBootstrap {
     if (token.isEmpty) return;
     if (_preparedToken == token) return;
 
+    if (_inFlightPrepare != null) {
+      await _inFlightPrepare;
+      if (_preparedToken == token) return;
+    }
+
+    final future = _runPrepare(token);
+    _inFlightPrepare = future;
+    try {
+      await future;
+    } finally {
+      if (identical(_inFlightPrepare, future)) {
+        _inFlightPrepare = null;
+      }
+    }
+  }
+
+  static Future<void> _runPrepare(String token) async {
     final userData = UserData();
     final response = await userData.getMyInfo(mergeBootstrapPayload: true);
     if (!response.isSuccess) return;

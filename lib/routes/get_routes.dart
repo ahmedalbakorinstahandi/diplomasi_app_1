@@ -1,4 +1,5 @@
 import 'package:diplomasi_app/core/constants/routes.dart';
+import 'package:diplomasi_app/core/services/app_shell_bootstrap.dart';
 import 'package:diplomasi_app/view/screens/auth/login.dart';
 import 'package:diplomasi_app/view/screens/auth/register.dart';
 import 'package:diplomasi_app/view/screens/auth/forgot_password.dart';
@@ -61,7 +62,11 @@ List<GetPage<dynamic>>? getPages = [
         message: map?['message'] as String?,
         buttonText: (map?['buttonText'] as String?) ?? 'متابعة',
         onButtonPressed: navigateToApp
-            ? () => Get.offAllNamed(AppRoutes.app)
+            ? () {
+                AppShellBootstrap.ensurePreparedForCurrentToken().then(
+                  (_) => Get.offAllNamed(AppRoutes.app),
+                );
+              }
             : null,
       );
     },

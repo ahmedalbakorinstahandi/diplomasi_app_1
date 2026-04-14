@@ -1,5 +1,6 @@
 class LessonAttemptModel {
   final int id;
+  final int? attemptNumber;
   final int userId;
   final int lessonId;
   final String status; // 'in_progress' | 'finished'
@@ -12,6 +13,7 @@ class LessonAttemptModel {
 
   LessonAttemptModel({
     required this.id,
+    this.attemptNumber,
     required this.userId,
     required this.lessonId,
     required this.status,
@@ -26,6 +28,7 @@ class LessonAttemptModel {
   factory LessonAttemptModel.fromJson(Map<String, dynamic> json) {
     return LessonAttemptModel(
       id: json['id'] as int,
+      attemptNumber: json['attempt_number'] as int?,
       userId: json['user_id'] as int,
       lessonId: json['lesson_id'] as int,
       status: json['status'] as String,
@@ -45,6 +48,7 @@ class LessonAttemptModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      if (attemptNumber != null) 'attempt_number': attemptNumber,
       'user_id': userId,
       'lesson_id': lessonId,
       'status': status,
