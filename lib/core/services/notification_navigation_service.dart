@@ -1,4 +1,5 @@
 import 'package:diplomasi_app/core/constants/routes.dart';
+import 'package:diplomasi_app/core/services/app_me_response_sidecar.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/data/model/user/notification_model.dart';
 import 'package:get/get.dart';
@@ -68,7 +69,11 @@ class NotificationNavigationService extends GetxService {
         return;
       case 'level_completed':
       case 'course_completed':
-        Get.toNamed(AppRoutes.cources);
+        if (AppMeResponseSidecar.hideCoursesLibrary) {
+          Get.offAllNamed(AppRoutes.app);
+        } else {
+          Get.toNamed(AppRoutes.cources);
+        }
         return;
       case 'account_banned':
         Get.toNamed(AppRoutes.profile);
@@ -101,7 +106,11 @@ class NotificationNavigationService extends GetxService {
         Get.toNamed(AppRoutes.billingHistory);
         return true;
       case 'courses':
-        Get.toNamed(AppRoutes.cources);
+        if (AppMeResponseSidecar.hideCoursesLibrary) {
+          Get.offAllNamed(AppRoutes.app);
+        } else {
+          Get.toNamed(AppRoutes.cources);
+        }
         return true;
       case 'levels':
         final courseId = _extractInt(data, ['course_id']);
@@ -109,7 +118,11 @@ class NotificationNavigationService extends GetxService {
           Get.toNamed(AppRoutes.levels, parameters: {'id': '$courseId'});
           return true;
         }
-        Get.toNamed(AppRoutes.cources);
+        if (AppMeResponseSidecar.hideCoursesLibrary) {
+          Get.offAllNamed(AppRoutes.app);
+        } else {
+          Get.toNamed(AppRoutes.cources);
+        }
         return true;
       case 'scenario_attempts':
         final scenarioId = _extractInt(data, ['scenario_id']);

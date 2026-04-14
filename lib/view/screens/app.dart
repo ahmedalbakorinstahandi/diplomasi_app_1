@@ -101,6 +101,12 @@ class AppScreen extends StatelessWidget {
       builder: (controller) {
         final colors = context.appColors;
         final scheme = Theme.of(context).colorScheme;
+        if (!controller.isShellReady) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
         return PopScope(
           canPop: false,
           onPopInvokedWithResult: (didPop, result) async {

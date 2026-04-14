@@ -6,8 +6,16 @@ import 'package:get/get.dart';
 class UserData {
   ApiService apiService = Get.find();
 
-  Future<ApiResponse> getMyInfo() async {
-    return await apiService.get(EndPoints.userMe);
+  Future<ApiResponse> getMyInfo({
+    bool mergeBootstrapPayload = false,
+  }) async {
+    final params = mergeBootstrapPayload
+        ? <String, dynamic>{
+            'include_app_update_check': 1,
+            'include_subscription': 1,
+          }
+        : null;
+    return await apiService.get(EndPoints.userMe, params: params);
   }
 
   /// Updates server last_opened_app_at when the app returns to foreground (re-engagement accuracy).

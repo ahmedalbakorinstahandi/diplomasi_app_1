@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'package:diplomasi_app/controllers/app_controller.dart';
 import 'package:diplomasi_app/controllers/profile/profile_controller.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
+import 'package:diplomasi_app/core/services/app_me_response_sidecar.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/data/model/users/user_model.dart';
 import 'package:diplomasi_app/data/resource/remote/general/general_data.dart';
@@ -45,6 +47,16 @@ class EditProfileControllerImp extends GetxController {
       currentAvatarUrl = currentUser?.avatar;
 
       Shared.setValue('user-data', response.data);
+      final rawBody = response.body;
+      if (rawBody is Map) {
+        await AppMeResponseSidecar.applyFromMeBody(
+          Map<String, dynamic>.from(rawBody),
+          mergeBootstrapPayload: false,
+        );
+        if (Get.isRegistered<AppControllerImp>()) {
+          Get.find<AppControllerImp>().update();
+        }
+      }
 
       // Populate fields
       firstNameController.text = currentUser?.firstName ?? '';

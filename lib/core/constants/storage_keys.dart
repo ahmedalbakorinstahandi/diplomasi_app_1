@@ -15,4 +15,6 @@ abstract class StorageKeys {
   static String get themeMode => 'theme_mode'; // system | light | dark
   static String get subscriptionState => 'subscription_state';
   static String get lastUpdateSuggestionAt => 'last_update_suggestion_at';
+  /// Cached `courses_mode` summary from GET /user/me (app).
+  static String get appCoursesCatalog => 'app_courses_catalog';
 }

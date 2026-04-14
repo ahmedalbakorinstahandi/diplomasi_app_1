@@ -3,6 +3,7 @@ import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/constants/assets.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/constants/variables.dart';
+import 'package:diplomasi_app/core/services/app_me_response_sidecar.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/core/widgets/icon_svg.dart';
 import 'package:diplomasi_app/view/widgets/general/account_upgrade_sheet.dart';
@@ -134,27 +135,29 @@ class HomeHeader extends StatelessWidget {
               // ),
               Spacer(),
               NotificationButton(),
-              SizedBox(width: width(8)),
-              InkWell(
-                onTap: () {
-                  Get.toNamed(AppRoutes.cources);
-                },
-                child: Container(
-                  width: width(40),
-                  height: height(40),
-                  decoration: BoxDecoration(
-                    color: colors.surfaceCard,
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  child: Center(
-                    child: MySvgIcon(
-                      path: Assets.icons.svg.book,
-                      size: emp(24),
-                      color: scheme.primary,
+              if (!AppMeResponseSidecar.hideCoursesLibrary) ...[
+                SizedBox(width: width(8)),
+                InkWell(
+                  onTap: () {
+                    Get.toNamed(AppRoutes.cources);
+                  },
+                  child: Container(
+                    width: width(40),
+                    height: height(40),
+                    decoration: BoxDecoration(
+                      color: colors.surfaceCard,
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                    child: Center(
+                      child: MySvgIcon(
+                        path: Assets.icons.svg.book,
+                        size: emp(24),
+                        color: scheme.primary,
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
         ],

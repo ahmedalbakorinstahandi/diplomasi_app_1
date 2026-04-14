@@ -1,3 +1,4 @@
+import 'package:diplomasi_app/controllers/app_controller.dart';
 import 'package:diplomasi_app/core/classes/api_response.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
@@ -88,6 +89,15 @@ class HomeControllerImp extends HomeController {
       return;
     }
     _didBootstrapSubscriptionState = true;
+
+    if (Get.isRegistered<AppControllerImp>()) {
+      final app = Get.find<AppControllerImp>();
+      if (app.shellBootstrapSidecarOutcome?.mergedSubscriptionPayload == true) {
+        _applyBannerStateFromCache();
+        update();
+        return;
+      }
+    }
 
     if (currentAccountState != 'registered_verified') {
       _persistSubscriptionSnapshot(null);

@@ -4,6 +4,7 @@ import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/assets.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
+import 'package:diplomasi_app/core/services/app_me_response_sidecar.dart';
 import 'package:diplomasi_app/core/services/notification_prompt_service.dart';
 import 'package:diplomasi_app/core/services/push_notification_service.dart';
 import 'package:diplomasi_app/view/widgets/general/suggest_update_dialog.dart';
@@ -44,7 +45,8 @@ abstract class AppController extends GetxController {
   GeneralData generalData = GeneralData();
   UserModel? userModel;
   bool isUserDataLoading = false;
-  Future<void> getMyInfo();
+  bool isShellReady = false;
+  Future<void> getMyInfo({bool mergeBootstrapPayload = false});
   Future<void> checkSuggestUpdateOncePerDay();
 
   int unreadNotificationsCount = 0;
@@ -63,17 +65,26 @@ abstract class AppController extends GetxController {
 }
 
 class AppControllerImp extends AppController {
-  @override
-  void onInit() async {
-    getMyInfo();
-    checkSuggestUpdateOncePerDay();
-    checkLevelAndCourse();
-    getUnreadNotificationsCount();
-    super.onInit();
+  AppMeSidecarOutcome? shellBootstrapSidecarOutcome;
 
-    // if (isUserLoggedIn) {
-    //   getUnreadNotificationsCount();
-    // }
+  @override
+  void onInit() {
+    super.onInit();
+    _runShellBootstrap();
+  }
+
+  Future<void> _runShellBootstrap() async {
+    try {
+      await getMyInfo(mergeBootstrapPayload: true);
+      if (shellBootstrapSidecarOutcome?.mergedAppUpdateCheckPayload != true) {
+        await checkSuggestUpdateOncePerDay();
+      }
+      checkLevelAndCourse();
+      getUnreadNotificationsCount();
+    } finally {
+      isShellReady = true;
+      update();
+    }
   }
 
   @override
@@ -156,17 +167,29 @@ class AppControllerImp extends AppController {
   }
 
   @override
-  Future<void> getMyInfo() async {
+  Future<void> getMyInfo({bool mergeBootstrapPayload = false}) async {
     if (isUserDataLoading) return;
 
     isUserDataLoading = true;
     update();
 
-    var response = await userData.getMyInfo();
+    var response = await userData.getMyInfo(
+      mergeBootstrapPayload: mergeBootstrapPayload,
+    );
     if (response.isSuccess) {
       Shared.setValue('user-data', response.data);
       userModel = UserModel.fromJson(response.data);
       Shared.setValue(StorageKeys.accountState, userModel?.accountState ?? '');
+      final rawBody = response.body;
+      if (rawBody is Map) {
+        final sidecar = await AppMeResponseSidecar.applyFromMeBody(
+          Map<String, dynamic>.from(rawBody),
+          mergeBootstrapPayload: mergeBootstrapPayload,
+        );
+        if (mergeBootstrapPayload) {
+          shellBootstrapSidecarOutcome = sidecar;
+        }
+      }
     }
     isUserDataLoading = false;
     update();
