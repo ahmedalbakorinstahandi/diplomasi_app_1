@@ -106,7 +106,9 @@ class ApiResponse<T> {
     }
 
     int step = Shared.getValue(StorageKeys.step, initialValue: Steps.login);
-    if (step == Steps.homeApp && statusCode == 401) {
+    final path = url != null ? Uri.tryParse(url!)?.path ?? '' : '';
+    final isAuthEndpoint = path.contains('/auth/');
+    if (step == Steps.homeApp && statusCode == 401 && !isAuthEndpoint) {
       AppShellBootstrap.reset();
       Shared.clear();
       Shared.setValue(StorageKeys.step, Steps.login);

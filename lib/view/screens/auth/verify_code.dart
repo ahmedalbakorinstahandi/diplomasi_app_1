@@ -15,8 +15,9 @@ class VerifyCodeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(VerifyCodeControllerImp());
     return GetBuilder<VerifyCodeControllerImp>(
+      init: VerifyCodeControllerImp(),
+      global: false,
       builder: (controller) {
         final colors = context.appColors;
         final scheme = Theme.of(context).colorScheme;

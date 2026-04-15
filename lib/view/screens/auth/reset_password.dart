@@ -15,8 +15,9 @@ class ResetPasswordScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(ResetPasswordControllerImp());
     return GetBuilder<ResetPasswordControllerImp>(
+      init: ResetPasswordControllerImp(),
+      global: false,
       builder: (controller) {
         final scheme = Theme.of(context).colorScheme;
         return Scaffold(

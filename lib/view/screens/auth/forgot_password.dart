@@ -16,8 +16,9 @@ class ForgotPasswordScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Get.put(ForgotPasswordControllerImp());
     return GetBuilder<ForgotPasswordControllerImp>(
+      init: ForgotPasswordControllerImp(),
+      global: false,
       builder: (controller) {
         final scheme = Theme.of(context).colorScheme;
         return Scaffold(

@@ -21,6 +21,7 @@ class RegisterScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetBuilder<RegisterControllerImp>(
       init: RegisterControllerImp(),
+      global: false,
       builder: (controller) {
         final colors = context.appColors;
         final scheme = Theme.of(context).colorScheme;
