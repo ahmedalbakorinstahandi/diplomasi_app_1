@@ -32,8 +32,8 @@ class PaymentMethodsScreen extends StatelessWidget {
                     final refundText =
                         refund is Map && refund['requested'] == true
                         ? ((refund['success'] == true)
-                              ? 'تحقق 1.00 USD: تم الاسترجاع'
-                              : 'تحقق 1.00 USD: بانتظار/فشل الاسترجاع')
+                              ? 'تحقق وسيلة الدفع: تم الاسترجاع'
+                              : 'تحقق وسيلة الدفع: بانتظار/فشل الاسترجاع')
                         : null;
 
                     return Card(

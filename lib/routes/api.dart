@@ -112,6 +112,8 @@ final class EndPoints {
       "$baseApi/general/certificates/verify/{certificateCode}";
   static String appUpdateCheck = "$baseApi/general/app-update-check";
   static String billingMoyasarPublic = "$baseApi/general/billing/moyasar";
+  static String billingMoyasarPreparePayment =
+      "$baseApi/user/billing/moyasar/prepare-payment";
 
   // settings
   static String setting = "$baseApi/general/settings/{idOrKey}";

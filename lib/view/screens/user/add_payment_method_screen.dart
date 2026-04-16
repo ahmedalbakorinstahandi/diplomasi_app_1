@@ -24,7 +24,6 @@ class AddPaymentMethodScreen extends StatefulWidget {
 }
 
 class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
-  static const int _verificationAmountMinor = 100;
   static const String _fallbackPublishableKey = String.fromEnvironment(
     'MOYASAR_PUBLISHABLE_KEY',
     defaultValue: '',
@@ -37,22 +36,14 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
   bool _configReady = false;
   bool _configError = false;
   String _publishableKey = '';
-  String _billingCurrency = 'USD';
+  String _paymentCurrency = 'SAR';
+  int _displayAmountUsdMinor = 0;
+  int _paymentAmountSarMinor = 0;
+  String _merchantReferenceId = '';
+  String _givenId = '';
+  String _disclaimerTextAr = '';
   PaymentConfig? _paymentConfig;
   late final ValueKey<String> _creditCardKey;
-
-  int _toMinorUnits(String amount) {
-    final parsed = double.tryParse(amount.trim()) ?? 0;
-    return (parsed * 100).round();
-  }
-
-  int get _amountMinor {
-    if (widget.mode == AddPaymentMethodMode.purchasePlan &&
-        widget.plan != null) {
-      return _toMinorUnits(widget.plan!.price);
-    }
-    return _verificationAmountMinor;
-  }
 
   String get _description {
     if (widget.mode == AddPaymentMethodMode.purchasePlan &&
@@ -75,14 +66,9 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
     final res = await _billingData.getMoyasarPublicConfig();
     var mode = MoyasarEnvKeys.modeFromEnv();
     var key = '';
-    String currency = MoyasarEnvKeys.billingCurrencyFromEnv();
     if (res.success && res.data is Map) {
       final m = Map<String, dynamic>.from(res.data as Map);
       mode = MoyasarEnvKeys.normalizeMode(m['mode']?.toString());
-      final c = (m['currency'] ?? '').toString().trim();
-      if (c.isNotEmpty) {
-        currency = c.toUpperCase();
-      }
       final serverKey = (m['publishable_key'] ?? '').toString().trim();
       final local = MoyasarEnvKeys.publishableForMode(mode);
       key = (local != null && local.isNotEmpty) ? local : serverKey;
@@ -103,20 +89,87 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
       });
       return;
     }
+    // Snapshot lock (amounts+FX) lives server-side.
+    final String prepareType = widget.mode == AddPaymentMethodMode.purchasePlan
+        ? 'plan_purchase'
+        : 'card_verification';
+    final int? planId =
+        widget.mode == AddPaymentMethodMode.purchasePlan ? widget.plan?.id : null;
+
+    final prepareRes = await _billingData.prepareMoyasarPayment(
+      type: prepareType,
+      planId: planId,
+    );
+
+    if (!prepareRes.success || prepareRes.data is! Map<String, dynamic>) {
+      if (!mounted) return;
+      setState(() {
+        _configReady = true;
+        _configError = true;
+      });
+      return;
+    }
+
+    final data = prepareRes.data as Map<String, dynamic>;
+    final String preparedGivenId = (data['given_id'] ?? '').toString().trim();
+    final String preparedMerchantReferenceId =
+        (data['merchant_reference_id'] ?? '').toString().trim();
+    final int displayUsdMinor = (data['display_amount_usd_minor'] as num? ?? 0).toInt();
+    final int paymentSarMinor =
+        (data['payment_amount_sar_minor'] as num? ?? 0).toInt();
+    final String disclaimerText = (data['disclaimer_text_ar'] ?? '')
+        .toString()
+        .trim();
+    final String preparedPublishableKey =
+        (data['publishable_key'] ?? '').toString().trim();
+
+    if (preparedGivenId.isEmpty ||
+        preparedMerchantReferenceId.isEmpty ||
+        paymentSarMinor <= 0) {
+      if (!mounted) return;
+      setState(() {
+        _configReady = true;
+        _configError = true;
+      });
+      return;
+    }
+
+    final exchangeRateAt = data['exchange_rate_at']?.toString().trim();
+    final exchangeRate = data['exchange_rate_usd_to_sar']?.toString().trim();
+    final disclaimerVersion = (data['disclaimer_version'] ?? 'sar_only_v1')
+        .toString()
+        .trim();
+
+    if (!mounted) return;
     setState(() {
-      _publishableKey = key;
-      _billingCurrency = currency;
+      _publishableKey =
+          preparedPublishableKey.isNotEmpty ? preparedPublishableKey : key;
+      _paymentAmountSarMinor = paymentSarMinor;
+      _displayAmountUsdMinor = displayUsdMinor;
+      _merchantReferenceId = preparedMerchantReferenceId;
+      _givenId = preparedGivenId;
+      _disclaimerTextAr = disclaimerText;
+
       _paymentConfig = PaymentConfig(
         publishableApiKey: _publishableKey,
-        amount: _amountMinor,
-        currency: _billingCurrency,
+        givenID: _givenId,
+        amount: _paymentAmountSarMinor,
+        currency: _paymentCurrency,
         description: _description,
         creditCard: CreditCardConfig(saveCard: true, manual: false),
         metadata: {
           'purpose': widget.mode == AddPaymentMethodMode.purchasePlan
               ? 'plan_purchase'
               : 'subscription_payment_method',
-          if (widget.plan != null) 'plan_id': widget.plan!.id.toString(),
+          if (widget.plan != null)
+            'plan_id': widget.plan!.id.toString(),
+          // Reconciliation snapshot.
+          'merchant_reference_id': _merchantReferenceId,
+          'display_currency': 'USD',
+          'display_amount_usd_minor': _displayAmountUsdMinor.toString(),
+          'exchange_rate_usd_to_sar': exchangeRate ?? '',
+          'exchange_rate_at': exchangeRateAt ?? '',
+          'disclaimer_version': disclaimerVersion,
         },
       );
       _configReady = true;
@@ -266,7 +319,7 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
             last4: last4,
             isDefault: true,
             refundVerification: true,
-            verificationAmountMinor: _verificationAmountMinor,
+            verificationAmountMinor: _paymentAmountSarMinor,
             meta: {
               'gateway_payment_id': result.id,
               'gateway_status': status.name,
@@ -307,8 +360,8 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
       text: isPurchaseMode
           ? 'تمت عملية الشراء بنجاح وتم حفظ البطاقة للتجديد.'
           : refundSuccess
-          ? 'تمت إضافة وسيلة الدفع بنجاح وتم رد 1.00 USD.'
-          : 'تمت إضافة وسيلة الدفع بنجاح. سيصل رد 1.00 USD خلال وقت قصير.',
+          ? 'تمت إضافة وسيلة الدفع بنجاح وتمت معالجة الاسترجاع.'
+          : 'تمت إضافة وسيلة الدفع بنجاح. سيصل الاسترجاع خلال وقت قصير.',
       snackType: SnackBarType.correct,
     );
     if (mounted && !_isDisposed) {
@@ -337,7 +390,7 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
             const SizedBox(height: 8),
             if (widget.mode == AddPaymentMethodMode.verificationOnly) ...[
               Text(
-                'ملاحظة: سيتم تنفيذ عملية تحقق صغيرة (1.00 USD).',
+                'سيتم خصم ${( _paymentAmountSarMinor / 100).toStringAsFixed(2)} SAR للتحقق من البطاقة.',
                 style: TextStyle(
                   color: scheme.onSurface.withOpacity(0.7),
                   fontSize: 12,
@@ -346,7 +399,7 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'سيتم رد مبلغ التحقق (1.00 USD) تلقائيًا بعد حفظ البطاقة.',
+                'سيتم رد مبلغ التحقق تلقائيًا خلال وقت قصير.',
                 style: TextStyle(
                   color: scheme.primary,
                   fontSize: 12,
@@ -356,7 +409,7 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
               ),
             ] else ...[
               Text(
-                'المبلغ الذي سيُخصم الآن: ${widget.plan?.price ?? '-'} USD',
+                'السعر المرجعي: ${(_displayAmountUsdMinor / 100).toStringAsFixed(2)} USD',
                 style: TextStyle(
                   color: scheme.primary,
                   fontSize: 12,
@@ -366,13 +419,24 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'الأسعار بالدولار الأمريكي (USD).',
+                'سيتم تنفيذ الدفع بالريال السعودي (SAR): ${(_paymentAmountSarMinor / 100).toStringAsFixed(2)} SAR',
                 style: TextStyle(
                   color: scheme.onSurface.withOpacity(0.7),
                   fontSize: 12,
                 ),
                 textDirection: TextDirection.rtl,
               ),
+              if (_disclaimerTextAr.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  _disclaimerTextAr,
+                  style: TextStyle(
+                    color: scheme.onSurface.withOpacity(0.65),
+                    fontSize: 11,
+                  ),
+                  textDirection: TextDirection.rtl,
+                ),
+              ],
             ],
             const SizedBox(height: 16),
             if (!_configReady)
@@ -390,11 +454,16 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
                 child: Stack(
                   children: [
                     SingleChildScrollView(
-                      child: CreditCard(
-                        key: _creditCardKey,
-                        config: _paymentConfig!,
-                        locale: const Localization.ar(),
-                        onPaymentResult: _handlePaymentResult,
+                      child: Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: CreditCard(
+                          key: _creditCardKey,
+                          config: _paymentConfig!,
+                          // Keep Arabic localization but force LTR layout
+                          // for the embedded gateway widget to avoid broken SAR rendering.
+                          locale: const Localization.ar(),
+                          onPaymentResult: _handlePaymentResult,
+                        ),
                       ),
                     ),
                     if (_isSaving)

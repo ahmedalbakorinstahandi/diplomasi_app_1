@@ -58,6 +58,7 @@ class BillingHistoryScreen extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _BillingHeader extends StatelessWidget {
   final BillingHistoryControllerImp controller;
 
@@ -197,6 +198,11 @@ class _InvoicesTab extends StatelessWidget {
                       final amountMinor =
                           (invoice['amount_minor'] as num?)?.toDouble() ?? 0;
                       final currency = invoice['currency']?.toString() ?? 'USD';
+                      final chargedAmountMinor =
+                          (invoice['charged_amount_minor'] as num?)?.toDouble() ??
+                              0;
+                      final chargedCurrency =
+                          invoice['charged_currency']?.toString() ?? 'SAR';
                       final issuedAt = invoice['issued_at'] != null
                           ? formatDateTime(invoice['issued_at']?.toString())
                           : '-';
@@ -204,7 +210,7 @@ class _InvoicesTab extends StatelessWidget {
                       return _BillingCard(
                         title: invoiceNumber,
                         subtitle:
-                            'الحالة: $status\nالمبلغ: ${(amountMinor / 100).toStringAsFixed(2)} $currency\nتاريخ الإصدار: $issuedAt',
+                            'الحالة: $status\nالسعر المرجعي: ${(amountMinor / 100).toStringAsFixed(2)} $currency\nالمبلغ المدفوع: ${(chargedAmountMinor / 100).toStringAsFixed(2)} $chargedCurrency\nتاريخ الإصدار: $issuedAt',
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -356,8 +362,8 @@ class _InvoicesTab extends StatelessWidget {
                                 child: Text('تاريخ الإصدار'),
                               ),
                               DropdownMenuItem(
-                                value: 'amount_minor',
-                                child: Text('المبلغ'),
+                                value: 'display_amount_minor',
+                                child: Text('السعر المرجعي'),
                               ),
                               DropdownMenuItem(
                                 value: 'created_at',
@@ -440,6 +446,10 @@ class _InvoicesTab extends StatelessWidget {
     final status = invoice['status']?.toString() ?? '-';
     final amountMinor = (invoice['amount_minor'] as num?)?.toDouble() ?? 0;
     final currency = invoice['currency']?.toString() ?? 'USD';
+    final chargedAmountMinor =
+        (invoice['charged_amount_minor'] as num?)?.toDouble() ?? 0;
+    final chargedCurrency =
+        invoice['charged_currency']?.toString() ?? 'SAR';
     final issuedAt = invoice['issued_at'] != null
         ? formatDateTime(invoice['issued_at']?.toString())
         : '-';
@@ -455,7 +465,8 @@ class _InvoicesTab extends StatelessWidget {
         title: Text('فاتورة $invoiceNumber'),
         content: Text(
           'الحالة: $status\n'
-          'المبلغ: ${(amountMinor / 100).toStringAsFixed(2)} $currency\n'
+          'السعر المرجعي: ${(amountMinor / 100).toStringAsFixed(2)} $currency\n'
+          'المبلغ المدفوع: ${(chargedAmountMinor / 100).toStringAsFixed(2)} $chargedCurrency\n'
           'تاريخ الإصدار: $issuedAt\n'
           'تاريخ الاستحقاق: $dueAt\n'
           'تاريخ الدفع: $paidAt',
@@ -553,7 +564,11 @@ class _PaymentsTab extends StatelessWidget {
                       final status = payment['status']?.toString() ?? '-';
                       final amountMinor =
                           (payment['amount_minor'] as num?)?.toDouble() ?? 0;
-                      final currency = payment['currency']?.toString() ?? 'USD';
+                      final currency = payment['currency']?.toString() ?? 'SAR';
+                      final displayAmountMinor =
+                          (payment['display_amount_minor'] as num?)?.toDouble() ?? 0;
+                      final displayCurrency =
+                          payment['display_currency']?.toString() ?? 'USD';
                       final finalizedAt = payment['finalized_at'] != null
                           ? formatDateTime(payment['finalized_at']?.toString())
                           : '-';
@@ -561,7 +576,7 @@ class _PaymentsTab extends StatelessWidget {
                       return _BillingCard(
                         title: 'Ref: $merchantReference',
                         subtitle:
-                            'الحالة الداخلية: $status\nالحالة البنكية: $gatewayStatus\nالمبلغ: ${(amountMinor / 100).toStringAsFixed(2)} $currency\nأُغلقت: $finalizedAt',
+                            'الحالة الداخلية: $status\nالحالة البنكية: $gatewayStatus\nالسعر المرجعي: ${(displayAmountMinor / 100).toStringAsFixed(2)} $displayCurrency\nالمبلغ المدفوع: ${(amountMinor / 100).toStringAsFixed(2)} $currency\nأُغلقت: $finalizedAt',
                       );
                     },
                   ),

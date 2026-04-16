@@ -40,7 +40,11 @@ abstract class PlansController extends GetxController {
   Future<void> cancelSubscription();
   Future<void> resumeSubscription();
   Future<void> retryPayment();
-  Future<void> purchasePlan(PlanModel plan, {int? paymentMethodId});
+  Future<void> purchasePlan(
+    PlanModel plan, {
+    int? paymentMethodId,
+    int? preparedTransactionId,
+  });
   Future<void> restorePurchases();
   Future<bool> setDefaultPaymentMethod(int id);
   Future<bool> deletePaymentMethod(int id);
@@ -309,7 +313,11 @@ class PlansControllerImp extends PlansController {
   }
 
   @override
-  Future<void> purchasePlan(PlanModel plan, {int? paymentMethodId}) async {
+  Future<void> purchasePlan(
+    PlanModel plan, {
+    int? paymentMethodId,
+    int? preparedTransactionId,
+  }) async {
     if (isActionLoading) return;
 
     isActionLoading = true;
@@ -350,6 +358,7 @@ class PlansControllerImp extends PlansController {
     final response = await billingData.purchasePlan(
       planId: plan.id,
       paymentMethodId: paymentMethodId,
+      preparedTransactionId: preparedTransactionId,
     );
     if (response.isSuccess) {
       final data = response.data is Map<String, dynamic>

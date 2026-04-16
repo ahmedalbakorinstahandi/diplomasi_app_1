@@ -133,10 +133,11 @@ class BillingHistoryControllerImp extends BillingHistoryController {
       params['finalized_at_to'] = paymentsDateTo!.toIso8601String().split('T').first;
     }
     if (paymentsMinAmount != null) {
-      params['amount_minor_min'] = _toMinorUnits(paymentsMinAmount!);
+      // UI inputs represent the USD reference amount, not the SAR charged amount.
+      params['display_amount_minor_min'] = _toMinorUnits(paymentsMinAmount!);
     }
     if (paymentsMaxAmount != null) {
-      params['amount_minor_max'] = _toMinorUnits(paymentsMaxAmount!);
+      params['display_amount_minor_max'] = _toMinorUnits(paymentsMaxAmount!);
     }
     params['sort_field'] = paymentsSortField;
     params['sort_order'] = paymentsSortOrder;

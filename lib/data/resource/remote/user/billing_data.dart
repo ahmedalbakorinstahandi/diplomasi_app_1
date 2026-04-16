@@ -11,6 +11,19 @@ class BillingData {
     return await apiService.get(EndPoints.billingMoyasarPublic);
   }
 
+  Future<ApiResponse> prepareMoyasarPayment({
+    required String type,
+    int? planId,
+  }) async {
+    return await apiService.post(
+      EndPoints.billingMoyasarPreparePayment,
+      data: {
+        'type': type,
+        if (planId != null) 'plan_id': planId,
+      },
+    );
+  }
+
   Future<ApiResponse> getCurrentSubscription() async {
     return await apiService.get(EndPoints.billingSubscription);
   }
@@ -30,12 +43,15 @@ class BillingData {
   Future<ApiResponse> purchasePlan({
     required int planId,
     int? paymentMethodId,
+    int? preparedTransactionId,
   }) async {
     return await apiService.post(
       EndPoints.billingSubscriptionPurchase,
       data: {
         'plan_id': planId,
         if (paymentMethodId != null) 'payment_method_id': paymentMethodId,
+        if (preparedTransactionId != null)
+          'prepared_transaction_id': preparedTransactionId,
       },
     );
   }

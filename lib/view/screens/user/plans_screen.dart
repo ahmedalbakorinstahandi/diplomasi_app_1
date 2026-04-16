@@ -325,9 +325,81 @@ class PlansScreen extends StatelessWidget {
         return;
       }
 
+      final prepareRes = await controller.billingData.prepareMoyasarPayment(
+        type: 'plan_purchase',
+        planId: plan.id,
+      );
+      if (!prepareRes.success || prepareRes.data is! Map<String, dynamic>) {
+        customSnackBar(
+          text: prepareRes.message ?? 'تعذر تجهيز مبلغ الدفع. حاول مرة أخرى.',
+          snackType: SnackBarType.error,
+        );
+        return;
+      }
+
+      final data = prepareRes.data as Map<String, dynamic>;
+      final preparedTransactionId =
+          (data['prepared_transaction_id'] as num?)?.toInt();
+      final int displayUsdMinor =
+          (data['display_amount_usd_minor'] as num?)?.toInt() ?? 0;
+      final int paymentSarMinor =
+          (data['payment_amount_sar_minor'] as num?)?.toInt() ?? 0;
+      final disclaimerText = (data['disclaimer_text_ar'] ?? '').toString().trim();
+
+      if (preparedTransactionId == null || paymentSarMinor <= 0) {
+        customSnackBar(
+          text: 'تعذر تجهيز مبلغ الدفع بشكل صحيح. حاول مرة أخرى.',
+          snackType: SnackBarType.error,
+        );
+        return;
+      }
+
+      final shouldProceed = await Get.dialog<bool>(
+        AlertDialog(
+          title: const Text('تأكيد الدفع'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'السعر المرجعي: ${(displayUsdMinor / 100).toStringAsFixed(2)} USD',
+                textDirection: TextDirection.rtl,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'سيتم تنفيذ الدفع بالريال السعودي (SAR): ${(paymentSarMinor / 100).toStringAsFixed(2)} SAR',
+                textDirection: TextDirection.rtl,
+              ),
+              if (disclaimerText.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(
+                  disclaimerText,
+                  style: const TextStyle(fontSize: 12),
+                  textDirection: TextDirection.rtl,
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(result: false),
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () => Get.back(result: true),
+              child: const Text('متابعة'),
+            ),
+          ],
+        ),
+        barrierDismissible: false,
+      );
+
+      if (shouldProceed != true) return;
+
       await controller.purchasePlan(
         plan,
         paymentMethodId: selection.selectedMethodId,
+        preparedTransactionId: preparedTransactionId,
       );
     } finally {
       controller.isPurchaseFlowInProgress = false;
