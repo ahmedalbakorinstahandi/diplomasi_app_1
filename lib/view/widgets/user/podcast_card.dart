@@ -25,6 +25,14 @@ class PodcastCard extends StatelessWidget {
     return '${m}:${s.toString().padLeft(2, '0')}';
   }
 
+  void _handleTap() {
+    if (podcast.isLocked) {
+      Get.find<PodcastsControllerImp>().play(podcast);
+      return;
+    }
+    Get.toNamed(AppRoutes.podcastPlayer, arguments: podcast);
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.appColors;
@@ -32,190 +40,246 @@ class PodcastCard extends StatelessWidget {
     final downloads = Get.find<PodcastDownloadControllerImp>();
     final player = Get.find<PodcastPlayerControllerImp>();
 
-    return GestureDetector(
-      onTap: () {
-        if (podcast.isLocked) {
-          Get.find<PodcastsControllerImp>().play(podcast);
-          return;
-        }
-        Get.toNamed(AppRoutes.podcastPlayer, arguments: podcast);
-      },
-      child: Container(
-        margin: EdgeInsets.only(bottom: height(12)),
-        decoration: BoxDecoration(
-          color: colors.surfaceCard,
-          borderRadius: BorderRadius.circular(width(14)),
-          border: Border.all(color: colors.border, width: 1),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(width(12)),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Cover image
-              ClipRRect(
-                borderRadius: BorderRadius.circular(width(10)),
-                child: SizedBox(
-                  width: width(72),
-                  height: width(72),
-                  child: podcast.coverImage != null
-                      ? CachedNetworkImage(
-                          imageUrl: podcast.coverImage!,
-                          fit: BoxFit.cover,
-                          errorWidget: (_, __, ___) => _CoverPlaceholder(scheme: scheme),
-                        )
-                      : _CoverPlaceholder(scheme: scheme),
-                ),
-              ),
-              SizedBox(width: width(12)),
-
-              // Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Title row with lock
-                    Row(
-                      children: [
-                        if (podcast.isLocked)
-                          Padding(
-                            padding: EdgeInsets.only(left: width(4)),
-                            child: Icon(
-                              Icons.lock_rounded,
-                              size: width(14),
-                              color: scheme.primary,
+    return Container(
+      margin: EdgeInsets.only(bottom: height(12)),
+      decoration: BoxDecoration(
+        color: colors.surfaceCard,
+        borderRadius: BorderRadius.circular(width(14)),
+        border: Border.all(color: colors.border, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // ── Tappable main area (navigates / plays) ─────────────────────
+          GestureDetector(
+            onTap: _handleTap,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(width(12), width(12), width(12), width(8)),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Cover image
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(width(10)),
+                        child: SizedBox(
+                          width: width(72),
+                          height: width(72),
+                          child: podcast.coverImage != null
+                              ? CachedNetworkImage(
+                                  imageUrl: podcast.coverImage!,
+                                  fit: BoxFit.cover,
+                                  errorWidget: (_, __, ___) =>
+                                      _CoverPlaceholder(scheme: scheme),
+                                )
+                              : _CoverPlaceholder(scheme: scheme),
+                        ),
+                      ),
+                      // Playing indicator overlay
+                      Obx(() {
+                        final isCurrent =
+                            player.currentPodcast.value?.id == podcast.id &&
+                                player.isPlaying.value;
+                        if (!isCurrent) return const SizedBox.shrink();
+                        return Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(width(10)),
+                            child: Container(
+                              color: scheme.primary.withOpacity(0.18),
+                              child: Icon(
+                                Icons.graphic_eq_rounded,
+                                color: scheme.primary,
+                                size: width(28),
+                              ),
                             ),
                           ),
-                        Expanded(
-                          child: Text(
-                            podcast.title,
+                        );
+                      }),
+                    ],
+                  ),
+
+                  SizedBox(width: width(12)),
+
+                  // Text content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title row with optional lock icon
+                        Row(
+                          children: [
+                            if (podcast.isLocked)
+                              Padding(
+                                padding: EdgeInsets.only(left: width(4)),
+                                child: Icon(
+                                  Icons.lock_rounded,
+                                  size: width(14),
+                                  color: scheme.primary,
+                                ),
+                              ),
+                            Expanded(
+                              child: Text(
+                                podcast.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: emp(14),
+                                  fontWeight: FontWeight.w700,
+                                  color: scheme.onSurface,
+                                  height: 1.3,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        if (podcast.description != null &&
+                            podcast.description!.isNotEmpty) ...[
+                          SizedBox(height: height(4)),
+                          Text(
+                            podcast.description!,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontSize: emp(14),
-                              fontWeight: FontWeight.w700,
-                              color: scheme.onSurface,
-                              height: 1.3,
+                              fontSize: emp(12),
+                              color: colors.textSecondary,
+                              height: 1.4,
                             ),
                           ),
-                        ),
+                        ],
+
+                        SizedBox(height: height(8)),
+
+                        // Progress bar (shows only when partially listened)
+                        if (!podcast.isLocked && podcast.durationSeconds > 0)
+                          _ProgressRow(
+                              podcast: podcast,
+                              colors: colors,
+                              scheme: scheme),
                       ],
                     ),
-
-                    if (podcast.description != null && podcast.description!.isNotEmpty) ...[
-                      SizedBox(height: height(4)),
-                      Text(
-                        podcast.description!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: emp(12),
-                          color: colors.textSecondary,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-
-                    SizedBox(height: height(8)),
-
-                    // Duration + progress bar
-                    if (!podcast.isLocked && podcast.durationSeconds > 0)
-                      _ProgressRow(podcast: podcast, colors: colors, scheme: scheme),
-
-                    SizedBox(height: height(8)),
-
-                    // Bottom row: duration label, badges, actions
-                    Row(
-                      children: [
-                        if (podcast.durationSeconds > 0)
-                          Text(
-                            _formatDuration(podcast.durationSeconds),
-                            style: TextStyle(
-                              fontSize: emp(11),
-                              color: colors.textMuted,
-                            ),
-                          ),
-                        if (podcast.isFree)
-                          Padding(
-                            padding: EdgeInsets.only(right: width(6)),
-                            child: _Badge(label: 'مجاني', color: colors.success),
-                          ),
-                        const Spacer(),
-                        // Favorite button
-                        Obx(() {
-                          final isFav = Get.find<PodcastsControllerImp>()
-                              .podcasts
-                              .firstWhereOrNull((p) => p.id == podcast.id)
-                              ?.isFavorite ?? podcast.isFavorite;
-                          return _IconBtn(
-                            icon: isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                            color: isFav ? scheme.error : colors.textMuted,
-                            onTap: () => Get.find<PodcastsControllerImp>().toggleFavorite(podcast),
-                          );
-                        }),
-                        // Download button
-                        if (!podcast.isLocked && podcast.allowDownload)
-                          Obx(() {
-                            final state = downloads.states[podcast.id] ?? PodcastDownloadState.idle;
-                            if (state == PodcastDownloadState.downloading) {
-                              return Padding(
-                                padding: EdgeInsets.all(width(8)),
-                                child: SizedBox(
-                                  width: width(16),
-                                  height: width(16),
-                                  child: CircularProgressIndicator(
-                                    value: downloads.progressFraction[podcast.id],
-                                    strokeWidth: 2,
-                                    color: scheme.primary,
-                                  ),
-                                ),
-                              );
-                            } else if (state == PodcastDownloadState.downloaded) {
-                              return _IconBtn(
-                                icon: Icons.download_done_rounded,
-                                color: colors.success,
-                                onTap: () {},
-                              );
-                            }
-                            return _IconBtn(
-                              icon: Icons.download_rounded,
-                              color: colors.textMuted,
-                              onTap: () => downloads.download(podcast),
-                            );
-                          }),
-                        // Play button
-                        if (!podcast.isLocked)
-                          Obx(() {
-                            final isCurrent = player.currentPodcast.value?.id == podcast.id;
-                            final isPlaying = player.isPlaying.value && isCurrent;
-                            return _IconBtn(
-                              icon: isPlaying ? Icons.pause_circle_rounded : Icons.play_circle_rounded,
-                              color: scheme.primary,
-                              size: width(32),
-                              onTap: () {
-                                if (isCurrent) {
-                                  player.togglePlayPause();
-                                } else {
-                                  Get.find<PodcastsControllerImp>().play(podcast);
-                                }
-                              },
-                            );
-                          }),
-                      ],
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+
+          // ── Action bar (NOT inside the navigation GestureDetector) ──────
+          Padding(
+            padding: EdgeInsets.fromLTRB(width(12), 0, width(12), width(10)),
+            child: Row(
+              children: [
+                // Duration label
+                if (podcast.durationSeconds > 0)
+                  Text(
+                    _formatDuration(podcast.durationSeconds),
+                    style: TextStyle(
+                      fontSize: emp(11),
+                      color: colors.textMuted,
+                    ),
+                  ),
+                // Free badge
+                if (podcast.isFree) ...[
+                  SizedBox(width: width(6)),
+                  _Badge(label: 'مجاني', color: colors.success),
+                ],
+                const Spacer(),
+
+                // Favourite button
+                Obx(() {
+                  final isFav = Get.find<PodcastsControllerImp>()
+                          .podcasts
+                          .firstWhereOrNull((p) => p.id == podcast.id)
+                          ?.isFavorite ??
+                      podcast.isFavorite;
+                  return _ActionBtn(
+                    icon: isFav
+                        ? Icons.favorite_rounded
+                        : Icons.favorite_border_rounded,
+                    color: isFav ? scheme.error : colors.textMuted,
+                    onTap: () =>
+                        Get.find<PodcastsControllerImp>().toggleFavorite(podcast),
+                  );
+                }),
+
+                // Download button
+                if (!podcast.isLocked && podcast.allowDownload)
+                  Obx(() {
+                    final state =
+                        downloads.states[podcast.id] ?? PodcastDownloadState.idle;
+                    if (state == PodcastDownloadState.downloading) {
+                      return Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal: width(8), vertical: 2),
+                        child: SizedBox(
+                          width: width(18),
+                          height: width(18),
+                          child: CircularProgressIndicator(
+                            value: downloads.progressFraction[podcast.id],
+                            strokeWidth: 2,
+                            color: scheme.primary,
+                          ),
+                        ),
+                      );
+                    } else if (state == PodcastDownloadState.downloaded) {
+                      return _ActionBtn(
+                        icon: Icons.download_done_rounded,
+                        color: colors.success,
+                        onTap: () {},
+                      );
+                    }
+                    return _ActionBtn(
+                      icon: Icons.download_rounded,
+                      color: colors.textMuted,
+                      onTap: () => downloads.download(podcast),
+                    );
+                  }),
+
+                // Play / Pause button
+                if (!podcast.isLocked)
+                  Obx(() {
+                    final isCurrent =
+                        player.currentPodcast.value?.id == podcast.id;
+                    final isPlaying = player.isPlaying.value && isCurrent;
+                    return _ActionBtn(
+                      icon: isPlaying
+                          ? Icons.pause_circle_rounded
+                          : Icons.play_circle_rounded,
+                      color: scheme.primary,
+                      size: width(32),
+                      onTap: () {
+                        if (isCurrent) {
+                          player.togglePlayPause();
+                        } else {
+                          Get.find<PodcastsControllerImp>().play(podcast);
+                        }
+                      },
+                    );
+                  }),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
+// ── Progress row ───────────────────────────────────────────────────────────
+
 class _ProgressRow extends StatelessWidget {
-  const _ProgressRow({required this.podcast, required this.colors, required this.scheme});
+  const _ProgressRow(
+      {required this.podcast, required this.colors, required this.scheme});
   final PodcastModel podcast;
   final AppColors colors;
   final ColorScheme scheme;
@@ -247,6 +311,8 @@ class _ProgressRow extends StatelessWidget {
   }
 }
 
+// ── Small helpers ──────────────────────────────────────────────────────────
+
 class _CoverPlaceholder extends StatelessWidget {
   const _CoverPlaceholder({required this.scheme});
   final ColorScheme scheme;
@@ -270,19 +336,27 @@ class _Badge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withOpacity(0.14),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600),
+        style:
+            TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600),
       ),
     );
   }
 }
 
-class _IconBtn extends StatelessWidget {
-  const _IconBtn({required this.icon, required this.color, required this.onTap, this.size});
+/// A small tap-target button used in the action bar.
+/// Lives outside the parent navigation [GestureDetector] so taps never
+/// accidentally trigger navigation.
+class _ActionBtn extends StatelessWidget {
+  const _ActionBtn(
+      {required this.icon,
+      required this.color,
+      required this.onTap,
+      this.size});
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
@@ -292,8 +366,9 @@ class _IconBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
         child: Icon(icon, color: color, size: size ?? 22),
       ),
     );

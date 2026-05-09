@@ -40,6 +40,16 @@ class PodcastsControllerImp extends GetxController {
     super.onInit();
     _downloads.hydrateFromStorage();
     fetchPodcasts(reload: true);
+
+    // Keep the list in sync when the user toggles a favourite from the player screen.
+    ever(_player.lastFavouriteToggle, ((int, bool)? event) {
+      if (event == null) return;
+      final idx = podcasts.indexWhere((p) => p.id == event.$1);
+      if (idx >= 0) {
+        podcasts[idx] = podcasts[idx].copyWith(isFavorite: event.$2);
+        podcasts.refresh();
+      }
+    });
   }
 
   @override

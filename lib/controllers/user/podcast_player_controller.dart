@@ -39,6 +39,16 @@ class PodcastPlayerControllerImp extends GetxController
   /// True when there is a previous episode in the current queue.
   final RxBool hasPrevious = false.obs;
 
+  // ── Favorite state ────────────────────────────────────────────────────────
+  /// Reactive favorite flag for the currently-playing episode.
+  /// Updated optimistically when the user taps the heart in the player screen.
+  final RxBool currentIsFavorite = false.obs;
+
+  /// Emits (podcastId, newFavoriteValue) whenever the player toggles a favorite.
+  /// PodcastsControllerImp listens to this so the list stays in sync without
+  /// creating a circular import.
+  final Rxn<(int, bool)> lastFavouriteToggle = Rxn<(int, bool)>();
+
   final List<double> speedPresets = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
 
   Timer? _syncTimer;
@@ -136,9 +146,36 @@ class PodcastPlayerControllerImp extends GetxController
     await playFromModel(_queue[_queueIndex]);
   }
 
-  // ── Playback ──────────────────────────────────────────────────────────────────
+  // ── Favourite toggle (player-level) ──────────────────────────────────────────
+
+  /// Toggles the favourite status of the currently-playing episode.
+  /// Works independently of PodcastsControllerImp; the result is broadcast via
+  /// [lastFavouriteToggle] so the list controller can react without a circular import.
+  Future<void> toggleFavoriteInPlayer() async {
+    final podcast = currentPodcast.value;
+    if (podcast == null) return;
+
+    final wasFav = currentIsFavorite.value;
+    currentIsFavorite.value = !wasFav; // optimistic
+
+    final res = wasFav
+        ? await _podcastsData.removeFavorite(podcast.id)
+        : await _podcastsData.addFavorite(podcast.id);
+
+    if (!res.isSuccess) {
+      currentIsFavorite.value = wasFav; // revert
+    } else {
+      lastFavouriteToggle.value = (podcast.id, currentIsFavorite.value);
+    }
+  }
 
   Future<void> playFromModel(PodcastModel podcast) async {
+    // Save progress of the current episode before switching.
+    if (currentPodcast.value != null) {
+      _syncProgressNow();
+      _syncTimer?.cancel();
+    }
+
     // Resolve detail if needed to get stream_url
     PodcastDetailModel detail;
     if (podcast is PodcastDetailModel && podcast.streamUrl != null) {
@@ -176,6 +213,7 @@ class PodcastPlayerControllerImp extends GetxController
 
     await _handler.loadEpisode(item, startAt: startAt);
     currentPodcast.value = detail;
+    currentIsFavorite.value = detail.isFavorite;
     await _handler.play();
     _startPeriodicSync();
   }
