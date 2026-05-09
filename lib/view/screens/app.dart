@@ -2,6 +2,7 @@ import 'package:diplomasi_app/controllers/app_controller.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/core/widgets/custom_scaffold.dart';
+import 'package:diplomasi_app/view/widgets/user/podcast_mini_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
@@ -106,7 +107,7 @@ class AppScreen extends StatelessWidget {
           canPop: false,
           onPopInvokedWithResult: (didPop, result) async {
             if (didPop) return;
-            if (controller.pageIndex == 1 || controller.pageIndex == 2) {
+            if (controller.pageIndex != 0) {
               controller.goToHome();
             } else {
               final shouldExit = await _showExitConfirmation(context);
@@ -116,19 +117,30 @@ class AppScreen extends StatelessWidget {
             }
           },
           child: MyScaffold(
-            body: SizedBox(
-              height: getHeight(),
-              child: PageView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                controller: controller.pageController,
-                itemCount: controller.pages.length,
-                onPageChanged: (index) {
-                  controller.onPageChanged(index);
-                },
-                itemBuilder: (context, index) {
-                  return controller.pages[index]['screen'];
-                },
-              ),
+            body: Stack(
+              children: [
+                SizedBox(
+                  height: getHeight(),
+                  child: PageView.builder(
+                    physics: const NeverScrollableScrollPhysics(),
+                    controller: controller.pageController,
+                    itemCount: controller.pages.length,
+                    onPageChanged: (index) {
+                      controller.onPageChanged(index);
+                    },
+                    itemBuilder: (context, index) {
+                      return controller.pages[index]['screen'];
+                    },
+                  ),
+                ),
+                // MiniPlayer floats above page content, below the bottom navbar
+                const Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: PodcastMiniPlayer(),
+                ),
+              ],
             ),
 
             bottomNavigationBar: Container(

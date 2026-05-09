@@ -117,4 +117,10 @@ final class EndPoints {
 
   // settings
   static String setting = "$baseApi/general/settings/{idOrKey}";
+
+  // Podcast Routes
+  static String podcasts = "$baseApi/user/podcasts";
+  static String podcast = "$baseApi/user/podcasts/{id}";
+  static String podcastProgress = "$baseApi/user/podcasts/{id}/progress";
+  static String podcastFavorite = "$baseApi/user/podcasts/{id}/favorite";
 }

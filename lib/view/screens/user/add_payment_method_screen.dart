@@ -36,7 +36,7 @@ class _AddPaymentMethodScreenState extends State<AddPaymentMethodScreen> {
   bool _configReady = false;
   bool _configError = false;
   String _publishableKey = '';
-  String _paymentCurrency = 'SAR';
+  final String _paymentCurrency = 'SAR';
   int _displayAmountUsdMinor = 0;
   int _paymentAmountSarMinor = 0;
   String _merchantReferenceId = '';

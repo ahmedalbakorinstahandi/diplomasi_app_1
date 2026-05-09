@@ -94,6 +94,9 @@ class ApiService {
     }
   }
 
+  /// Exposes the underlying Dio instance for raw download operations (e.g. podcast file downloads).
+  Dio get dio => _dio;
+
   /// جلب ملف ثنائي من رابط مطلق مع نفس اعتراضات Dio (مثلاً توكن المستخدم).
   Future<Uint8List?> getBytesAbsoluteUrl(String url) async {
     try {

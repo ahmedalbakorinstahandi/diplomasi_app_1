@@ -11,11 +11,11 @@ import 'package:moyasar/src/widgets/three_d_s_webview.dart';
 class CreditCard extends StatefulWidget {
   CreditCard(
       {super.key,
-        required this.config,
-        required this.onPaymentResult,
-        this.locale = const Localization.en()})
+      required this.config,
+      required this.onPaymentResult,
+      this.locale = const Localization.en()})
       : textDirection =
-  locale.languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr;
+            locale.languageCode == 'ar' ? TextDirection.rtl : TextDirection.ltr;
 
   final Function onPaymentResult;
   final PaymentConfig config;
@@ -170,7 +170,8 @@ class _CreditCardState extends State<CreditCard> {
           if (detected != CardNetwork.unknown) {
             _detectedNetwork = detected;
 
-            final supported = widget.config.supportedNetworks.map((e) => e.name).toSet();
+            final supported =
+                widget.config.supportedNetworks.map((e) => e.name).toSet();
             final detectedName = detected.name;
 
             if (!supported.contains(detectedName)) {
@@ -274,8 +275,8 @@ class _CreditCardState extends State<CreditCard> {
                 fontWeight: FontWeight.w500, // Medium weight
                 fontSize: 16,
                 color: (_cardNumberError != null ||
-                    _expiryError != null ||
-                    _cvcError != null)
+                        _expiryError != null ||
+                        _cvcError != null)
                     ? Colors.red
                     : Colors.black,
               )),
@@ -316,7 +317,7 @@ class _CreditCardState extends State<CreditCard> {
                     CardNumberInputFormatter(),
                   ],
                   onSaved: (value) =>
-                  _cardData.number = CardUtils.getCleanedNumber(value!),
+                      _cardData.number = CardUtils.getCleanedNumber(value!),
                 ),
                 const Divider(height: 2),
                 Row(
@@ -324,9 +325,10 @@ class _CreditCardState extends State<CreditCard> {
                   children: [
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: widget.textDirection == TextDirection.rtl
-                            ? CrossAxisAlignment.end
-                            : CrossAxisAlignment.start,
+                        crossAxisAlignment:
+                            widget.textDirection == TextDirection.rtl
+                                ? CrossAxisAlignment.end
+                                : CrossAxisAlignment.start,
                         children: [
                           CardFormField(
                             inputDecoration: buildInputDecoration(
@@ -362,9 +364,10 @@ class _CreditCardState extends State<CreditCard> {
                     ),
                     Expanded(
                       child: Column(
-                        crossAxisAlignment: widget.textDirection == TextDirection.rtl
-                            ? CrossAxisAlignment.end
-                            : CrossAxisAlignment.start,
+                        crossAxisAlignment:
+                            widget.textDirection == TextDirection.rtl
+                                ? CrossAxisAlignment.end
+                                : CrossAxisAlignment.start,
                         children: [
                           CardFormField(
                             inputDecoration: buildInputDecoration(
@@ -396,7 +399,7 @@ class _CreditCardState extends State<CreditCard> {
               child: ElevatedButton(
                 style: ButtonStyle(
                   minimumSize:
-                  const WidgetStatePropertyAll<Size>(Size.fromHeight(52)),
+                      const WidgetStatePropertyAll<Size>(Size.fromHeight(52)),
                   backgroundColor: WidgetStatePropertyAll<Color>(
                     _isButtonEnabled ? blueColor : lightBlueColor,
                   ),
@@ -409,54 +412,54 @@ class _CreditCardState extends State<CreditCard> {
                 onPressed: _isButtonEnabled ? _saveForm : null,
                 child: _isSubmitting
                     ? const CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2,
-                )
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      )
                     : Directionality(
-                  textDirection: widget.textDirection,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    textDirection: widget.textDirection,
-                    children: [
-                      Spacer(),
-                      Text(
-                        '${widget.locale.pay} ',
-                        style: const TextStyle(
-                          fontFamily: 'Aeonik',
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500, // Medium weight
-                          fontSize: 16,
-                        ),
                         textDirection: widget.textDirection,
-                      ),
-                      SizedBox(
-                          width: 20,
-                          child: Text(
-                            widget.config.currency.toUpperCase() == 'USD'
-                                ? '\$'
-                                : widget.config.currency.toUpperCase(),
-                            style: const TextStyle(
-                              fontFamily: 'Aeonik',
-                              color: Colors.white,
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          textDirection: widget.textDirection,
+                          children: [
+                            Spacer(),
+                            Text(
+                              '${widget.locale.pay} ',
+                              style: const TextStyle(
+                                fontFamily: 'Aeonik',
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500, // Medium weight
+                                fontSize: 16,
+                              ),
+                              textDirection: widget.textDirection,
                             ),
-                          )),
-                      const SizedBox(width: 4),
-                      Text(
-                        getAmount(widget.config.amount),
-                        style: const TextStyle(
-                          fontFamily: 'Aeonik',
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500, // Medium weight
-                          fontSize: 16,
+                            SizedBox(
+                                width: 20,
+                                child: Text(
+                                  widget.config.currency.toUpperCase() == 'USD'
+                                      ? '\$'
+                                      : widget.config.currency.toUpperCase(),
+                                  style: const TextStyle(
+                                    fontFamily: 'Aeonik',
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 16,
+                                  ),
+                                )),
+                            const SizedBox(width: 4),
+                            Text(
+                              getAmount(widget.config.amount),
+                              style: const TextStyle(
+                                fontFamily: 'Aeonik',
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500, // Medium weight
+                                fontSize: 16,
+                              ),
+                              textDirection: widget.textDirection,
+                            ),
+                            Spacer(),
+                          ],
                         ),
-                        textDirection: widget.textDirection,
                       ),
-                      Spacer(),
-                    ],
-                  ),
-                ),
               ),
             ),
           ),
@@ -495,30 +498,33 @@ class SaveCardNotice extends StatelessWidget {
 
     return tokenizeCard
         ? Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Directionality(
-          textDirection: textDirection,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            textDirection: textDirection,
-            children: [
-              Icon(
-                Icons.info,
-                color: blueColor,
+            padding: const EdgeInsets.all(8.0),
+            child: Directionality(
+              textDirection: textDirection,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                textDirection: textDirection,
+                children: [
+                  Icon(
+                    Icons.info,
+                    color: blueColor,
+                  ),
+                  SizedBox(width: 5),
+                  Flexible(
+                    child: Text(
+                      locale.saveCardNotice,
+                      style: TextStyle(
+                          fontFamily: 'Aeonik',
+                          color: blueColor,
+                          fontWeight: FontWeight.w500),
+                      textDirection: textDirection,
+                      textAlign: isRTL ? TextAlign.right : TextAlign.left,
+                    ),
+                  ),
+                ],
               ),
-              SizedBox(width: 5),
-              Flexible(
-                child: Text(
-                  locale.saveCardNotice,
-                  style: TextStyle(fontFamily: 'Aeonik', color: blueColor, fontWeight: FontWeight.w500),
-                  textDirection: textDirection,
-                  textAlign: isRTL ? TextAlign.right : TextAlign.left,
-                ),
-              ),
-            ],
-          ),
-        ))
+            ))
         : const SizedBox.shrink();
   }
 }
@@ -534,13 +540,13 @@ class CardFormField extends StatelessWidget {
 
   const CardFormField(
       {super.key,
-        required this.onSaved,
-        this.validator,
-        this.onChanged,
-        this.inputDecoration,
-        this.keyboardType = TextInputType.number,
-        this.textInputAction = TextInputAction.next,
-        this.inputFormatters});
+      required this.onSaved,
+      this.validator,
+      this.onChanged,
+      this.inputDecoration,
+      this.keyboardType = TextInputType.number,
+      this.textInputAction = TextInputAction.next,
+      this.inputFormatters});
 
   @override
   Widget build(BuildContext context) {
@@ -576,12 +582,12 @@ String getAmount(int amount) {
 
 InputDecoration buildInputDecoration(
     {required String hintText,
-      required TextDirection hintTextDirection,
-      bool addNetworkIcons = false,
-      bool hideBorder = false,
-      PaymentConfig? config,
-      CardNetwork? detectedNetwork,
-      bool unsupportedNetwork = false}) {
+    required TextDirection hintTextDirection,
+    bool addNetworkIcons = false,
+    bool hideBorder = false,
+    PaymentConfig? config,
+    CardNetwork? detectedNetwork,
+    bool unsupportedNetwork = false}) {
   Widget? iconWidget;
   if (addNetworkIcons && config != null) {
     if (detectedNetwork != null) {
@@ -595,7 +601,9 @@ InputDecoration buildInputDecoration(
             amount: config.amount,
             currency: config.currency,
             description: config.description,
-            supportedNetworks: [PaymentNetwork.values.firstWhere((e) => e.name == detectedName)],
+            supportedNetworks: [
+              PaymentNetwork.values.firstWhere((e) => e.name == detectedName)
+            ],
           ),
           textDirection: hintTextDirection,
         );
@@ -621,7 +629,8 @@ InputDecoration buildInputDecoration(
     suffixIcon: isRTL ? null : iconWidget,
     prefixIcon: isRTL ? iconWidget : null,
     hintText: hintText,
-    hintStyle: const TextStyle(fontFamily: 'Aeonik', color: Color(0xFF9E9E9E)), // Font for hint text
+    hintStyle: const TextStyle(
+        fontFamily: 'Aeonik', color: Color(0xFF9E9E9E)), // Font for hint text
     border: hideBorder ? InputBorder.none : defaultEnabledBorder,
     isDense: true,
     contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -646,4 +655,5 @@ OutlineInputBorder defaultErrorBorder = OutlineInputBorder(
     borderRadius: defaultBorderRadius);
 
 Color blueColor = const Color(0xFF768DFF); // Updated color
-Color lightBlueColor = const Color(0xFF768DFF).withOpacity(0.3); // Adjusted light blue color too
+Color lightBlueColor =
+    const Color(0xFF768DFF).withOpacity(0.3); // Adjusted light blue color too

@@ -2,6 +2,8 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // Mirror for Google Maven packages unreachable via dl.google.com
+        maven { url = uri("https://mirrors.cloud.tencent.com/nexus/repository/maven-public") }
     }
 }
 

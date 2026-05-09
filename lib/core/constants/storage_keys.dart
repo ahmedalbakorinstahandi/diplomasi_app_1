@@ -17,4 +17,10 @@ abstract class StorageKeys {
   static String get lastUpdateSuggestionAt => 'last_update_suggestion_at';
   /// Cached `courses_mode` summary from GET /user/me (app).
   static String get appCoursesCatalog => 'app_courses_catalog';
+
+  /// Podcast download metadata map (JSON-encoded).
+  static String get podcastDownloadsMeta => 'podcast_downloads_meta';
+
+  /// Guest podcast progress (JSON-encoded map keyed by podcast id).
+  static String get podcastGuestProgress => 'podcast_guest_progress';
 }

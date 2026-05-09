@@ -243,6 +243,9 @@ final class IconsSvg {
 
   // subscriptions.svg
   final String subscriptions = '$iconsSvgPath/subscriptions.svg';
+
+  // headphones.svg
+  final String headphones = '$iconsSvgPath/headphones.svg';
 }
 
 @immutable

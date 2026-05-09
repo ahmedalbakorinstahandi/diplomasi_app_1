@@ -69,6 +69,9 @@ dependencies:
   package_info_plus: ^8.1.2
   file_saver: ^0.3.1
   flutter_dotenv: ^6.0.0
+  just_audio: ^0.9.46
+  audio_service: ^0.18.17
+  audio_session: ^0.1.25
 
 dependency_overrides:
   intl: ^0.20.2

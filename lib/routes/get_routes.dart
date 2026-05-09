@@ -33,6 +33,9 @@ import 'package:diplomasi_app/view/screens/public/glossary_screen.dart';
 import 'package:diplomasi_app/view/screens/user/billing_history_screen.dart';
 import 'package:diplomasi_app/view/screens/user/faqs_screen.dart';
 import 'package:diplomasi_app/view/screens/user/videos_screen.dart';
+import 'package:diplomasi_app/view/screens/user/podcasts_screen.dart';
+import 'package:diplomasi_app/view/screens/user/podcast_player_screen.dart';
+import 'package:diplomasi_app/view/screens/user/podcast_downloads_screen.dart';
 import 'package:get/get.dart';
 
 List<GetPage<dynamic>>? getPages = [
@@ -201,6 +204,26 @@ List<GetPage<dynamic>>? getPages = [
   GetPage(
     name: AppRoutes.billingHistory,
     page: () => const BillingHistoryScreen(),
+    transition: Transition.rightToLeft,
+    transitionDuration: const Duration(milliseconds: 300),
+  ),
+
+  // Podcast Routes
+  GetPage(
+    name: AppRoutes.podcasts,
+    page: () => const PodcastsScreen(),
+    transition: Transition.rightToLeft,
+    transitionDuration: const Duration(milliseconds: 300),
+  ),
+  GetPage(
+    name: AppRoutes.podcastPlayer,
+    page: () => const PodcastPlayerScreen(),
+    transition: Transition.downToUp,
+    transitionDuration: const Duration(milliseconds: 300),
+  ),
+  GetPage(
+    name: AppRoutes.podcastDownloads,
+    page: () => const PodcastDownloadsScreen(),
     transition: Transition.rightToLeft,
     transitionDuration: const Duration(milliseconds: 300),
   ),

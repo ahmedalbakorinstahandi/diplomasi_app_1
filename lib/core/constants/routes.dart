@@ -34,6 +34,11 @@ abstract class AppRoutes {
   static String videos = '/videos';
   static String billingHistory = '/billing-history';
 
+  // Podcast Routes
+  static String podcasts = '/podcasts';
+  static String podcastPlayer = '/podcast-player';
+  static String podcastDownloads = '/podcast-downloads';
+
   // Learning Routes
   static String cources = '/cources';
   static String levels = '/levels';

@@ -34,10 +34,6 @@ abstract class LoginController extends GetxController {
 class LoginControllerImp extends LoginController {
   bool obscurePassword = true;
 
-  @override
-  void onInit() {
-    super.onInit();
-  }
 
   @override
   void onReady() {

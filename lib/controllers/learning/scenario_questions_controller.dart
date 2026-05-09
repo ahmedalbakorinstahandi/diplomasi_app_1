@@ -39,8 +39,8 @@ class ScenarioQuestionsControllerImp extends ScenarioQuestionsController {
     scenarioId = int.tryParse(Get.parameters['scenario_id'] ?? '');
     attemptId = int.tryParse(Get.parameters['attempt_id'] ?? '');
 
-    print('scenarioId: $scenarioId');
-    print('attemptId: $attemptId');
+    printDebug('scenarioId: $scenarioId');
+    printDebug('attemptId: $attemptId');
 
     if (scenarioId == null) {
       Get.back();
@@ -67,7 +67,7 @@ class ScenarioQuestionsControllerImp extends ScenarioQuestionsController {
         );
       }
     } catch (e) {
-      print('Error loading scenario details: $e');
+      printDebug('Error loading scenario details: $e');
     } finally {
       isLoadingScenario = false;
       update();
@@ -100,7 +100,7 @@ class ScenarioQuestionsControllerImp extends ScenarioQuestionsController {
         }
       }
     } catch (e) {
-      print('Error starting attempt: $e');
+      printDebug('Error starting attempt: $e');
     } finally {
       isLoading = false;
       update();
@@ -158,7 +158,7 @@ class ScenarioQuestionsControllerImp extends ScenarioQuestionsController {
         }
       }
     } catch (e) {
-      print('Error loading current question: $e');
+      printDebug('Error loading current question: $e');
     } finally {
       isLoadingQuestion = false;
       // If we're showing description and question is loaded, toggle to questions
@@ -209,7 +209,7 @@ class ScenarioQuestionsControllerImp extends ScenarioQuestionsController {
 
       return result;
     } catch (e) {
-      print('Error submitting answer: $e');
+      printDebug('Error submitting answer: $e');
       return null;
     } finally {
       isSubmittingAnswer = false;
@@ -249,7 +249,7 @@ class ScenarioQuestionsControllerImp extends ScenarioQuestionsController {
       }
     } catch (e) {
       // Handle error silently or show message
-      print('Error marking description as read: $e');
+      printDebug('Error marking description as read: $e');
     }
   }
 }

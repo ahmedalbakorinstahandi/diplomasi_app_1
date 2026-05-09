@@ -17,15 +17,7 @@ abstract class ForgotPasswordController extends GetxController {
 }
 
 class ForgotPasswordControllerImp extends ForgotPasswordController {
-  @override
-  void onInit() {
-    super.onInit();
-  }
 
-  @override
-  void onClose() {
-    super.onClose();
-  }
 
   @override
   sendOtp() async {

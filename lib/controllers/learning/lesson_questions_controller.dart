@@ -41,8 +41,8 @@ class LessonQuestionsControllerImp extends LessonQuestionsController {
     lessonId = int.tryParse(Get.parameters['lesson_id'] ?? '');
     attemptId = int.tryParse(Get.parameters['attempt_id'] ?? '');
 
-    print('lessonId: $lessonId');
-    print('attemptId: $attemptId');
+    printDebug('lessonId: $lessonId');
+    printDebug('attemptId: $attemptId');
 
     // if (lessonId == null || attemptId == null) {
     //   Get.back();

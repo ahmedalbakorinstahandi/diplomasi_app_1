@@ -1,6 +1,7 @@
 import 'package:diplomasi_app/core/classes/api_response.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
+import 'package:diplomasi_app/core/functions/print.dart';
 import 'package:diplomasi_app/data/model/learning/lesson_attempt_model.dart';
 import 'package:diplomasi_app/data/model/learning/lesson_model.dart';
 import 'package:diplomasi_app/data/resource/remote/learning/lessons_data.dart';
@@ -33,7 +34,7 @@ class LessonControllerImp extends LessonController {
       return;
     }
 
-    print('lessonId: $lessonId');
+    printDebug('lessonId: $lessonId');
 
     getLessonDetails();
     super.onInit();
@@ -113,7 +114,7 @@ class LessonControllerImp extends LessonController {
       }
     } catch (e) {
       // Handle error silently or show message
-      print('Error marking video as watched: $e');
+      printDebug('Error marking video as watched: $e');
     }
   }
 

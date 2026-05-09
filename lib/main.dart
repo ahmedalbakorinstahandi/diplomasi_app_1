@@ -1,10 +1,14 @@
 import 'dart:async';
 
+import 'package:audio_service/audio_service.dart';
+import 'package:diplomasi_app/controllers/user/podcast_download_controller.dart';
+import 'package:diplomasi_app/controllers/user/podcast_player_controller.dart';
 import 'package:diplomasi_app/core/bindings/initialbindings.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
 import 'package:diplomasi_app/core/constants/variables.dart';
 import 'package:diplomasi_app/core/localization/translation.dart';
+import 'package:diplomasi_app/core/services/podcast_audio_handler.dart';
 import 'package:diplomasi_app/data/resource/remote/user/user_data.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:diplomasi_app/core/services/notification_navigation_service.dart';
@@ -22,6 +26,17 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Firebase Messaging spawns a headless background FlutterEngine to process
+  // background notifications. That engine also enters main(), but it has no
+  // rendering views. Initialising AudioService (which requires a
+  // FlutterFragmentActivity) inside it causes a PlatformException.
+  // We detect the background context by the absence of UI views and return
+  // early so Firebase can do its own setup without interference.
+  if (WidgetsBinding.instance.platformDispatcher.views.isEmpty) {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    return;
+  }
 
   try {
     await dotenv.load(fileName: '.env');
@@ -46,8 +61,44 @@ void main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Initialize all app services
+  // Initialize all app services (SharedPreferences etc.)
   await MyServices.initialServices();
+
+  // ── Audio service MUST be initialised before push-notification setup ──────
+  //
+  // `pushNotificationService.init()` registers a Firebase background message
+  // handler, which causes Firebase to immediately spawn a background
+  // FlutterEngine (visible as FLTFireBGExecutor in logcat). That background
+  // engine registers ALL plugins including audio_service. The audio_service
+  // Java plugin overwrites shared static state in AudioServicePlugin when it
+  // attaches to the background engine, which corrupts the pending platform
+  // channel reply that AudioService.init() is waiting for — resulting in a
+  // PlatformException("The Activity class … is wrong").
+  //
+  // By completing AudioService.init() BEFORE push notifications are
+  // initialised, the configure() platform call finishes before any background
+  // engine can interfere. The background engine's later plugin registration
+  // then has nothing in-flight to corrupt.
+  final audioHandler = await AudioService.init(
+    builder: () => PodcastAudioHandler(),
+    config: const AudioServiceConfig(
+      androidNotificationChannelId: 'com.diplomasi.app.podcast',
+      androidNotificationChannelName: 'البودكاست',
+      androidNotificationOngoing: true,
+      androidStopForegroundOnPause: true,
+    ),
+  );
+  Get.put<PodcastAudioHandler>(audioHandler, permanent: true);
+  Get.put<PodcastDownloadControllerImp>(
+    PodcastDownloadControllerImp(),
+    permanent: true,
+  );
+  Get.put<PodcastPlayerControllerImp>(
+    PodcastPlayerControllerImp(audioHandler),
+    permanent: true,
+  );
+
+  // ── Push notifications (triggers Firebase background engine creation) ──────
   Get.put(NotificationNavigationService(), permanent: true);
   final pushNotificationService = Get.put(
     PushNotificationService(),

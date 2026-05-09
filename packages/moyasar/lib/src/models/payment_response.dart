@@ -1,6 +1,5 @@
 import 'package:moyasar/moyasar.dart';
 import 'package:moyasar/src/models/payment_type.dart';
-import 'package:moyasar/src/models/payment_split.dart';
 
 /// Moyasar API response for processing a payment.
 class PaymentResponse {

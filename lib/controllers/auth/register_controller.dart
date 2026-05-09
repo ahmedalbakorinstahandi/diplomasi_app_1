@@ -34,10 +34,6 @@ abstract class RegisterController extends GetxController {
 }
 
 class RegisterControllerImp extends RegisterController {
-  @override
-  void onInit() {
-    super.onInit();
-  }
 
   @override
   void onClose() {

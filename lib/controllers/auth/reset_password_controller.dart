@@ -36,10 +36,6 @@ class ResetPasswordControllerImp extends ResetPasswordController {
     super.onInit();
   }
 
-  @override
-  void onClose() {
-    super.onClose();
-  }
 
   @override
   void togglePasswordVisibility() {

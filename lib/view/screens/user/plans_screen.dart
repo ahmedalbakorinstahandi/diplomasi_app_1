@@ -1,6 +1,7 @@
 import 'package:diplomasi_app/core/classes/handling_data_view.dart';
 import 'package:diplomasi_app/core/constants/variables.dart';
 import 'package:diplomasi_app/core/constants/routes.dart';
+import 'package:diplomasi_app/core/functions/print.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/core/widgets/custom_scaffold.dart';
@@ -82,8 +83,8 @@ class PlansScreen extends StatelessWidget {
                         onPressed: controller.isRestoreInProgress
                             ? null
                             : () async {
-                          await controller.restorePurchases();
-                        },
+                                await controller.restorePurchases();
+                              },
                         icon: controller.isRestoreInProgress
                             ? SizedBox(
                                 width: 16,
@@ -252,7 +253,9 @@ class PlansScreen extends StatelessWidget {
                 child: const Text('إلغاء'),
               ),
               ElevatedButton(
-                onPressed: hasAcceptedLegal ? () => Get.back(result: true) : null,
+                onPressed: hasAcceptedLegal
+                    ? () => Get.back(result: true)
+                    : null,
                 child: const Text('تأكيد'),
               ),
             ],
@@ -269,7 +272,7 @@ class PlansScreen extends StatelessWidget {
 
     try {
       if (isEffectiveIOS) {
-        print('Starting iOS purchase flow for plan ${plan.id}');
+        printDebug('Starting iOS purchase flow for plan ${plan.id}');
         await controller.purchasePlan(plan);
         return;
       }
@@ -338,13 +341,15 @@ class PlansScreen extends StatelessWidget {
       }
 
       final data = prepareRes.data as Map<String, dynamic>;
-      final preparedTransactionId =
-          (data['prepared_transaction_id'] as num?)?.toInt();
+      final preparedTransactionId = (data['prepared_transaction_id'] as num?)
+          ?.toInt();
       final int displayUsdMinor =
           (data['display_amount_usd_minor'] as num?)?.toInt() ?? 0;
       final int paymentSarMinor =
           (data['payment_amount_sar_minor'] as num?)?.toInt() ?? 0;
-      final disclaimerText = (data['disclaimer_text_ar'] ?? '').toString().trim();
+      final disclaimerText = (data['disclaimer_text_ar'] ?? '')
+          .toString()
+          .trim();
 
       if (preparedTransactionId == null || paymentSarMinor <= 0) {
         customSnackBar(
