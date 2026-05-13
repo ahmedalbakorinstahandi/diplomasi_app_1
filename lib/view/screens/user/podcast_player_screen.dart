@@ -20,6 +20,9 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
   late final PodcastPlayerControllerImp _player;
   late final AnimationController _scaleCtrl;
   late final Animation<double> _scaleAnim;
+  /// Must be disposed — [ever] survives after the route pops; callbacks would otherwise
+  /// touch [_scaleCtrl] after [dispose] ([AnimationController.forward]/reverse).
+  Worker? _isPlayingWorker;
 
   @override
   void initState() {
@@ -35,8 +38,10 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
     );
 
     if (_player.isPlaying.value) _scaleCtrl.forward();
-    ever(_player.isPlaying, (bool playing) {
-      playing ? _scaleCtrl.forward() : _scaleCtrl.reverse();
+    _isPlayingWorker = ever(_player.isPlaying, (playing) {
+      if (!mounted) return;
+      final isPl = playing == true;
+      isPl ? _scaleCtrl.forward() : _scaleCtrl.reverse();
     });
 
     final arg = Get.arguments;
@@ -49,6 +54,8 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
 
   @override
   void dispose() {
+    _isPlayingWorker?.dispose();
+    _isPlayingWorker = null;
     _scaleCtrl.dispose();
     super.dispose();
   }
@@ -227,7 +234,7 @@ class _PodcastPlayerScreenState extends State<PodcastPlayerScreen>
                     children: _player.speedPresets.map((s) {
                       final selected = _player.speed.value == s;
                       return ChoiceChip(
-                        label: Text('${s}×'),
+                        label: Text('$s×'),
                         selected: selected,
                         onSelected: (_) {
                           _player.setPlaybackSpeed(s);

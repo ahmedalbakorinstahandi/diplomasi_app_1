@@ -134,6 +134,9 @@ class PodcastDetailModel extends PodcastModel {
   final String? downloadUrl;
   final String? publishedAt;
 
+  /// Server row update time; used to know if a re-upload replaced the audio file.
+  final String? updatedAt;
+
   const PodcastDetailModel({
     required super.id,
     required super.title,
@@ -150,6 +153,7 @@ class PodcastDetailModel extends PodcastModel {
     this.streamUrl,
     this.downloadUrl,
     this.publishedAt,
+    this.updatedAt,
   });
 
   factory PodcastDetailModel.fromJson(Map<String, dynamic> json) {
@@ -173,10 +177,11 @@ class PodcastDetailModel extends PodcastModel {
       streamUrl: json['stream_url']?.toString(),
       downloadUrl: json['download_url']?.toString(),
       publishedAt: json['published_at']?.toString(),
+      updatedAt: json['updated_at']?.toString(),
     );
   }
 
-  factory PodcastDetailModel.fromBase(PodcastModel base, {String? streamUrl, String? downloadUrl, String? publishedAt}) {
+  factory PodcastDetailModel.fromBase(PodcastModel base, {String? streamUrl, String? downloadUrl, String? publishedAt, String? updatedAt}) {
     return PodcastDetailModel(
       id: base.id,
       title: base.title,
@@ -193,6 +198,7 @@ class PodcastDetailModel extends PodcastModel {
       streamUrl: streamUrl,
       downloadUrl: downloadUrl,
       publishedAt: publishedAt,
+      updatedAt: updatedAt,
     );
   }
 
@@ -213,6 +219,7 @@ class PodcastDetailModel extends PodcastModel {
     String? streamUrl,
     String? downloadUrl,
     String? publishedAt,
+    String? updatedAt,
   }) {
     return PodcastDetailModel(
       id: id ?? this.id,
@@ -230,6 +237,7 @@ class PodcastDetailModel extends PodcastModel {
       streamUrl: streamUrl ?? this.streamUrl,
       downloadUrl: downloadUrl ?? this.downloadUrl,
       publishedAt: publishedAt ?? this.publishedAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }

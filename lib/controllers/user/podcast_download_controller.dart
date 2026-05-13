@@ -72,6 +72,12 @@ class PodcastDownloadControllerImp extends GetxController {
   final RxMap<int, PodcastDownloadState> states = <int, PodcastDownloadState>{}.obs;
   final RxMap<int, double> progressFraction = <int, double>{}.obs;
 
+  /// Per-active download cancel handles (Dio).
+  final Map<int, CancelToken> _cancelTokens = <int, CancelToken>{};
+
+  /// `true` when API [updated_at] differs from the revision stored at download time.
+  final RxMap<int, bool> staleByPodcastId = <int, bool>{}.obs;
+
   // ── Public metadata accessor (for UI) ────────────────────────────────────────
 
   Map<String, dynamic>? metadataForId(int id) => _storage.getMetadata(id);
@@ -125,12 +131,17 @@ class PodcastDownloadControllerImp extends GetxController {
     if (states[podcast.id] == PodcastDownloadState.downloading) return;
     if (states[podcast.id] == PodcastDownloadState.downloaded) return;
 
+    _cancelTokens[podcast.id]?.cancel();
+    final token = CancelToken();
+    _cancelTokens[podcast.id] = token;
+
     states[podcast.id] = PodcastDownloadState.downloading;
     progressFraction[podcast.id] = 0.0;
+    staleByPodcastId.remove(podcast.id);
     states.refresh();
 
+    var savePath = '';
     try {
-      // Fetch detail to get stream_url
       final detailRes = await _podcastsData.getPodcast(podcast.id);
       if (!detailRes.isSuccess || detailRes.data == null) {
         throw Exception('Failed to fetch podcast detail');
@@ -143,17 +154,17 @@ class PodcastDownloadControllerImp extends GetxController {
         throw Exception('No downloadable URL');
       }
 
-      final savePath = await filePathForId(podcast.id);
+      savePath = await filePathForId(podcast.id);
       final api = Get.find<ApiService>();
       await api.dio.download(
         url,
         savePath,
+        cancelToken: token,
         onReceiveProgress: (received, total) {
           if (total > 0) {
             progressFraction[podcast.id] = received / total;
           }
         },
-        cancelToken: CancelToken(),
       );
 
       _storage.saveMetadata(podcast.id, {
@@ -162,20 +173,95 @@ class PodcastDownloadControllerImp extends GetxController {
         'cover_image': podcast.coverImage,
         'duration_seconds': podcast.durationSeconds,
         'downloaded_at': DateTime.now().toIso8601String(),
+        if (detail.updatedAt != null && detail.updatedAt!.isNotEmpty)
+          'source_updated_at': detail.updatedAt,
       });
 
       states[podcast.id] = PodcastDownloadState.downloaded;
+    } on DioException catch (e) {
+      if (CancelToken.isCancel(e) || e.type == DioExceptionType.cancel) {
+        states[podcast.id] = PodcastDownloadState.idle;
+        await _deleteFileQuietly(savePath);
+      } else {
+        states[podcast.id] = PodcastDownloadState.failed;
+        await _deleteFileQuietly(savePath);
+      }
     } catch (_) {
       states[podcast.id] = PodcastDownloadState.failed;
+      await _deleteFileQuietly(savePath);
     } finally {
+      _cancelTokens.remove(podcast.id);
       progressFraction.remove(podcast.id);
       states.refresh();
     }
   }
 
+  Future<void> _deleteFileQuietly(String path) async {
+    if (path.isEmpty) return;
+    try {
+      final f = File(path);
+      if (await f.exists()) await f.delete();
+    } catch (_) {}
+  }
+
+  /// Stops an in-flight download and removes any partial file.
+  void cancelDownload(int id) {
+    _cancelTokens[id]?.cancel();
+  }
+
+  // ── Compare server revision vs local metadata (replaced audio on server) ─────
+
+  /// Call when opening the downloads screen or pull-to-refresh.
+  Future<void> checkAllDownloadedFreshness() async {
+    final entries = states.entries
+        .where((e) => e.value == PodcastDownloadState.downloaded)
+        .map((e) => e.key)
+        .toList();
+    for (final id in entries) {
+      await checkFreshnessForId(id);
+    }
+  }
+
+  Future<void> checkFreshnessForId(int id) async {
+    final meta = _storage.getMetadata(id);
+    if (meta == null) {
+      staleByPodcastId[id] = false;
+      return;
+    }
+    final saved = meta['source_updated_at']?.toString();
+    if (saved == null || saved.isEmpty) {
+      staleByPodcastId[id] = false;
+      return;
+    }
+
+    try {
+      final res = await _podcastsData.getPodcast(id);
+      if (!res.isSuccess || res.data == null) {
+        return;
+      }
+      final detail = PodcastDetailModel.fromJson(res.data as Map<String, dynamic>);
+      final remote = detail.updatedAt ?? '';
+      staleByPodcastId[id] = remote.isNotEmpty && remote != saved;
+    } catch (_) {
+      // Keep previous stale flag
+    }
+  }
+
+  /// Deletes local file + metadata, then downloads again from API URLs.
+  Future<void> replaceWithLatestFromServer(int id) async {
+    final res = await _podcastsData.getPodcast(id);
+    if (!res.isSuccess || res.data == null) return;
+    final detail = PodcastDetailModel.fromJson(res.data as Map<String, dynamic>);
+    await delete(id);
+    states[id] = PodcastDownloadState.idle;
+    states.refresh();
+    await download(detail);
+  }
+
   // ── Delete ────────────────────────────────────────────────────────────────────
 
   Future<void> delete(int id) async {
+    cancelDownload(id);
     final path = localPathIfExists(id);
     if (path != null) {
       try {
@@ -185,6 +271,7 @@ class PodcastDownloadControllerImp extends GetxController {
     _storage.deleteMetadata(id);
     states.remove(id);
     progressFraction.remove(id);
+    staleByPodcastId.remove(id);
     states.refresh();
   }
 }

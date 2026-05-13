@@ -1,13 +1,14 @@
 import 'dart:async';
-import 'dart:convert';
-
 import 'package:audio_service/audio_service.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:diplomasi_app/controllers/user/podcast_download_controller.dart';
 import 'package:diplomasi_app/core/classes/shared_preferences.dart';
 import 'package:diplomasi_app/core/constants/steps.dart';
 import 'package:diplomasi_app/core/constants/storage_keys.dart';
+import 'package:diplomasi_app/core/constants/variables.dart';
+import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/core/services/podcast_audio_handler.dart';
+import 'package:diplomasi_app/core/services/podcast_listen_progress_store.dart';
 import 'package:diplomasi_app/data/model/user/podcast_model.dart';
 import 'package:diplomasi_app/data/resource/remote/user/podcasts_data.dart';
 import 'package:flutter/material.dart';
@@ -53,7 +54,7 @@ class PodcastPlayerControllerImp extends GetxController
 
   Timer? _syncTimer;
   Timer? _sleepTimer;
-  StreamSubscription? _playbackStateSub;
+  StreamSubscription? _playingStreamSub;
   StreamSubscription? _positionSub;
   StreamSubscription? _completedSub;
 
@@ -68,11 +69,21 @@ class PodcastPlayerControllerImp extends GetxController
     _handler.onSkipToNext = skipToNext;
     _handler.onSkipToPrevious = skipToPrevious;
 
-    _playbackStateSub = _handler.playbackState.listen((state) {
-      isPlaying.value = state.playing;
+    /// Authoritative for play/pause icon (fixes stuck "pause" after complete, skip, stop).
+    _playingStreamSub = _handler.player.playingStream.listen((playing) {
+      isPlaying.value = playing;
     });
 
     _positionSub = AudioService.position.listen((p) {
+      // After natural completion AudioService.position can jitter (e.g. back to zero)
+      // while processingState stays completed — keep the scrubber pinned to full length.
+      if (_handler.player.processingState == ProcessingState.completed) {
+        final d = duration.value ?? _handler.player.duration;
+        if (d != null && d > Duration.zero) {
+          position.value = d;
+          return;
+        }
+      }
       position.value = p;
     });
 
@@ -90,7 +101,7 @@ class PodcastPlayerControllerImp extends GetxController
   @override
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);
-    _playbackStateSub?.cancel();
+    _playingStreamSub?.cancel();
     _positionSub?.cancel();
     _completedSub?.cancel();
     _syncTimer?.cancel();
@@ -101,7 +112,8 @@ class PodcastPlayerControllerImp extends GetxController
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.hidden) {
       _syncProgressNow();
     }
   }
@@ -155,6 +167,14 @@ class PodcastPlayerControllerImp extends GetxController
     final podcast = currentPodcast.value;
     if (podcast == null) return;
 
+    if (!isUserLoggedIn) {
+      customSnackBar(
+        text: 'سجّل الدخول لإضافة الحلقات إلى المفضلة',
+        snackType: SnackBarType.info,
+      );
+      return;
+    }
+
     final wasFav = currentIsFavorite.value;
     currentIsFavorite.value = !wasFav; // optimistic
 
@@ -164,6 +184,10 @@ class PodcastPlayerControllerImp extends GetxController
 
     if (!res.isSuccess) {
       currentIsFavorite.value = wasFav; // revert
+      customSnackBar(
+        text: 'تعذّر تحديث المفضلة. تحقق من الاتصال وحاول مرة أخرى.',
+        snackType: SnackBarType.error,
+      );
     } else {
       lastFavouriteToggle.value = (podcast.id, currentIsFavorite.value);
     }
@@ -179,11 +203,13 @@ class PodcastPlayerControllerImp extends GetxController
     // Resolve detail if needed to get stream_url
     PodcastDetailModel detail;
     if (podcast is PodcastDetailModel && podcast.streamUrl != null) {
-      detail = podcast;
+      detail = PodcastListenProgressStore.mergeIntoDetail(podcast);
     } else {
       final res = await _podcastsData.getPodcast(podcast.id);
       if (!res.isSuccess || res.data == null) return;
-      detail = PodcastDetailModel.fromJson(res.data as Map<String, dynamic>);
+      detail = PodcastListenProgressStore.mergeIntoDetail(
+        PodcastDetailModel.fromJson(res.data as Map<String, dynamic>),
+      );
     }
 
     // Check for local file
@@ -219,21 +245,32 @@ class PodcastPlayerControllerImp extends GetxController
   }
 
   Future<void> togglePlayPause() async {
-    if (_handler.player.playing) {
-      await pause();
-    } else {
+    final p = _handler.player;
+    // At end of file [playing] can be false but [pause] is wrong — always treat as "play again".
+    if (p.processingState == ProcessingState.completed) {
       await resume();
+      return;
     }
+    if (p.playing) {
+      await pause();
+      return;
+    }
+    await resume();
   }
 
   Future<void> pause() async {
     await _handler.pause();
     _syncProgressNow();
+    isPlaying.value = false;
   }
 
-  Future<void> resume() => _handler.play();
+  /// Continues playback; [PodcastAudioHandler.play] seeks to 0 when the episode
+  /// had finished (same path as notification / headset play).
+  Future<void> resume() async {
+    await _handler.play();
+  }
 
-  Future<void> seekTo(Duration position) => _handler.seek(position);
+  Future<void> seekTo(Duration newPosition) => _handler.seek(newPosition);
 
   Future<void> skipForward({int seconds = 30}) =>
       _handler.seekRelative(Duration(seconds: seconds));
@@ -277,30 +314,43 @@ class PodcastPlayerControllerImp extends GetxController
     _syncProgressNow();
     _syncTimer?.cancel();
     _sleepTimer?.cancel();
-    await _handler.stop();
+    // Clear UI state immediately so the mini-player hides even if the platform
+    // stop handshake is slow or the audio isolate lags briefly.
+    isPlaying.value = false;
+    position.value = Duration.zero;
+    duration.value = null;
     currentPodcast.value = null;
+    currentIsFavorite.value = false;
     _queue.clear();
     _queueIndex = -1;
     _updateQueueFlags();
+    await _handler.stop();
   }
 
   // ── Episode completed ─────────────────────────────────────────────────────────
 
   void _onEpisodeCompleted() {
-    _syncProgressNow();
     if (repeatOne.value) {
+      _syncProgressNow();
       _handler.seek(Duration.zero).then((_) => _handler.play());
-    } else if (hasNext.value) {
-      // Auto-advance to the next episode in the queue.
-      skipToNext();
+      return;
     }
+
+    // Do not auto-advance the queue here — only [repeatOne] loops. User picks
+    // "next" explicitly; otherwise playback stops at the end.
+    final d = duration.value ?? _handler.player.duration;
+    if (d != null && d > Duration.zero) {
+      position.value = d;
+    }
+    _syncProgressNow();
+    isPlaying.value = false;
   }
 
   // ── Progress sync ─────────────────────────────────────────────────────────────
 
   void _startPeriodicSync() {
     _syncTimer?.cancel();
-    _syncTimer = Timer.periodic(const Duration(seconds: 12), (_) {
+    _syncTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       _syncProgressNow();
     });
   }
@@ -309,36 +359,22 @@ class PodcastPlayerControllerImp extends GetxController
     final podcast = currentPodcast.value;
     if (podcast == null) return;
 
-    final posSeconds = position.value.inSeconds;
-    final durSeconds = duration.value?.inSeconds;
+    final posSeconds = _handler.player.position.inSeconds;
+    final durSeconds =
+        _handler.player.duration?.inSeconds ?? duration.value?.inSeconds;
+
+    PodcastListenProgressStore.save(podcast.id, posSeconds, durSeconds);
 
     final step = Shared.getValue(StorageKeys.step, initialValue: 0);
-    final isLoggedIn = step == Steps.homeApp;
-
-    if (isLoggedIn) {
-      _podcastsData.updateProgress(
-        podcast.id,
-        positionSeconds: posSeconds,
-        durationSeconds: durSeconds,
-      ).ignore();
-    } else {
-      _persistGuestProgress(podcast.id, posSeconds, durSeconds);
+    final inApp = step == Steps.homeApp;
+    if (inApp) {
+      _podcastsData
+          .updateProgress(
+            podcast.id,
+            positionSeconds: posSeconds,
+            durationSeconds: durSeconds,
+          )
+          .ignore();
     }
-  }
-
-  void _persistGuestProgress(int podcastId, int posSeconds, int? durSeconds) {
-    final raw = Shared.getValue(StorageKeys.podcastGuestProgress);
-    Map<String, dynamic> map = {};
-    if (raw != null) {
-      try {
-        map = json.decode(raw.toString()) as Map<String, dynamic>;
-      } catch (_) {}
-    }
-    map[podcastId.toString()] = {
-      'position_seconds': posSeconds,
-      if (durSeconds != null) 'duration_seconds': durSeconds,
-      'saved_at': DateTime.now().toIso8601String(),
-    };
-    Shared.setValue(StorageKeys.podcastGuestProgress, json.encode(map));
   }
 }

@@ -309,7 +309,8 @@ class ApiService {
       infoMap = Map<String, dynamic>.from(responseData['info'] as Map);
     }
 
-    final suppressSnack = errorKey == AuthResponseKeys.accountNotVerified ||
+    final suppressSnack =
+        errorKey == AuthResponseKeys.accountNotVerified ||
         _suppressSnackForBillingIosVerify(errorKey, endpoint);
 
     if (message != null) {

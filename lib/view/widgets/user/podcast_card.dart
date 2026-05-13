@@ -20,9 +20,9 @@ class PodcastCard extends StatelessWidget {
     if (m >= 60) {
       final h = m ~/ 60;
       final rem = m % 60;
-      return '${h}س ${rem.toString().padLeft(2, '0')}د';
+      return '$hس ${rem.toString().padLeft(2, '0')}د';
     }
-    return '${m}:${s.toString().padLeft(2, '0')}';
+    return '$m:${s.toString().padLeft(2, '0')}';
   }
 
   void _handleTap() {
@@ -218,18 +218,28 @@ class PodcastCard extends StatelessWidget {
                     final state =
                         downloads.states[podcast.id] ?? PodcastDownloadState.idle;
                     if (state == PodcastDownloadState.downloading) {
-                      return Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: width(8), vertical: 2),
-                        child: SizedBox(
-                          width: width(18),
-                          height: width(18),
-                          child: CircularProgressIndicator(
-                            value: downloads.progressFraction[podcast.id],
-                            strokeWidth: 2,
-                            color: scheme.primary,
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: width(18),
+                            height: width(18),
+                            child: CircularProgressIndicator(
+                              value: downloads.progressFraction[podcast.id],
+                              strokeWidth: 2,
+                              color: scheme.primary,
+                            ),
                           ),
-                        ),
+                          IconButton(
+                            icon: Icon(Icons.close_rounded,
+                                size: width(18), color: colors.textMuted),
+                            tooltip: 'إلغاء التحميل',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () =>
+                                downloads.cancelDownload(podcast.id),
+                          ),
+                        ],
                       );
                     } else if (state == PodcastDownloadState.downloaded) {
                       return _ActionBtn(

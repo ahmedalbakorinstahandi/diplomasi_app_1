@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:diplomasi_app/core/classes/api_response.dart';
+import 'package:diplomasi_app/core/constants/variables.dart';
+import 'package:diplomasi_app/core/functions/snackbar.dart';
+import 'package:diplomasi_app/core/services/podcast_listen_progress_store.dart';
 import 'package:diplomasi_app/controllers/user/podcast_download_controller.dart';
 import 'package:diplomasi_app/controllers/user/podcast_player_controller.dart';
 import 'package:diplomasi_app/data/model/user/podcast_model.dart';
@@ -81,29 +84,53 @@ class PodcastsControllerImp extends GetxController {
     }
 
     try {
+      // Without a session the API falls back to `all` for this filter; we then
+      // narrow client-side using merged local progress.
+      final apiStatus =
+          (!isUserLoggedIn && status.value == 'continue_listening')
+              ? 'all'
+              : status.value;
+
       final res = await _data.getPodcasts(
         page: _page,
-        status: status.value,
+        status: apiStatus,
         isFree: filterFree.value,
         search: searchQuery.value.trim().isEmpty ? null : searchQuery.value.trim(),
         cancelToken: _cancelToken,
       );
 
-      if (res.isSuccess && res.data != null && res.meta != null) {
-        final raw = res.data as List;
-        final items = raw
-            .map((e) => PodcastModel.fromJson(e as Map<String, dynamic>))
-            .toList();
-
-        if (reload) {
-          podcasts.assignAll(items);
+      if (res.isSuccess && res.data != null) {
+        final raw = res.data;
+        if (raw is! List) {
+          hasError.value = true;
         } else {
-          podcasts.addAll(items);
-        }
+          var items = raw
+              .map((e) => PodcastModel.fromJson(e as Map<String, dynamic>))
+              .map(PodcastListenProgressStore.mergeIntoPodcast)
+              .toList();
 
-        final meta = res.meta!;
-        _hasMore = meta.currentPage < meta.lastPage;
-        _page = meta.currentPage + 1;
+          if (!isUserLoggedIn && status.value == 'continue_listening') {
+            items = items
+                .where(PodcastListenProgressStore.looksLikeContinueListening)
+                .toList();
+          }
+
+          if (reload) {
+            podcasts.assignAll(items);
+          } else {
+            podcasts.addAll(items);
+          }
+
+          final meta = res.meta;
+          if (meta != null) {
+            _hasMore = meta.currentPage < meta.lastPage;
+            _page = meta.currentPage + 1;
+          } else {
+            // Still show [data]; disable endless scroll if pagination meta is missing.
+            _hasMore = false;
+            _page = 1;
+          }
+        }
       } else if (!res.isSuccess) {
         hasError.value = true;
       }
@@ -115,10 +142,21 @@ class PodcastsControllerImp extends GetxController {
     }
   }
 
+  @override
   Future<void> refresh() => fetchPodcasts(reload: true);
 
   void setStatus(String s) {
     if (status.value == s) return;
+
+    // Favorites need an account; «أكمل الاستماع» uses local progress when unauthenticated.
+    if (s == 'favorites' && !isUserLoggedIn) {
+      customSnackBar(
+        text: 'سجّل الدخول لعرض المفضلة',
+        snackType: SnackBarType.info,
+      );
+      return;
+    }
+
     status.value = s;
     fetchPodcasts(reload: true);
   }
@@ -145,22 +183,35 @@ class PodcastsControllerImp extends GetxController {
 
   // ── favorite toggle (optimistic) ─────────────────────────────────────────────
   Future<void> toggleFavorite(PodcastModel podcast) async {
-    final idx = podcasts.indexWhere((p) => p.id == podcast.id);
-    if (idx < 0) return;
+    if (!isUserLoggedIn) {
+      customSnackBar(
+        text: 'سجّل الدخول لإضافة الحلقات إلى المفضلة',
+        snackType: SnackBarType.info,
+      );
+      return;
+    }
 
-    final wasFav = podcasts[idx].isFavorite;
-    final updated = podcasts[idx].copyWith(isFavorite: !wasFav);
-    podcasts[idx] = updated;
-    podcasts.refresh();
+    final idx = podcasts.indexWhere((p) => p.id == podcast.id);
+    final wasFav = idx >= 0 ? podcasts[idx].isFavorite : podcast.isFavorite;
+
+    if (idx >= 0) {
+      podcasts[idx] = podcasts[idx].copyWith(isFavorite: !wasFav);
+      podcasts.refresh();
+    }
 
     final ApiResponse res = wasFav
         ? await _data.removeFavorite(podcast.id)
         : await _data.addFavorite(podcast.id);
 
     if (!res.isSuccess) {
-      // revert
-      podcasts[idx] = podcasts[idx].copyWith(isFavorite: wasFav);
-      podcasts.refresh();
+      if (idx >= 0) {
+        podcasts[idx] = podcasts[idx].copyWith(isFavorite: wasFav);
+        podcasts.refresh();
+      }
+      customSnackBar(
+        text: 'تعذّر تحديث المفضلة. تحقق من الاتصال وحاول مرة أخرى.',
+        snackType: SnackBarType.error,
+      );
     }
   }
 

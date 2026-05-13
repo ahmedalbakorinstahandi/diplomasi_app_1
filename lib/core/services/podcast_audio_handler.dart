@@ -39,14 +39,46 @@ class PodcastAudioHandler extends BaseAudioHandler with SeekHandler {
   // ── Controls ────────────────────────────────────────────────────────────────
 
   @override
-  Future<void> play() => _player.play();
+  Future<void> play() async {
+    // Lock screen / notification / BT call [play] without going through the UI
+    // controller — mirror in-app "resume from end" behaviour.
+    final st = _player.processingState;
+    final dur = _player.duration;
+    if (st == ProcessingState.completed) {
+      await _player.seek(Duration.zero);
+    } else if (dur != null &&
+        dur > Duration.zero &&
+        _player.position >= dur) {
+      await _player.seek(Duration.zero);
+    }
+    await _player.play();
+  }
 
   @override
   Future<void> pause() => _player.pause();
 
+  /// Stop playback and tear down media-session / foreground notification so the
+  /// mini-player shell can disappear and Android can remove the playback tile.
   @override
   Future<void> stop() async {
     await _player.stop();
+    // One frame so piped PlaybackEvents apply before we clear the notification.
+    await Future<void>.delayed(Duration.zero);
+
+    mediaItem.add(null);
+    queue.add(<MediaItem>[]);
+
+    final prev = playbackState.value;
+    playbackState.add(
+      prev.copyWith(
+        processingState: AudioProcessingState.idle,
+        playing: false,
+        controls: const [],
+        androidCompactActionIndices: const [],
+        updatePosition: Duration.zero,
+      ),
+    );
+
     await super.stop();
   }
 

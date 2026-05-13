@@ -34,7 +34,9 @@ void main() async {
   // We detect the background context by the absence of UI views and return
   // early so Firebase can do its own setup without interference.
   if (WidgetsBinding.instance.platformDispatcher.views.isEmpty) {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     return;
   }
 

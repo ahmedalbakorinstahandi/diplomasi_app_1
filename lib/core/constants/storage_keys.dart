@@ -21,6 +21,7 @@ abstract class StorageKeys {
   /// Podcast download metadata map (JSON-encoded).
   static String get podcastDownloadsMeta => 'podcast_downloads_meta';
 
-  /// Guest podcast progress (JSON-encoded map keyed by podcast id).
+  /// Local podcast listen positions + duration hints (JSON map by podcast id).
+  /// Used as a durable backup next to server progress.
   static String get podcastGuestProgress => 'podcast_guest_progress';
 }

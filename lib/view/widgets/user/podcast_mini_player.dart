@@ -30,37 +30,41 @@ class PodcastMiniPlayer extends StatelessWidget {
           ? (pos.inSeconds / duration.inSeconds).clamp(0.0, 1.0)
           : 0.0;
 
-      return GestureDetector(
-        onTap: () => Get.toNamed(AppRoutes.podcastPlayer),
-        child: Container(
-          height: kMiniPlayerHeight,
-          decoration: BoxDecoration(
-            color: colors.surface,
-            boxShadow: [
-              BoxShadow(
-                color: colors.shadow,
-                blurRadius: 8,
-                offset: const Offset(0, -2),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              // Thin progress bar at top
-              LinearProgressIndicator(
+      return Container(
+        height: kMiniPlayerHeight,
+        decoration: BoxDecoration(
+          color: colors.surface,
+          boxShadow: [
+            BoxShadow(
+              color: colors.shadow,
+              blurRadius: 8,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => Get.toNamed(AppRoutes.podcastPlayer),
+              child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 2,
                 backgroundColor: colors.border,
                 valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
               ),
+            ),
 
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: width(12)),
-                  child: Row(
-                    children: [
-                      // Cover
-                      ClipRRect(
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: width(12)),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => Get.toNamed(AppRoutes.podcastPlayer),
+                      child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: SizedBox(
                           width: width(44),
@@ -80,23 +84,30 @@ class PodcastMiniPlayer extends StatelessWidget {
                                 ),
                         ),
                       ),
-                      SizedBox(width: width(10)),
+                    ),
+                    SizedBox(width: width(10)),
 
-                      // Title
-                      Expanded(
-                        child: Text(
-                          podcast.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: emp(13),
-                            fontWeight: FontWeight.w600,
-                            color: scheme.onSurface,
+                    Expanded(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => Get.toNamed(AppRoutes.podcastPlayer),
+                        child: Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: Text(
+                            podcast.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: emp(13),
+                              fontWeight: FontWeight.w600,
+                              color: scheme.onSurface,
+                            ),
                           ),
                         ),
                       ),
+                    ),
 
-                      // Controls
+                    // Controls (must stay outside tap-to-expand so buttons receive taps)
                       // Previous episode
                       Obx(() => IconButton(
                             icon: Icon(
@@ -155,7 +166,7 @@ class PodcastMiniPlayer extends StatelessWidget {
                           size: width(20),
                           color: colors.textMuted,
                         ),
-                        onPressed: player.stopAndClear,
+                        onPressed: () => player.stopAndClear(),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                       ),
@@ -165,8 +176,7 @@ class PodcastMiniPlayer extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      );
+        );
     });
   }
 }
