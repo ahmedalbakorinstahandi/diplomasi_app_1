@@ -569,11 +569,13 @@ class _ProgressSection extends StatelessWidget {
     final progress =
         dur.inSeconds > 0 ? (pos.inSeconds / dur.inSeconds).clamp(0.0, 1.0) : 0.0;
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: width(20)),
-      child: Column(
-        children: [
-          SliderTheme(
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: width(20)),
+        child: Column(
+          children: [
+            SliderTheme(
             data: SliderThemeData(
               trackHeight: 3.5,
               thumbShape:
@@ -611,6 +613,7 @@ class _ProgressSection extends StatelessWidget {
           ),
         ],
       ),
+      ),
     );
   }
 }
@@ -631,13 +634,16 @@ class _MainControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: width(8)),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          // ◀◀ Previous episode
-          Obx(() => _CtrlBtn(
+    // Media transport stays LTR so skip icons and button order match user expectation.
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: width(8)),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            // ◀◀ Previous episode
+            Obx(() => _CtrlBtn(
                 icon: Icons.skip_previous_rounded,
                 size: width(28),
                 color: player.hasPrevious.value
@@ -680,7 +686,8 @@ class _MainControls extends StatelessWidget {
                     : colors.textMuted.withOpacity(0.35),
                 onTap: player.hasNext.value ? player.skipToNext : null,
               )),
-        ],
+          ],
+        ),
       ),
     );
   }

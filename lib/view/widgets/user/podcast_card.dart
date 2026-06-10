@@ -3,7 +3,6 @@ import 'package:diplomasi_app/controllers/user/podcast_download_controller.dart'
 import 'package:diplomasi_app/controllers/user/podcast_player_controller.dart';
 import 'package:diplomasi_app/controllers/user/podcasts_controller.dart';
 import 'package:diplomasi_app/core/constants/app_colors.dart';
-import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/functions/size.dart';
 import 'package:diplomasi_app/data/model/user/podcast_model.dart';
 import 'package:flutter/material.dart';
@@ -26,11 +25,7 @@ class PodcastCard extends StatelessWidget {
   }
 
   void _handleTap() {
-    if (podcast.isLocked) {
-      Get.find<PodcastsControllerImp>().play(podcast);
-      return;
-    }
-    Get.toNamed(AppRoutes.podcastPlayer, arguments: podcast);
+    Get.find<PodcastsControllerImp>().openInPlayer(podcast);
   }
 
   @override

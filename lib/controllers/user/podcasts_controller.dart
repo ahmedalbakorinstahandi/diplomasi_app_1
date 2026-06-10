@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:diplomasi_app/core/classes/api_response.dart';
+import 'package:diplomasi_app/core/constants/routes.dart';
 import 'package:diplomasi_app/core/constants/variables.dart';
 import 'package:diplomasi_app/core/functions/snackbar.dart';
 import 'package:diplomasi_app/core/services/podcast_listen_progress_store.dart';
@@ -216,16 +217,32 @@ class PodcastsControllerImp extends GetxController {
   }
 
   // ── play ─────────────────────────────────────────────────────────────────────
+
+  /// Builds the playback queue from the visible list (unlocked episodes only)
+  /// so prev/next navigation works in the player, notification, and car controls.
+  void _setQueueFor(PodcastModel podcast) {
+    final playable = podcasts.where((p) => !p.isLocked).toList();
+    final idx = playable.indexWhere((p) => p.id == podcast.id);
+    _player.setQueue(playable, idx >= 0 ? idx : 0);
+  }
+
   Future<void> play(PodcastModel podcast) async {
     if (podcast.isLocked) {
       _showLockedSheet(podcast);
       return;
     }
-    // Pass the full visible list as the queue so prev/next navigation works
-    // in the player screen, notification, and car controls.
-    final idx = podcasts.indexWhere((p) => p.id == podcast.id);
-    _player.setQueue(podcasts.toList(), idx >= 0 ? idx : 0);
+    _setQueueFor(podcast);
     await _player.playFromModel(podcast);
+  }
+
+  /// Opens the full player screen and prepares the episode queue.
+  void openInPlayer(PodcastModel podcast) {
+    if (podcast.isLocked) {
+      _showLockedSheet(podcast);
+      return;
+    }
+    _setQueueFor(podcast);
+    Get.toNamed(AppRoutes.podcastPlayer, arguments: podcast);
   }
 
   void _showLockedSheet(PodcastModel podcast) {
@@ -246,10 +263,15 @@ class _LockedPodcastSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
@@ -302,6 +324,7 @@ class _LockedPodcastSheet extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

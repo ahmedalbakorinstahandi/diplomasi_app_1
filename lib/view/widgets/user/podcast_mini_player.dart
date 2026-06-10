@@ -107,70 +107,71 @@ class PodcastMiniPlayer extends StatelessWidget {
                       ),
                     ),
 
-                    // Controls (must stay outside tap-to-expand so buttons receive taps)
-                      // Previous episode
-                      Obx(() => IconButton(
+                    // Controls stay LTR so skip icons are not mirrored in RTL layout.
+                    Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Obx(() => IconButton(
+                                icon: Icon(
+                                  Icons.skip_previous_rounded,
+                                  size: width(24),
+                                  color: player.hasPrevious.value
+                                      ? scheme.onSurface
+                                      : colors.textMuted,
+                                ),
+                                onPressed: player.hasPrevious.value
+                                    ? player.skipToPrevious
+                                    : null,
+                                tooltip: 'السابق',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              )),
+                          SizedBox(width: width(2)),
+                          Obx(() => IconButton(
+                                icon: Icon(
+                                  player.isPlaying.value
+                                      ? Icons.pause_rounded
+                                      : Icons.play_arrow_rounded,
+                                  size: width(28),
+                                  color: scheme.primary,
+                                ),
+                                onPressed: player.togglePlayPause,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              )),
+                          SizedBox(width: width(2)),
+                          Obx(() => IconButton(
+                                icon: Icon(
+                                  Icons.skip_next_rounded,
+                                  size: width(24),
+                                  color: player.hasNext.value
+                                      ? scheme.onSurface
+                                      : colors.textMuted,
+                                ),
+                                onPressed: player.hasNext.value
+                                    ? player.skipToNext
+                                    : null,
+                                tooltip: 'التالي',
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              )),
+                          SizedBox(width: width(6)),
+                          IconButton(
                             icon: Icon(
-                              Icons.skip_previous_rounded,
-                              size: width(24),
-                              color: player.hasPrevious.value
-                                  ? scheme.onSurface
-                                  : colors.textMuted,
+                              Icons.close_rounded,
+                              size: width(20),
+                              color: colors.textMuted,
                             ),
-                            onPressed: player.hasPrevious.value
-                                ? player.skipToPrevious
-                                : null,
-                            tooltip: 'السابق',
+                            onPressed: () => player.stopAndClear(),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(),
-                          )),
-                      SizedBox(width: width(2)),
-
-                      // Play / Pause
-                      Obx(() => IconButton(
-                            icon: Icon(
-                              player.isPlaying.value
-                                  ? Icons.pause_rounded
-                                  : Icons.play_arrow_rounded,
-                              size: width(28),
-                              color: scheme.primary,
-                            ),
-                            onPressed: player.togglePlayPause,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          )),
-                      SizedBox(width: width(2)),
-
-                      // Next episode
-                      Obx(() => IconButton(
-                            icon: Icon(
-                              Icons.skip_next_rounded,
-                              size: width(24),
-                              color: player.hasNext.value
-                                  ? scheme.onSurface
-                                  : colors.textMuted,
-                            ),
-                            onPressed: player.hasNext.value
-                                ? player.skipToNext
-                                : null,
-                            tooltip: 'التالي',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          )),
-                      SizedBox(width: width(6)),
-
-                      // Close
-                      IconButton(
-                        icon: Icon(
-                          Icons.close_rounded,
-                          size: width(20),
-                          color: colors.textMuted,
-                        ),
-                        onPressed: () => player.stopAndClear(),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
+                  ],
                   ),
                 ),
               ),
